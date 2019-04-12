@@ -8,10 +8,13 @@ import shutil
 import sys
 import tempfile
 
+__version__ = '0.0.1'
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--json', action='store_true', help='parse input file from JSON format')
     parser.add_argument('--strict', action='store_true', help='nucleotides in tetrade linked only by cWH pairing')
+    parser.add_argument('--version', action='version', version='%(prog)s {}'.format(__version__))
     parser.add_argument('input', help='a JSON file produced by DSSR if "--json" is used, otherwise a PDB or PDBx/MMCIF file to be analyzed first by DSSR')
     args = parser.parse_args()
 
@@ -135,20 +138,42 @@ if __name__ == '__main__':
         print('None')
         exit()
 
+    quadruplexes.sort(key=lambda x: len(x), reverse=True)
+
     for quadruplex in quadruplexes:
-        print('{} tetrads'.format(len(quadruplex)))
+        if len(quadruplex) > 1:
+            print('n4-helix with {} tetrads'.format(len(quadruplex)))
+        else:
+            print('single tetrad without stacking')
+
         quadruplex = list(quadruplex)
         quadruplex.sort(key=lambda x: nts[x[0]]['index'])
 
-        previous = None
-        stem = []
-        stem_counter = 0
-
+        previous = []
+        classified = []
+        votes = {'parallel': 0, 'antiparallel': 0, 'mixed' : 0}
         for tetrade in quadruplex:
             current = [nts[nt]['index'] for nt in tetrade]
-            if not previous or not all([j - i == 1 for i, j in zip(previous, current)]):
-                stem_counter += 1
-                print('stem #{}'.format(stem_counter))
+            if len(quadruplex) > 1 and previous:
+                index_diff = [j - i for i, j in zip(previous, current)]
+                is_stem = all([abs(diff) == 1 for diff in index_diff])
+                is_parallel = len(set(index_diff)) == 1
+                is_antiparallel = len(set(index_diff)) == 2
+                if is_stem:
+                    votes['parallel'] += 1 if is_parallel else 0
+                    votes['antiparallel'] += 1 if is_antiparallel else 0
+                    votes['mixed'] += 1 if not is_parallel and not is_antiparallel else 0
+                if not is_stem:
+                    votes = sorted(votes.items(), key=lambda x: x[1], reverse=True)
+                    # clear winner
+                    if votes[0][1] > votes[1][1]:
+                        stem_type = votes[0][0]
+                    else:
+                        stem_type = 'mixed'
+                    print('  {} stem with {} tetrads'.format(stem_type, len(classified)))
+                    print('\n'.join(classified))
+                    classified = []
+                    votes = {'parallel': 0, 'antiparallel': 0, 'mixed' : 0}
             previous = current
 
             classification = ''
@@ -169,6 +194,15 @@ if __name__ == '__main__':
                     classification = '+Z'
                 elif n2 > n3 and n2 < n4:
                     classification = '-Z'
+            classified.append('    {} {} {} {} {}'.format(tetrade[0], tetrade[1], tetrade[2], tetrade[3], classification))
 
-            print(tetrade[0], tetrade[1], tetrade[2], tetrade[3], classification)
-        print()
+
+        if len(classified) > 1:
+            votes = sorted(votes.items(), key=lambda x: x[1], reverse=True)
+            # clear winner
+            if votes[0][1] > votes[1][1]:
+                stem_type = votes[0][0]
+            else:
+                stem_type = 'mixed'
+            print('  {} stem with {} tetrads'.format(stem_type, len(classified)))
+        print('\n'.join(classified))
