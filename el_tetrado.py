@@ -40,6 +40,8 @@ if __name__ == '__main__':
     nts = dict()
     for nt in data['nts']:
         nt_id = nt['nt_id']
+        if nt_id.find(':') != -1:
+            nt['chain_name'] = '{}:{}'.format(nt_id.split(':')[0], nt['chain_name'])
         nts[nt_id] = nt
 
     stacks = list()
@@ -137,28 +139,36 @@ if __name__ == '__main__':
         print('{} tetrads'.format(len(quadruplex)))
         quadruplex = list(quadruplex)
         quadruplex.sort(key=lambda x: nts[x[0]]['index'])
+
+        previous = None
+        stem = []
+        stem_counter = 0
+
         for tetrade in quadruplex:
+            current = [nts[nt]['index'] for nt in tetrade]
+            if not previous or not all([j - i == 1 for i, j in zip(previous, current)]):
+                stem_counter += 1
+                print('stem #{}'.format(stem_counter))
+            previous = current
+
             classification = ''
             if len(set([nts[i]['chain_name'] for i in tetrade])) == 1:
-                # either none nucleotide has colon in name (i.e. it came from non-symmetry file)
-                # or all nts have the same value before that colon
-                if all([nt.find(':') == -1 for nt in tetrade]) \
-                   or len(set([nt.split(':')[0] for nt in tetrade])) == 1:
-                    n1 = nts[tetrade[0]]['index']
-                    n2 = nts[tetrade[1]]['index']
-                    n3 = nts[tetrade[2]]['index']
-                    n4 = nts[tetrade[3]]['index']
-                    if n2 < n3 and n3 < n4:
-                        classification = '+O'
-                    elif n2 > n3 and n3 > n4:
-                        classification = '-O'
-                    elif n2 < n3 and n2 < n4:
-                        classification = '+N'
-                    elif n2 < n3 and n2 > n4:
-                        classification = '-N'
-                    elif n2 > n3 and n2 > n4:
-                        classification = '+Z'
-                    elif n2 > n3 and n2 < n4:
-                        classification = '-Z'
+                n1 = nts[tetrade[0]]['index']
+                n2 = nts[tetrade[1]]['index']
+                n3 = nts[tetrade[2]]['index']
+                n4 = nts[tetrade[3]]['index']
+                if n2 < n3 and n3 < n4:
+                    classification = '+O'
+                elif n2 > n3 and n3 > n4:
+                    classification = '-O'
+                elif n2 < n3 and n2 < n4:
+                    classification = '+N'
+                elif n2 < n3 and n2 > n4:
+                    classification = '-N'
+                elif n2 > n3 and n2 > n4:
+                    classification = '+Z'
+                elif n2 > n3 and n2 < n4:
+                    classification = '-Z'
 
             print(tetrade[0], tetrade[1], tetrade[2], tetrade[3], classification)
+        print()
