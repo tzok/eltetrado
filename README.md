@@ -15,7 +15,7 @@ Bussemaker and Olson, 2015). User is required to either run `x3dna-dssr
 
 # Usage
 
-    usage: el_tetrado [-h] [--json] [--strict] [--version] input
+    usage: eltetrado [-h] [--json] [--strict] [--version] input
     
     positional arguments:
       input       a JSON file produced by DSSR if "--json" is used, otherwise a
@@ -38,7 +38,7 @@ Bussemaker and Olson, 2015). User is required to either run `x3dna-dssr
 
     $ curl ftp://ftp.wwpdb.org/pub/pdb/data/biounit/coordinates/divided/rj/4rj1.pdb1.gz | gunzip > 4rj1-1.pdb
     
-    $ ./el_tetrado 4rj1-1.pdb
+    $ ./eltetrado 4rj1-1.pdb
     
     n4-helix with 9 tetrads
       parallel stem with 5 tetrads

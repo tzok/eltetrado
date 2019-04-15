@@ -15,8 +15,11 @@ if __name__ == '__main__':
     parser.add_argument('--json', action='store_true', help='parse input file from JSON format')
     parser.add_argument('--strict', action='store_true', help='nucleotides in tetrade linked only by cWH pairing')
     parser.add_argument('--version', action='version', version='%(prog)s {}'.format(__version__))
+    parser.add_argument('--stacking-mismatch', help='a perfect tetrade stacking covers 4 nucleotides; this option can be used with value 1 or 2 to allow this number of nucleotides to be non-stacked with otherwise well aligned tetrade [default=2]', default=2)
     parser.add_argument('input', help='a JSON file produced by DSSR if "--json" is used, otherwise a PDB or PDBx/MMCIF file to be analyzed first by DSSR')
     args = parser.parse_args()
+
+    stacking_mismatch = int(args.stacking_mismatch)
 
     if args.json:
         with open(args.input) as jsonfile:
@@ -106,7 +109,7 @@ if __name__ == '__main__':
             if not stack.isdisjoint(ti) and not stack.isdisjoint(tj):
                 ti.difference_update(stack)
                 tj.difference_update(stack)
-        return len(ti) == len(tj) == 0
+        return len(ti) <= stacking_mismatch and len(tj) <= stacking_mismatch
 
     stackings = dict()
     for ti, tj in itertools.combinations(tetrades, 2):
