@@ -1,4 +1,4 @@
-# El Tetrado
+# Project description
 
 This is an application to analyze base pairing patterns of DNA/RNA 3D
 structures to find and classify tetrads and quadruplexes. For more
