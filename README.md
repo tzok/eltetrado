@@ -56,7 +56,7 @@ pairs
 
 ![](4RJ1.png)
 
-    $ curl ftp://ftp.wwpdb.org/pub/pdb/data/biounit/coordinates/divided/rj/4rj1.pdb1.gz | gunzip > 4rj1-1.pdb
+    $ curl ftp://ftp.wwpdb.org/pub/pdb/data/biounit/coordinates/divided/rj/4rj1.pdb1.gz | gzip -d > 4rj1-1.pdb
     
     $ ./eltetrado 4rj1-1.pdb
     
