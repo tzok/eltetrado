@@ -32,9 +32,29 @@ Bussemaker and Olson, 2015). User is required to either run `x3dna-dssr
     DNA/RNA 3D structure in PDB or PDBx/mmCIF format
   - `--strict`: When set, a tetrad can consist of cWH base pairs only.
     Otherwise, a tetrad may contain any type of base
-    pairs
+pairs
 
-# Example
+# Examples
+
+## 1MY9: Solution structure of a K+ cation stabilized dimeric RNA quadruplex containing two G:G(:A):G:G(:A) hexads, G:G:G:G tetrads and UUUU loops
+
+![](1MY9.png)
+
+    $ curl ftp://ftp.wwpdb.org/pub/pdb/data/structures/divided/mmCIF/my/1my9.cif.gz | gzip -d > 1my9.cif
+    
+    $ ./eltetrado 1my9.cif
+    
+    n4-helix with 4 tetrads
+      parallel stem with 2 tetrads
+        1:A.G1 1:A.G4 1:A.G10 1:A.G13 +O
+        1:A.G2 1:A.G5 1:A.G11 1:A.G14 +O
+      parallel stem with 2 tetrads
+        1:B.G15 1:B.G18 1:B.G24 1:B.G27 +O
+        1:B.G16 1:B.G19 1:B.G25 1:B.G28 +O
+
+## 4RJ1: Structural variations and solvent structure of UGGGGU quadruplexes stabilized by Sr2+ ions
+
+![](4RJ1.png)
 
     $ curl ftp://ftp.wwpdb.org/pub/pdb/data/biounit/coordinates/divided/rj/4rj1.pdb1.gz | gunzip > 4rj1-1.pdb
     
