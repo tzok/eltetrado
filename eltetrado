@@ -28,8 +28,8 @@ if __name__ == '__main__':
         currdir = os.path.dirname(os.path.realpath(__file__))
         tempdir = tempfile.mkdtemp()
         shutil.copy(os.path.join(currdir, 'x3dna-dssr'), tempdir)
-        shutil.copy(sys.argv[1], tempdir)
-        dssr = subprocess.Popen(['./x3dna-dssr', '-i={}'.format(os.path.basename(sys.argv[1])), '--json', '--symmetry'], stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=tempdir)
+        shutil.copy(args.input, tempdir)
+        dssr = subprocess.Popen(['./x3dna-dssr', '-i={}'.format(os.path.basename(args.input)), '--json', '--symmetry'], stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=tempdir)
         dssr, _ = dssr.communicate()
         shutil.rmtree(tempdir)
 
