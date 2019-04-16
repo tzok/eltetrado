@@ -179,8 +179,10 @@ if __name__ == '__main__':
                     votes = {'parallel': 0, 'antiparallel': 0, 'mixed' : 0}
             previous = current
 
-            classification = ''
-            if len(set([nts[i]['chain_name'] for i in tetrade])) == 1:
+            distinct_chain_count = len(set([nts[i]['chain_name'] for i in tetrade]))
+            prefixes = ['', 'uni', 'bi', 'tri', 'tetra']
+            classification = 'cannot assign ONZ class to {}molecular tetrade'.format(prefixes[distinct_chain_count])
+            if distinct_chain_count == 1:
                 n1 = nts[tetrade[0]]['index']
                 n2 = nts[tetrade[1]]['index']
                 n3 = nts[tetrade[2]]['index']
