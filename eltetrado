@@ -186,17 +186,17 @@ if __name__ == '__main__':
                 n3 = nts[tetrade[2]]['index']
                 n4 = nts[tetrade[3]]['index']
                 if n2 < n3 and n3 < n4:
-                    classification = '+O'
+                    classification = 'O+'
                 elif n2 > n3 and n3 > n4:
-                    classification = '-O'
+                    classification = 'O+'
                 elif n2 < n3 and n2 < n4:
-                    classification = '+N'
+                    classification = 'N+'
                 elif n2 < n3 and n2 > n4:
-                    classification = '-N'
+                    classification = 'N-'
                 elif n2 > n3 and n2 > n4:
-                    classification = '+Z'
+                    classification = 'Z+'
                 elif n2 > n3 and n2 < n4:
-                    classification = '-Z'
+                    classification = 'Z-'
             classified.append('    {} {} {} {} {}'.format(tetrade[0], tetrade[1], tetrade[2], tetrade[3], classification))
 
 
