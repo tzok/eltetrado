@@ -13,9 +13,9 @@ __version__ = '0.0.2-dev1'
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--json', action='store_true', help='parse input file from JSON format')
-    parser.add_argument('--strict', action='store_true', help='nucleotides in tetrade linked only by cWH pairing')
+    parser.add_argument('--strict', action='store_true', help='nucleotides in tetrad linked only by cWH pairing')
     parser.add_argument('--version', action='version', version='%(prog)s {}'.format(__version__))
-    parser.add_argument('--stacking-mismatch', help='a perfect tetrade stacking covers 4 nucleotides; this option can be used with value 1 or 2 to allow this number of nucleotides to be non-stacked with otherwise well aligned tetrade [default=2]', default=2)
+    parser.add_argument('--stacking-mismatch', help='a perfect tetrad stacking covers 4 nucleotides; this option can be used with value 1 or 2 to allow this number of nucleotides to be non-stacked with otherwise well aligned tetrad [default=2]', default=2)
     parser.add_argument('input', help='a JSON file produced by DSSR if "--json" is used, otherwise a PDB or PDBx/MMCIF file to be analyzed first by DSSR')
     args = parser.parse_args()
 
@@ -77,9 +77,9 @@ if __name__ == '__main__':
                 cwh[nt2] = list()
             cwh[nt2].append(nt1)
 
-    # search for a tetrade: i -> j -> k -> l -> i
+    # search for a tetrad: i -> j -> k -> l -> i
     used = set()
-    tetrades = list()
+    tetrads = list()
     for i in cwh:
         if i in used:
             continue
@@ -92,17 +92,17 @@ if __name__ == '__main__':
                                 ni, nj, nk, nl = nts[i]['index'], nts[j]['index'], nts[k]['index'], nts[l]['index']
                                 nmin = min(ni, nj, nk, nl)
                                 if ni == nmin:
-                                    tetrade = (i, j, k, l)
+                                    tetrad = (i, j, k, l)
                                 elif nj == nmin:
-                                    tetrade = (j, k, l, i)
+                                    tetrad = (j, k, l, i)
                                 elif nk == nmin:
-                                    tetrade = (k, l, i, j)
+                                    tetrad = (k, l, i, j)
                                 else:
-                                    tetrade = (l, i, j, k)
-                                tetrades.append(tetrade)
-                                used.update(tetrade)
+                                    tetrad = (l, i, j, k)
+                                tetrads.append(tetrad)
+                                used.update(tetrad)
 
-    def check_tetrades_stacking(ti, tj):
+    def check_tetrads_stacking(ti, tj):
         ti, tj = set(ti), set(tj)
         for stack in stacks:
             stack = set(stack)
@@ -112,8 +112,8 @@ if __name__ == '__main__':
         return len(ti) <= stacking_mismatch and len(tj) <= stacking_mismatch
 
     stackings = dict()
-    for ti, tj in itertools.combinations(tetrades, 2):
-        if check_tetrades_stacking(ti, tj):
+    for ti, tj in itertools.combinations(tetrads, 2):
+        if check_tetrads_stacking(ti, tj):
             if not ti in stackings:
                 stackings[ti] = list()
             stackings[ti].append(tj)
@@ -122,15 +122,15 @@ if __name__ == '__main__':
             stackings[tj].append(ti)
 
     quadruplexes = list()
-    candidates = set(tetrades)
+    candidates = set(tetrads)
     while candidates:
         quadruplex = [candidates.pop()]
         changed = True
         while changed:
             changed = False
-            for tetrade in quadruplex:
-                if tetrade in stackings:
-                    for stacked in stackings[tetrade]:
+            for tetrad in quadruplex:
+                if tetrad in stackings:
+                    for stacked in stackings[tetrad]:
                         if stacked in candidates:
                             quadruplex.append(stacked)
                             candidates.remove(stacked)
@@ -155,8 +155,8 @@ if __name__ == '__main__':
         previous = []
         classified = []
         votes = {'parallel': 0, 'antiparallel': 0, 'mixed' : 0}
-        for tetrade in quadruplex:
-            current = [nts[nt]['index'] for nt in tetrade]
+        for tetrad in quadruplex:
+            current = [nts[nt]['index'] for nt in tetrad]
             if len(quadruplex) > 1 and previous:
                 index_diff = [j - i for i, j in zip(previous, current)]
                 is_stem = all([abs(diff) == 1 for diff in index_diff])
@@ -179,14 +179,14 @@ if __name__ == '__main__':
                     votes = {'parallel': 0, 'antiparallel': 0, 'mixed' : 0}
             previous = current
 
-            distinct_chain_count = len(set([nts[i]['chain_name'] for i in tetrade]))
+            distinct_chain_count = len(set([nts[i]['chain_name'] for i in tetrad]))
             prefixes = ['', 'uni', 'bi', 'tri', 'tetra']
-            classification = 'cannot assign ONZ class to {}molecular tetrade'.format(prefixes[distinct_chain_count])
+            classification = 'cannot assign ONZ class to {}molecular tetrad'.format(prefixes[distinct_chain_count])
             if distinct_chain_count == 1:
-                n1 = nts[tetrade[0]]['index']
-                n2 = nts[tetrade[1]]['index']
-                n3 = nts[tetrade[2]]['index']
-                n4 = nts[tetrade[3]]['index']
+                n1 = nts[tetrad[0]]['index']
+                n2 = nts[tetrad[1]]['index']
+                n3 = nts[tetrad[2]]['index']
+                n4 = nts[tetrad[3]]['index']
                 if n2 < n3 and n3 < n4:
                     classification = 'O+'
                 elif n2 > n3 and n3 > n4:
@@ -199,7 +199,7 @@ if __name__ == '__main__':
                     classification = 'Z+'
                 elif n2 > n3 and n2 < n4:
                     classification = 'Z-'
-            classified.append('    {} {} {} {} {}'.format(tetrade[0], tetrade[1], tetrade[2], tetrade[3], classification))
+            classified.append('    {} {} {} {} {}'.format(tetrad[0], tetrad[1], tetrad[2], tetrad[3], classification))
 
 
         if len(classified) > 1:
