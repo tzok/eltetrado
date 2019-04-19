@@ -10,12 +10,36 @@ import tempfile
 
 __version__ = '0.0.2-dev1'
 
+def classify_onz(nts, tetrad):
+    distinct_chain_count = len(set([nts[i]['chain_name'] for i in tetrad]))
+    prefixes = ['', 'uni', 'bi', 'tri', 'tetra']
+    classification = 'cannot assign ONZ class to {}molecular tetrad'.format(prefixes[distinct_chain_count])
+    if distinct_chain_count == 1:
+        n1 = nts[tetrad[0]]['index']
+        n2 = nts[tetrad[1]]['index']
+        n3 = nts[tetrad[2]]['index']
+        n4 = nts[tetrad[3]]['index']
+        if n2 < n3 and n3 < n4:
+            classification = 'O+'
+        elif n2 > n3 and n3 > n4:
+            classification = 'O+'
+        elif n2 < n3 and n2 < n4:
+            classification = 'N+'
+        elif n2 < n3 and n2 > n4:
+            classification = 'N-'
+        elif n2 > n3 and n2 > n4:
+            classification = 'Z+'
+        elif n2 > n3 and n2 < n4:
+            classification = 'Z-'
+    return classification
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--json', action='store_true', help='parse input file from JSON format')
-    parser.add_argument('--strict', action='store_true', help='nucleotides in tetrad linked only by cWH pairing')
-    parser.add_argument('--version', action='version', version='%(prog)s {}'.format(__version__))
     parser.add_argument('--stacking-mismatch', help='a perfect tetrad stacking covers 4 nucleotides; this option can be used with value 1 or 2 to allow this number of nucleotides to be non-stacked with otherwise well aligned tetrad [default=2]', default=2)
+    parser.add_argument('--relaxed-stem-definition', action='store_true', help='when set, two sequentially close tetrades will be considered a stem regardless of their stacking')
+    parser.add_argument('--strict', action='store_true', help='nucleotides in tetrad are found when linked only by cWH pairing')
+    parser.add_argument('--version', action='version', version='%(prog)s {}'.format(__version__))
     parser.add_argument('input', help='a JSON file produced by DSSR if "--json" is used, otherwise a PDB or PDBx/MMCIF file to be analyzed first by DSSR')
     args = parser.parse_args()
 
@@ -102,6 +126,22 @@ if __name__ == '__main__':
                                 tetrads.append(tetrad)
                                 used.update(tetrad)
 
+    def check_tetrads_stem(ti, tj):
+        ti = [nts[nt]['index'] for nt in ti]
+        tj = [nts[nt]['index'] for nt in tj]
+        index_diff = [j - i for i, j in zip(ti, tj)]
+        return all([abs(diff) == 1 for diff in index_diff])
+
+    stems = dict()
+    for ti, tj in itertools.combinations(tetrads, 2):
+        if check_tetrads_stem(ti, tj):
+            if not ti in stems:
+                stems[ti] = list()
+            stems[ti].append(tj)
+            if not tj in stems:
+                stems[tj] = list()
+            stems[tj].append(ti)
+
     def check_tetrads_stacking(ti, tj):
         ti, tj = set(ti), set(tj)
         for stack in stacks:
@@ -135,6 +175,12 @@ if __name__ == '__main__':
                             quadruplex.append(stacked)
                             candidates.remove(stacked)
                             changed = True
+                if args.relaxed_stem_definition and tetrad in stems:
+                    for stemmed in stems[tetrad]:
+                        if stemmed in candidates:
+                            quadruplex.append(stemmed)
+                            candidates.remove(stemmed)
+                            changed = True
         quadruplexes.append(quadruplex)
 
     if len(quadruplexes) == 0:
@@ -154,7 +200,7 @@ if __name__ == '__main__':
 
         previous = []
         classified = []
-        votes = {'parallel': 0, 'antiparallel': 0, 'mixed' : 0}
+        votes = {'parallel': 0, 'antiparallel': 0, 'hybrid' : 0}
         for tetrad in quadruplex:
             current = [nts[nt]['index'] for nt in tetrad]
             if len(quadruplex) > 1 and previous:
@@ -165,40 +211,21 @@ if __name__ == '__main__':
                 if is_stem:
                     votes['parallel'] += 1 if is_parallel else 0
                     votes['antiparallel'] += 1 if is_antiparallel else 0
-                    votes['mixed'] += 1 if not is_parallel and not is_antiparallel else 0
+                    votes['hybrid'] += 1 if not is_parallel and not is_antiparallel else 0
                 if not is_stem:
                     votes = sorted(votes.items(), key=lambda x: x[1], reverse=True)
                     # clear winner
                     if votes[0][1] > votes[1][1]:
                         stem_type = votes[0][0]
                     else:
-                        stem_type = 'mixed'
+                        stem_type = 'hybrid'
                     print('  {} stem with {} tetrads'.format(stem_type, len(classified)))
                     print('\n'.join(classified))
                     classified = []
-                    votes = {'parallel': 0, 'antiparallel': 0, 'mixed' : 0}
+                    votes = {'parallel': 0, 'antiparallel': 0, 'hybrid' : 0}
             previous = current
 
-            distinct_chain_count = len(set([nts[i]['chain_name'] for i in tetrad]))
-            prefixes = ['', 'uni', 'bi', 'tri', 'tetra']
-            classification = 'cannot assign ONZ class to {}molecular tetrad'.format(prefixes[distinct_chain_count])
-            if distinct_chain_count == 1:
-                n1 = nts[tetrad[0]]['index']
-                n2 = nts[tetrad[1]]['index']
-                n3 = nts[tetrad[2]]['index']
-                n4 = nts[tetrad[3]]['index']
-                if n2 < n3 and n3 < n4:
-                    classification = 'O+'
-                elif n2 > n3 and n3 > n4:
-                    classification = 'O+'
-                elif n2 < n3 and n2 < n4:
-                    classification = 'N+'
-                elif n2 < n3 and n2 > n4:
-                    classification = 'N-'
-                elif n2 > n3 and n2 > n4:
-                    classification = 'Z+'
-                elif n2 > n3 and n2 < n4:
-                    classification = 'Z-'
+            classification = classify_onz(nts, tetrad)
             classified.append('    {} {} {} {} {}'.format(tetrad[0], tetrad[1], tetrad[2], tetrad[3], classification))
 
 
