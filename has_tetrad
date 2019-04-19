@@ -1,0 +1,79 @@
+#! /usr/bin/env python
+import argparse
+import itertools
+import json
+import os
+import subprocess
+import shutil
+import sys
+import tempfile
+
+__version__ = '0.0.2-dev1'
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--json', action='store_true', help='parse input file from JSON format')
+    parser.add_argument('--strict', action='store_true', help='nucleotides in tetrad linked only by cWH pairing')
+    parser.add_argument('--version', action='version', version='%(prog)s {}'.format(__version__))
+    parser.add_argument('input', help='a JSON file produced by DSSR if "--json" is used, otherwise a PDB or PDBx/MMCIF file to be analyzed first by DSSR')
+    args = parser.parse_args()
+
+    if args.json:
+        with open(args.input) as jsonfile:
+            dssr = jsonfile.read()
+    else:
+        currdir = os.path.dirname(os.path.realpath(__file__))
+        tempdir = tempfile.mkdtemp()
+        shutil.copy(os.path.join(currdir, 'x3dna-dssr'), tempdir)
+        shutil.copy(args.input, tempdir)
+        dssr = subprocess.Popen(['./x3dna-dssr', '-i={}'.format(os.path.basename(args.input)), '--json', '--symmetry', '--pair-only'], stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=tempdir)
+        dssr, _ = dssr.communicate()
+        shutil.rmtree(tempdir)
+
+    try:
+        data = json.loads(dssr)
+    except:
+        print('Invalid JSON in', args.input, file=sys.stderr)
+        exit(1)
+
+    if 'pairs' not in data:
+        exit(1)
+
+    cwh = dict()
+    for pair in data['pairs']:
+        lw = pair['LW']
+        nt1 = pair['nt1']
+        nt2 = pair['nt2']
+
+        if args.strict:
+            if lw == 'cWH':
+                if nt1 not in cwh:
+                    cwh[nt1] = list()
+                cwh[nt1].append(nt2)
+            elif lw == 'cHW':
+                if nt2 not in cwh:
+                    cwh[nt2] = list()
+                cwh[nt2].append(nt1)
+        else:
+            if nt1 not in cwh:
+                cwh[nt1] = list()
+            cwh[nt1].append(nt2)
+            if nt2 not in cwh:
+                cwh[nt2] = list()
+            cwh[nt2].append(nt1)
+
+    # search for a tetrad: i -> j -> k -> l -> i
+    used = set()
+    tetrads = list()
+    for i in cwh:
+        if i in used:
+            continue
+        for j in cwh[i]:
+            if j in cwh and j not in (i) and j not in used:
+                for k in cwh[j]:
+                    if k in cwh and k not in (i, j) and k not in used:
+                        for l in cwh[k]:
+                            if l in cwh and l not in (i, j, k) and l not in used and i in cwh[l]:
+                                exit(0)
+
+    exit(1)
