@@ -82,17 +82,20 @@ if __name__ == '__main__':
         lw = pair['LW']
         nt1 = nts[pair['nt1']]['nt_id']
         nt2 = nts[pair['nt2']]['nt_id']
+        if lw == 'cWH':
+            if nt1 not in cwh:
+                cwh[nt1] = list()
+            cwh[nt1].append(nt2)
+        elif lw == 'cHW':
+            if nt2 not in cwh:
+                cwh[nt2] = list()
+            cwh[nt2].append(nt1)
 
-        if args.strict:
-            if lw == 'cWH':
-                if nt1 not in cwh:
-                    cwh[nt1] = list()
-                cwh[nt1].append(nt2)
-            elif lw == 'cHW':
-                if nt2 not in cwh:
-                    cwh[nt2] = list()
-                cwh[nt2].append(nt1)
-        else:
+    if not args.strict:
+        for pair in data['pairs']:
+            lw = pair['LW']
+            nt1 = nts[pair['nt1']]['nt_id']
+            nt2 = nts[pair['nt2']]['nt_id']
             if nt1 not in cwh:
                 cwh[nt1] = list()
             cwh[nt1].append(nt2)
@@ -203,10 +206,10 @@ if __name__ == '__main__':
         for tetrad in quadruplex:
             current = [nts[nt]['index'] for nt in tetrad]
             if previous:
-                index_diff = [j - i for i, j in zip(previous, current)]
-                is_stem = all([abs(diff) == 1 for diff in index_diff])
-                is_parallel = len(set(index_diff)) == 1
-                is_antiparallel = len(set(index_diff)) == 2
+                index_diff = set([j - i for i, j in zip(sorted(previous), sorted(current))])
+                is_stem = all([abs(diff) <= 2 for diff in index_diff])
+                is_parallel = len(index_diff - {1, 2}) == 0 or len(index_diff - {-1, -2}) == 0
+                is_antiparallel = not is_parallel and len(index_diff - {1, -1, 2, -2}) == 0
                 if is_stem:
                     direction = 'parallel' if is_parallel else 'antiparallel' if is_antiparallel else 'hybrid'
                     votes_direction[direction] += 1
