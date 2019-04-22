@@ -207,9 +207,9 @@ if __name__ == '__main__':
             current = [nts[nt]['index'] for nt in tetrad]
             if previous:
                 index_diff = set([j - i for i, j in zip(sorted(previous), sorted(current))])
-                is_stem = all([abs(diff) <= 2 for diff in index_diff])
-                is_parallel = len(index_diff - {1, 2}) == 0 or len(index_diff - {-1, -2}) == 0
-                is_antiparallel = not is_parallel and len(index_diff - {1, -1, 2, -2}) == 0
+                is_stem = all([abs(diff) <= 3 for diff in index_diff])
+                is_parallel = len(index_diff - {1, 2, 3}) == 0 or len(index_diff - {-1, -2, -3}) == 0
+                is_antiparallel = not is_parallel and len(index_diff - {1, -1, 2, -2, 3, -3}) == 0
                 if is_stem:
                     direction = 'parallel' if is_parallel else 'antiparallel' if is_antiparallel else 'hybrid'
                     votes_direction[direction] += 1
