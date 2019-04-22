@@ -1,4 +1,4 @@
-#! /usr/bin/env python
+#! /usr/bin/env python3
 import argparse
 import itertools
 import json
@@ -12,8 +12,7 @@ __version__ = '0.0.2-dev1'
 
 def classify_onz(nts, tetrad):
     distinct_chain_count = len(set([nts[i]['chain_name'] for i in tetrad]))
-    prefixes = ['', 'uni', 'bi', 'tri', 'tetra']
-    classification = 'cannot assign ONZ class to {}molecular tetrad'.format(prefixes[distinct_chain_count])
+    classification = 'n/a'
     if distinct_chain_count == 1:
         n1 = nts[tetrad[0]]['index']
         n2 = nts[tetrad[1]]['index']
@@ -22,7 +21,7 @@ def classify_onz(nts, tetrad):
         if n2 < n3 and n3 < n4:
             classification = 'O+'
         elif n2 > n3 and n3 > n4:
-            classification = 'O+'
+            classification = 'O-'
         elif n2 < n3 and n2 < n4:
             classification = 'N+'
         elif n2 < n3 and n2 > n4:
@@ -105,26 +104,23 @@ if __name__ == '__main__':
     used = set()
     tetrads = list()
     for i in cwh:
-        if i in used:
-            continue
-        for j in cwh[i]:
-            if j in cwh and j not in (i) and j not in used:
-                for k in cwh[j]:
-                    if k in cwh and k not in (i, j) and k not in used:
-                        for l in cwh[k]:
-                            if l in cwh and l not in (i, j, k) and l not in used and i in cwh[l]:
-                                ni, nj, nk, nl = nts[i]['index'], nts[j]['index'], nts[k]['index'], nts[l]['index']
-                                nmin = min(ni, nj, nk, nl)
-                                if ni == nmin:
-                                    tetrad = (i, j, k, l)
-                                elif nj == nmin:
-                                    tetrad = (j, k, l, i)
-                                elif nk == nmin:
-                                    tetrad = (k, l, i, j)
-                                else:
-                                    tetrad = (l, i, j, k)
-                                tetrads.append(tetrad)
-                                used.update(tetrad)
+        for j in [j for j in cwh[i] if j in cwh and j not in (i)]:
+            for k in [k for k in cwh[j] if k in cwh and k not in (i, j)]:
+                for l in [l for l in cwh[k] if l in cwh and l not in (i, j, k) and i in cwh[l]]:
+                    if any([i in used, j in used, k in used, l in used]):
+                        continue
+                    ni, nj, nk, nl = nts[i]['index'], nts[j]['index'], nts[k]['index'], nts[l]['index']
+                    nmin = min(ni, nj, nk, nl)
+                    if ni == nmin:
+                        tetrad = (i, j, k, l)
+                    elif nj == nmin:
+                        tetrad = (j, k, l, i)
+                    elif nk == nmin:
+                        tetrad = (k, l, i, j)
+                    else:
+                        tetrad = (l, i, j, k)
+                    tetrads.append(tetrad)
+                    used.update(tetrad)
 
     def check_tetrads_stem(ti, tj):
         ti = [nts[nt]['index'] for nt in ti]
@@ -200,41 +196,69 @@ if __name__ == '__main__':
 
         previous = []
         classified = []
-        votes = {'parallel': 0, 'antiparallel': 0, 'hybrid' : 0}
+        direction = 'n/a'
+        votes_direction = {'parallel': 0, 'antiparallel': 0, 'hybrid' : 0}
+        votes_classification = {'O' : 0, 'N' : 0, 'Z' : 0, 'n/a' : 0}
+
         for tetrad in quadruplex:
             current = [nts[nt]['index'] for nt in tetrad]
-            if len(quadruplex) > 1 and previous:
+            if previous:
                 index_diff = [j - i for i, j in zip(previous, current)]
                 is_stem = all([abs(diff) == 1 for diff in index_diff])
                 is_parallel = len(set(index_diff)) == 1
                 is_antiparallel = len(set(index_diff)) == 2
                 if is_stem:
-                    votes['parallel'] += 1 if is_parallel else 0
-                    votes['antiparallel'] += 1 if is_antiparallel else 0
-                    votes['hybrid'] += 1 if not is_parallel and not is_antiparallel else 0
+                    direction = 'parallel' if is_parallel else 'antiparallel' if is_antiparallel else 'hybrid'
+                    votes_direction[direction] += 1
                 if not is_stem:
-                    votes = sorted(votes.items(), key=lambda x: x[1], reverse=True)
-                    # clear winner
-                    if votes[0][1] > votes[1][1]:
-                        stem_type = votes[0][0]
+                    if len(classified) == 1:
+                        print('  single tetrad')
                     else:
-                        stem_type = 'hybrid'
-                    print('  {} stem with {} tetrads'.format(stem_type, len(classified)))
+                        votes_direction = sorted(votes_direction.items(), key=lambda x: x[1], reverse=True)
+                        # clear winner
+                        if votes_direction[1][1] == 0:
+                            stem_type = votes_direction[0][0]
+                        else:
+                            stem_type = 'hybrid'
+
+                        votes_classification = sorted(votes_classification.items(), key=lambda x: x[1], reverse=True)
+                        # clear winner
+                        if votes_classification[1][1] == 0:
+                            classification_type = votes_classification[0][0]
+                        else:
+                            classification_type = 'M' # Mixed
+                        if classification_type == 'n/a':
+                            classification_type = 'U' # Unknown
+
+                        print('  {}{} quadruplex with {} tetrads'.format(classification_type[0], stem_type[0], len(classified)))
                     print('\n'.join(classified))
                     classified = []
-                    votes = {'parallel': 0, 'antiparallel': 0, 'hybrid' : 0}
+                    votes_direction = {'parallel': 0, 'antiparallel': 0, 'hybrid' : 0}
+                    votes_classification = {'O' : 0, 'N' : 0, 'Z' : 0, 'n/a' : 0}
             previous = current
 
             classification = classify_onz(nts, tetrad)
-            classified.append('    {} {} {} {} {}'.format(tetrad[0], tetrad[1], tetrad[2], tetrad[3], classification))
+            votes_classification[classification.replace('-', '').replace('+', '')] += 1
+            classified.append('    {} {} {} {} {} {}'.format(tetrad[0], tetrad[1], tetrad[2], tetrad[3], direction, classification))
 
-
-        if len(classified) > 1:
-            votes = sorted(votes.items(), key=lambda x: x[1], reverse=True)
+        if len(classified) == 1:
+            print('  single tetrad')
+        else:
+            votes_direction = sorted(votes_direction.items(), key=lambda x: x[1], reverse=True)
             # clear winner
-            if votes[0][1] > votes[1][1]:
-                stem_type = votes[0][0]
+            if votes_direction[1][1] == 0:
+                stem_type = votes_direction[0][0]
             else:
-                stem_type = 'mixed'
-            print('  {} stem with {} tetrads'.format(stem_type, len(classified)))
+                stem_type = 'hybrid'
+
+            votes_classification = sorted(votes_classification.items(), key=lambda x: x[1], reverse=True)
+            # clear winner
+            if votes_classification[1][1] == 0:
+                classification_type = votes_classification[0][0]
+            else:
+                classification_type = 'M' # Mixed
+            if classification_type == 'n/a':
+                classification_type = 'U' # Unknown
+
+            print('  {}{} quadruplex with {} tetrads'.format(classification_type[0], stem_type[0], len(classified)))
         print('\n'.join(classified))
