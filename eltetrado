@@ -9,7 +9,7 @@ import shutil
 import sys
 import tempfile
 
-__version__ = '0.0.2-dev1'
+__version__ = '0.0.2-dev2'
 
 def classify_onz(nts, tetrad):
     distinct_chain_count = len(set([nts[i]['chain_name'] for i in tetrad]))
