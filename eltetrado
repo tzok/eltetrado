@@ -1,5 +1,6 @@
 #! /usr/bin/env python3
 import argparse
+import collections
 import itertools
 import json
 import os
@@ -26,9 +27,9 @@ def classify_onz(nts, tetrad):
             classification = 'N+'
         elif n2 < n3 and n2 > n4:
             classification = 'N-'
-        elif n2 > n3 and n2 > n4:
-            classification = 'Z+'
         elif n2 > n3 and n2 < n4:
+            classification = 'Z+'
+        elif n2 > n3 and n2 > n4:
             classification = 'Z-'
     return classification
 
@@ -86,7 +87,12 @@ if __name__ == '__main__':
             if nt1 not in cwh:
                 cwh[nt1] = list()
             cwh[nt1].append(nt2)
-        elif lw == 'cHW':
+
+    for pair in data['pairs']:
+        lw = pair['LW']
+        nt1 = nts[pair['nt1']]['nt_id']
+        nt2 = nts[pair['nt2']]['nt_id']
+        if lw == 'cHW':
             if nt2 not in cwh:
                 cwh[nt2] = list()
             cwh[nt2].append(nt1)
@@ -197,6 +203,7 @@ if __name__ == '__main__':
         quadruplex = list(quadruplex)
         quadruplex.sort(key=lambda x: nts[x[0]]['index'])
 
+        previous_chains = None
         previous = []
         classified = []
         direction = 'n/a'
@@ -204,12 +211,15 @@ if __name__ == '__main__':
         votes_classification = {'O' : 0, 'N' : 0, 'Z' : 0, 'n/a' : 0}
 
         for tetrad in quadruplex:
+            current_chains = collections.Counter([nts[nt]['chain_name'] for nt in tetrad])
             current = [nts[nt]['index'] for nt in tetrad]
             if previous:
-                index_diff = set([j - i for i, j in zip(sorted(previous), sorted(current))])
-                is_stem = all([abs(diff) <= 3 for diff in index_diff])
-                is_parallel = len(index_diff - {1, 2, 3}) == 0 or len(index_diff - {-1, -2, -3}) == 0
-                is_antiparallel = not is_parallel and len(index_diff - {1, -1, 2, -2, 3, -3}) == 0
+                index_diff = [j - i for i, j in zip(sorted(previous), sorted(current))]
+                is_stem = previous_chains == current_chains
+                is_parallel = len(set(index_diff) - {1, 2, 3}) == 0 or len(set(index_diff) - {-1, -2, -3}) == 0
+                is_antiparallel = not is_parallel \
+                        and len(set(index_diff) - {1, -1, 2, -2, 3, -3}) == 0 \
+                        and collections.Counter([1 if i > 0 else -1 for i in index_diff]).most_common()[0][1] == 2
                 if is_stem:
                     direction = 'parallel' if is_parallel else 'antiparallel' if is_antiparallel else 'hybrid'
                     votes_direction[direction] += 1
@@ -238,6 +248,7 @@ if __name__ == '__main__':
                     classified = []
                     votes_direction = {'parallel': 0, 'antiparallel': 0, 'hybrid' : 0}
                     votes_classification = {'O' : 0, 'N' : 0, 'Z' : 0, 'n/a' : 0}
+            previous_chains = current_chains
             previous = current
 
             classification = classify_onz(nts, tetrad)
