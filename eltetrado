@@ -283,15 +283,16 @@ if __name__ == '__main__':
     for quadruplex in quadruplexes:
         for tetrad in quadruplex:
             tetrad = tuple(map(lambda nt: nts[nt]['index'], tetrad))
-            layer1.append([tetrad[0], tetrad[1]])
-            layer1.append([tetrad[2], tetrad[3]])
-            layer2.append([tetrad[0], tetrad[3]])
-            layer2.append([tetrad[1], tetrad[2]])
+            layer1.append(sorted([tetrad[0], tetrad[1]]))
+            layer1.append(sorted([tetrad[2], tetrad[3]]))
+            layer2.append(sorted([tetrad[0], tetrad[3]]))
+            layer2.append(sorted([tetrad[1], tetrad[2]]))
 
     brackets = ('([{<' + string.ascii_uppercase, ')]}>' + string.ascii_lowercase)
 
     def fcfs(pairs):
-        pairs = sorted(pairs, key=lambda x: x[0])
+        pairs = sorted(pairs, key=lambda x: x[1])
+        print(pairs)
         order = dict()
         for i in range(len(pairs)):
             xi, yi = pairs[i][0], pairs[i][1]
@@ -299,9 +300,9 @@ if __name__ == '__main__':
             for j in range(i):
                 xj, yj = pairs[j][0], pairs[j][1]
                 if (xi < xj < yi < yj) or (xj < xi < yj < yi):
-                    conflicts += 1
-            order[xi] = brackets[0][conflicts]
-            order[yi] = brackets[1][conflicts]
+                    conflicts = max(conflicts, order[xj][0] + 1)
+            order[xi] = conflicts, brackets[0][conflicts]
+            order[yi] = conflicts, brackets[1][conflicts]
         return order
 
     layer1 = fcfs(layer1)
@@ -314,11 +315,11 @@ if __name__ == '__main__':
         index = nts[nt]['index']
         sequence.append(nts[nt]['nt_code'])
         if index in layer1:
-            dbn1.append(layer1[index])
+            dbn1.append(layer1[index][1])
         else:
             dbn1.append('.')
         if index in layer2:
-            dbn2.append(layer2[index])
+            dbn2.append(layer2[index][1])
         else:
             dbn2.append('.')
 
