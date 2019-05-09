@@ -6,6 +6,7 @@ import json
 import os
 import subprocess
 import shutil
+import string
 import sys
 import tempfile
 
@@ -276,3 +277,52 @@ if __name__ == '__main__':
 
             print('  {}{} quadruplex with {} tetrads'.format(classification_type[0], stem_type[0], len(classified)))
         print('\n'.join(classified))
+
+    layer1 = list()
+    layer2 = list()
+    for quadruplex in quadruplexes:
+        for tetrad in quadruplex:
+            tetrad = tuple(map(lambda nt: nts[nt]['index'], tetrad))
+            layer1.append([tetrad[0], tetrad[1]])
+            layer1.append([tetrad[2], tetrad[3]])
+            layer2.append([tetrad[0], tetrad[3]])
+            layer2.append([tetrad[1], tetrad[2]])
+
+    brackets = ('([{<' + string.ascii_uppercase, ')]}>' + string.ascii_lowercase)
+
+    def fcfs(pairs):
+        pairs = sorted(pairs, key=lambda x: x[0])
+        order = dict()
+        for i in range(len(pairs)):
+            xi, yi = pairs[i][0], pairs[i][1]
+            conflicts = 0
+            for j in range(i):
+                xj, yj = pairs[j][0], pairs[j][1]
+                if (xi < xj < yi < yj) or (xj < xi < yj < yi):
+                    conflicts += 1
+            order[xi] = brackets[0][conflicts]
+            order[yi] = brackets[1][conflicts]
+        return order
+
+    layer1 = fcfs(layer1)
+    layer2 = fcfs(layer2)
+    sequence = list()
+    dbn1 = list()
+    dbn2 = list()
+
+    for nt in nts:
+        index = nts[nt]['index']
+        sequence.append(nts[nt]['nt_code'])
+        if index in layer1:
+            dbn1.append(layer1[index])
+        else:
+            dbn1.append('.')
+        if index in layer2:
+            dbn2.append(layer2[index])
+        else:
+            dbn2.append('.')
+
+    print()
+    print(''.join(sequence))
+    print(''.join(dbn1))
+    print(''.join(dbn2))
