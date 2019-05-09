@@ -148,8 +148,11 @@ if __name__ == '__main__':
                 nts[nt]['index'] = i
                 i += 1
 
-    chains = {nts[nt]['chain_name'] for nt in tetrad for tetrad in tetrads}
     if args.reorder:
+        chains = set()
+        for tetrad in tetrads:
+            for nt in tetrad:
+                chains.add(nts[nt]['chain_name'])
         best_score = {'O+': -1, 'O-': -1, 'N+': -1, 'N-': -1, 'Z+': -1, 'Z-': -1}
         best_permutation = None
         best_description = ''
