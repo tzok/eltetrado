@@ -49,12 +49,12 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     stacking_mismatch = int(args.stacking_mismatch)
+    currdir = os.path.dirname(os.path.realpath(__file__))
 
     if args.json:
         with open(args.input) as jsonfile:
             dssr = jsonfile.read()
     else:
-        currdir = os.path.dirname(os.path.realpath(__file__))
         tempdir = tempfile.mkdtemp()
         shutil.copy(os.path.join(currdir, 'x3dna-dssr'), tempdir)
         shutil.copy(args.input, tempdir)
@@ -249,6 +249,7 @@ if __name__ == '__main__':
         exit()
 
     quadruplexes.sort(key=lambda x: len(x), reverse=True)
+    classification_map = dict()
 
     for quadruplex in quadruplexes:
         if len(quadruplex) > 1:
@@ -308,6 +309,7 @@ if __name__ == '__main__':
             previous = current
 
             classification = classify_onz(nts, tetrad, args.reorder)
+            classification_map[tetrad] = classification
             votes_classification[classification.replace('-', '').replace('+', '')] += 1
             classified.append('    {} {} {} {} {} {}'.format(tetrad[0], tetrad[1], tetrad[2], tetrad[3], direction, classification))
 
@@ -337,11 +339,58 @@ if __name__ == '__main__':
     layer2 = list()
     for quadruplex in quadruplexes:
         for tetrad in quadruplex:
+            classification = classification_map[tetrad]
             tetrad = tuple(map(lambda nt: index(nts[nt]), tetrad))
-            layer1.append(sorted([tetrad[0], tetrad[1]]))
-            layer1.append(sorted([tetrad[2], tetrad[3]]))
-            layer2.append(sorted([tetrad[0], tetrad[3]]))
-            layer2.append(sorted([tetrad[1], tetrad[2]]))
+            layer1.append(sorted([tetrad[0], tetrad[1]]) + [classification])
+            layer1.append(sorted([tetrad[2], tetrad[3]]) + [classification])
+            layer2.append(sorted([tetrad[0], tetrad[3]]) + [classification])
+            layer2.append(sorted([tetrad[1], tetrad[2]]) + [classification])
+
+    rev = {index(nts[nt]): nt for nt in nts}
+    previous_chain = nts[rev[sorted(rev)[0]]]['chain_name']
+    shift = dict()
+    value = 0
+    sequence = list()
+
+    for i in sorted(rev):
+        nt = rev[i]
+        current_chain = nts[nt]['chain_name']
+        if current_chain != previous_chain:
+            sequence.append('-')
+            value += 1
+        previous_chain = current_chain
+        shift[i] = value
+        sequence.append(nts[nt]['nt_code'])
+
+    output_name = os.path.splitext(os.path.basename(args.input))[0]
+    fd, fasta = tempfile.mkstemp('.fasta')
+    os.close(fd)
+    with open(fasta, 'w') as fastafile:
+        fastafile.write('>{}\n'.format(output_name))
+        fastafile.write(''.join(sequence));
+
+    def to_helix(layer):
+        fd, name = tempfile.mkstemp('.helix')
+        os.close(fd)
+        onz_value = {'O+': 1, 'O-': 2, 'N+': 3, 'N-': 4, 'Z+': 5, 'Z-': 6, 'n/a': 7}
+        with open(name, 'w') as helixfile:
+            helixfile.write('#{}\n'.format(max(rev) + shift[max(rev)]))
+            helixfile.write('i\tj\tlength\tvalue\n')
+            for x, y, onz in layer:
+                x += shift[x]
+                y += shift[y]
+                helixfile.write('{}\t{}\t1\t{}\n'.format(x, y, onz_value[onz]))
+        return name
+
+    helix1 = to_helix(layer1)
+    helix2 = to_helix(layer2)
+    output_pdf = '{}.pdf'.format(output_name)
+    subprocess.run([os.path.join(currdir, 'mp.R'), fasta, helix1, helix2, output_pdf], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    print()
+    print('Plot:', output_pdf)
+    os.remove(fasta)
+    os.remove(helix1)
+    os.remove(helix2)
 
     brackets = ('([{<' + string.ascii_uppercase, ')]}>' + string.ascii_lowercase)
 
@@ -364,8 +413,6 @@ if __name__ == '__main__':
     sequence = list()
     dbn1 = list()
     dbn2 = list()
-
-    rev = {index(nts[nt]): nt for nt in nts}
     previous_chain = nts[rev[sorted(rev)[0]]]['chain_name']
 
     for i in sorted(rev):
