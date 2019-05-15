@@ -136,57 +136,6 @@ if __name__ == '__main__':
                     tetrads.append(tetrad)
                     used.update(tetrad)
 
-    def apply_chain_reordering(nts, chain_order):
-        i = 1
-        for chain in chain_order:
-            for nt in nts:
-                if nts[nt]['chain_name'] == chain:
-                    nts[nt]['index'] = i
-                    i += 1
-        for nt in nts:
-            if nts[nt]['chain_name'] not in chain_order:
-                nts[nt]['index'] = i
-                i += 1
-
-    if args.reorder:
-        chains = set()
-        for tetrad in tetrads:
-            for nt in tetrad:
-                chains.add(nts[nt]['chain_name'])
-        best_score = {'O+': -1, 'O-': -1, 'N+': -1, 'N-': -1, 'Z+': -1, 'Z-': -1}
-        best_permutation = None
-        best_description = ''
-        n = len(tetrads)
-        reorderings = set()
-        for permutation in itertools.permutations(chains):
-            apply_chain_reordering(nts, permutation)
-            score = {'O+': 0, 'O-': 0, 'N+': 0, 'N-': 0, 'Z+': 0, 'Z-': 0}
-            description = list()
-            for tetrad in tetrads:
-                onz = classify_onz(nts, tetrad, True)
-                score[onz] += 1
-                description.append(onz)
-            description = tuple(description)
-            if description not in reorderings:
-                print('Possible reordering:', ''.join(description))
-                reorderings.add(description)
-
-            def value(s):
-                value = 0
-                for x in ('O+', 'O-', 'N+', 'N-', 'Z+', 'Z-'):
-                    value += s[x]
-                    value *= len(tetrads)
-                return value
-
-            if value(score) > value(best_score):
-                best_score = score
-                best_permutation = permutation
-                best_description = description
-
-        print('Selected reordering:', ''.join(best_description))
-        print()
-        apply_chain_reordering(nts, best_permutation)
-
     def check_tetrads_stem(ti, tj):
         ti = [index(nts[nt]) for nt in ti]
         tj = [index(nts[nt]) for nt in tj]
@@ -249,6 +198,68 @@ if __name__ == '__main__':
         exit()
 
     quadruplexes.sort(key=lambda x: len(x), reverse=True)
+
+    def apply_chain_reordering(nts, chain_order):
+        i = 1
+        for chain in chain_order:
+            for nt in nts:
+                if nts[nt]['chain_name'] == chain:
+                    nts[nt]['index'] = i
+                    i += 1
+        for nt in nts:
+            if nts[nt]['chain_name'] not in chain_order:
+                nts[nt]['index'] = i
+                i += 1
+
+    if args.reorder:
+        chains_set = set()
+        for quadruplex in quadruplexes:
+            previous_chains = None
+            for tetrad in quadruplex:
+                current_chains = collections.Counter([nts[nt]['chain_name'] for nt in tetrad])
+                if previous_chains and previous_chains != current_chains:
+                    chains_set.add(tuple(set(previous_chains.elements())))
+                previous_chains = current_chains
+            chains_set.add(tuple(set(current_chains.elements())))
+
+        previous_best = []
+        for chains in chains_set:
+            best_score = {'O+': -1, 'O-': -1, 'N+': -1, 'N-': -1, 'Z+': -1, 'Z-': -1}
+            best_permutation = None
+            best_description = ''
+            n = len(tetrads)
+            reorderings = set()
+            for permutation in sorted(itertools.permutations(chains)):
+                apply_chain_reordering(nts, previous_best + list(permutation))
+                score = {'O+': 0, 'O-': 0, 'N+': 0, 'N-': 0, 'Z+': 0, 'Z-': 0}
+                description = list()
+                for tetrad in tetrads:
+                    onz = classify_onz(nts, tetrad, True)
+                    score[onz] += 1
+                    description.append(onz)
+                description = tuple(description)
+                if description not in reorderings:
+                    print('Possible reordering:', ''.join(description))
+                    reorderings.add(description)
+
+                def value(s):
+                    value = 0
+                    for x in ('O+', 'O-', 'N+', 'N-', 'Z+', 'Z-'):
+                        value += s[x]
+                        value *= len(tetrads)
+                    return value
+
+                if value(score) > value(best_score):
+                    best_score = score
+                    best_permutation = permutation
+                    best_description = description
+
+            print('Selected reordering:', ''.join(best_description))
+            print('Chain order:', ', '.join(previous_best + list(best_permutation)))
+            print()
+            apply_chain_reordering(nts, previous_best + list(best_permutation))
+            previous_best = previous_best + list(best_permutation)
+
     classification_map = dict()
 
     for quadruplex in quadruplexes:
