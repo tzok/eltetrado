@@ -23,6 +23,17 @@ def classify_onz(nts, tetrad, reordered):
         n2 = index(nts[tetrad[1]])
         n3 = index(nts[tetrad[2]])
         n4 = index(nts[tetrad[3]])
+
+        nmin = min(n1, n2, n3, n4)
+        if nmin == n1:
+            pass
+        elif nmin == n2:
+            n1, n2, n3, n4 = n2, n3, n4, n1
+        elif nmin == n3:
+            n1, n2, n3, n4 = n3, n4, n1, n2
+        else:
+            n1, n2, n3, n4 = n4, n1, n2, n3
+
         if n2 < n3 and n3 < n4:
             classification = 'O+'
         elif n2 > n3 and n3 > n4:
@@ -222,6 +233,19 @@ if __name__ == '__main__':
                 previous_chains = current_chains
             chains_set.add(tuple(set(current_chains.elements())))
 
+        candidates = list(chains_set)
+        chains_set = list()
+        while candidates:
+            chain_set = set(candidates.pop())
+            to_remove = list()
+            for i, chains in enumerate(candidates):
+                if not chain_set.isdisjoint(set(chains)):
+                    chain_set.update(set(chains))
+                    to_remove.append(i)
+            for i in sorted(to_remove, reverse=True):
+                del(candidates[i])
+            chains_set.append(chain_set)
+
         previous_best = []
         for chains in chains_set:
             best_score = {'O+': -1, 'O-': -1, 'N+': -1, 'N-': -1, 'Z+': -1, 'Z-': -1}
@@ -255,11 +279,11 @@ if __name__ == '__main__':
                     best_description = description
 
             print('Selected reordering:', ''.join(best_description))
-            print('Chain order:', ', '.join(previous_best + list(best_permutation)))
-            print()
             apply_chain_reordering(nts, previous_best + list(best_permutation))
             previous_best = previous_best + list(best_permutation)
 
+    print('Chain order:', ', '.join(previous_best))
+    print()
     classification_map = dict()
 
     for quadruplex in quadruplexes:
@@ -373,15 +397,18 @@ if __name__ == '__main__':
         shift[i] = value
         sequence.append(nts[nt]['nt_code'])
 
+    tempdir = os.path.join(tempfile.gettempdir(), '.eltetrado')
+    os.makedirs(tempdir, exist_ok=True)
+
     output_name = os.path.splitext(os.path.basename(args.input))[0]
-    fd, fasta = tempfile.mkstemp('.fasta')
+    fd, fasta = tempfile.mkstemp('.fasta', dir=tempdir)
     os.close(fd)
     with open(fasta, 'w') as fastafile:
         fastafile.write('>{}\n'.format(output_name))
-        fastafile.write(''.join(sequence));
+        fastafile.write(''.join(sequence))
 
     def to_helix(layer):
-        fd, name = tempfile.mkstemp('.helix')
+        fd, name = tempfile.mkstemp('.helix', dir=tempdir)
         os.close(fd)
         onz_value = {'O+': 1, 'O-': 2, 'N+': 3, 'N-': 4, 'Z+': 5, 'Z-': 6, 'n/a': 7}
         with open(name, 'w') as helixfile:
@@ -399,9 +426,6 @@ if __name__ == '__main__':
     subprocess.run([os.path.join(currdir, 'mp.R'), fasta, helix1, helix2, output_pdf], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     print()
     print('Plot:', output_pdf)
-    os.remove(fasta)
-    os.remove(helix1)
-    os.remove(helix2)
 
     brackets = ('([{<' + string.ascii_uppercase, ')]}>' + string.ascii_lowercase)
 
