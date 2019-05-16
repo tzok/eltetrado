@@ -222,6 +222,8 @@ if __name__ == '__main__':
                 nts[nt]['index'] = i
                 i += 1
 
+    chain_order = {nts[nt]['chain_name']: 0 for nt in nts}
+
     if args.reorder:
         chains_set = set()
         for quadruplex in quadruplexes:
@@ -281,8 +283,9 @@ if __name__ == '__main__':
             print('Selected reordering:', ''.join(best_description))
             apply_chain_reordering(nts, previous_best + list(best_permutation))
             previous_best = previous_best + list(best_permutation)
+        chain_order = previous_best
 
-    print('Chain order:', ', '.join(previous_best))
+    print('Chain order:', ', '.join(chain_order))
     print()
     classification_map = dict()
 
