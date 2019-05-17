@@ -54,7 +54,7 @@ if __name__ == '__main__':
     parser.add_argument('--stacking-mismatch', help='a perfect tetrad stacking covers 4 nucleotides; this option can be used with value 1 or 2 to allow this number of nucleotides to be non-stacked with otherwise well aligned tetrad [default=2]', default=2)
     parser.add_argument('--relaxed-stem-definition', action='store_true', help='when set, two sequentially close tetrades will be considered a stem regardless of their stacking')
     parser.add_argument('--strict', action='store_true', help='nucleotides in tetrad are found when linked only by cWH pairing')
-    parser.add_argument('--reorder', action='store_true', help='when set, chains will be internally reordered to allow classification of bi- and tetramolecular structures')
+    parser.add_argument('--no-reorder', action='store_true', help='chains of bi- and tetramolecular quadruplexes are reordered to be able to have them classified; when this is set, chains will be processed in original order and bi-/tetramolecular quadruplexes will not be classified')
     parser.add_argument('--version', action='version', version='%(prog)s {}'.format(__version__))
     parser.add_argument('input', help='a JSON file produced by DSSR if "--json" is used, otherwise a PDB or PDBx/MMCIF file to be analyzed first by DSSR')
     args = parser.parse_args()
@@ -222,9 +222,10 @@ if __name__ == '__main__':
                 nts[nt]['index'] = i
                 i += 1
 
-    chain_order = {nts[nt]['chain_name']: 0 for nt in nts}
 
-    if args.reorder:
+    if args.no_reorder:
+        chain_order = {nts[nt]['chain_name']: 0 for nt in nts}
+    else:
         chains_set = set()
         for quadruplex in quadruplexes:
             previous_chains = None
@@ -346,7 +347,7 @@ if __name__ == '__main__':
             previous_chains = current_chains
             previous = current
 
-            classification = classify_onz(nts, tetrad, args.reorder)
+            classification = classify_onz(nts, tetrad, not args.no_reorder)
             classification_map[tetrad] = classification
             votes_classification[classification.replace('-', '').replace('+', '')] += 1
             classified.append('    {} {} {} {} {} {}'.format(tetrad[0], tetrad[1], tetrad[2], tetrad[3], direction, classification))
