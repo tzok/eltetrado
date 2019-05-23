@@ -56,6 +56,7 @@ if __name__ == '__main__':
     parser.add_argument('--strict', action='store_true', help='nucleotides in tetrad are found when linked only by cWH pairing')
     parser.add_argument('--no-reorder', action='store_true', help='chains of bi- and tetramolecular quadruplexes are reordered to be able to have them classified; when this is set, chains will be processed in original order and bi-/tetramolecular quadruplexes will not be classified')
     parser.add_argument('--version', action='version', version='%(prog)s {}'.format(__version__))
+    parser.add_argument('--complete-2d', action='store_true', help='when set, the visualization will also show canonical base pairs to provide context for the quadruplex')
     parser.add_argument('input', help='a JSON file produced by DSSR if "--json" is used, otherwise a PDB or PDBx/MMCIF file to be analyzed first by DSSR')
     args = parser.parse_args()
 
@@ -146,6 +147,16 @@ if __name__ == '__main__':
                         tetrad = (l, i, j, k)
                     tetrads.append(tetrad)
                     used.update(tetrad)
+
+    canonical = dict()
+    for pair in data['pairs']:
+        saenger = pair['Saenger']
+        if saenger in ('19-XIX', '20-XX', '28-XXVIII'):
+            nt1 = nts[pair['nt1']]['nt_id']
+            nt2 = nts[pair['nt2']]['nt_id']
+            if not any(nt1 in tetrad and nt2 in tetrad for tetrad in tetrads):
+                canonical[nt1] = nt2
+                canonical[nt2] = nt1
 
     def check_tetrads_stem(ti, tj):
         ti = [index(nts[nt]) for nt in ti]
@@ -251,6 +262,9 @@ if __name__ == '__main__':
 
         previous_best = []
         for chains in chains_set:
+            if len(chains) == 1:
+                previous_best += list(chains)
+                continue
             best_score = {'O+': -1, 'O-': -1, 'N+': -1, 'N-': -1, 'Z+': -1, 'Z-': -1}
             best_permutation = None
             best_description = ''
@@ -283,7 +297,7 @@ if __name__ == '__main__':
 
             print('Selected reordering:', ''.join(best_description))
             apply_chain_reordering(nts, previous_best + list(best_permutation))
-            previous_best = previous_best + list(best_permutation)
+            previous_best += list(best_permutation)
         chain_order = previous_best
 
     print('Chain order:', ', '.join(chain_order))
@@ -411,7 +425,7 @@ if __name__ == '__main__':
         fastafile.write('>{}\n'.format(output_name))
         fastafile.write(''.join(sequence))
 
-    def to_helix(layer):
+    def to_helix(layer, canonical=None):
         fd, name = tempfile.mkstemp('.helix', dir=tempdir)
         os.close(fd)
         onz_value = {'O+': 1, 'O-': 2, 'N+': 3, 'N-': 4, 'Z+': 5, 'Z-': 6, 'n/a': 7}
@@ -422,9 +436,15 @@ if __name__ == '__main__':
                 x += shift[x]
                 y += shift[y]
                 helixfile.write('{}\t{}\t1\t{}\n'.format(x, y, onz_value[onz]))
+            if canonical:
+                for x, y in canonical.items():
+                    x, y = index(nts[x]), index(nts[y])
+                    x += shift[x]
+                    y += shift[y]
+                    helixfile.write('{}\t{}\t1\t-1\n'.format(x, y))
         return name
 
-    helix1 = to_helix(layer1)
+    helix1 = to_helix(layer1, canonical if args.complete_2d else None)
     helix2 = to_helix(layer2)
     output_pdf = '{}.pdf'.format(output_name)
     subprocess.run([os.path.join(currdir, 'mp.R'), fasta, helix1, helix2, output_pdf], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
