@@ -31,8 +31,7 @@ Bussemaker and Olson, 2015). User is required to either run `x3dna-dssr
     with `x3dna-dssr --json`. Otherwise, the input will be treated as a
     DNA/RNA 3D structure in PDB or PDBx/mmCIF format
   - `--strict`: When set, a tetrad can consist of cWH base pairs only.
-    Otherwise, a tetrad may contain any type of base
-pairs
+    Otherwise, a tetrad may contain any type of base pairs
 
 # Examples
 
@@ -91,8 +90,8 @@ integrated software tool for dissecting the spatial structure of RNA’,
 <div id="ref-Popenda2019">
 
 Popenda, M., Miskiewicz, J., Sarzynska, J., Zok, T. and Szachniuk, M.
-(2019) ‘Novel classification of tetrads and quadruplex structures’, *in
-press*.
+(2019) ‘Novel classification of tetrads and quadruplex structures’,
+*submitted*.
 
 </div>
 
