@@ -8,7 +8,7 @@ import shutil
 import sys
 import tempfile
 
-__version__ = '0.0.2-dev7'
+__version__ = '0.0.2-dev8'
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
