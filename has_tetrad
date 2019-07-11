@@ -15,7 +15,9 @@ if __name__ == '__main__':
     parser.add_argument('--json', action='store_true', help='parse input file from JSON format')
     parser.add_argument('--strict', action='store_true', help='nucleotides in tetrad linked only by cWH pairing')
     parser.add_argument('--version', action='version', version='%(prog)s {}'.format(__version__))
-    parser.add_argument('input', help='a JSON file produced by DSSR if "--json" is used, otherwise a PDB or PDBx/MMCIF file to be analyzed first by DSSR')
+    parser.add_argument('input',
+                        help='a JSON file produced by DSSR if "--json" is used, otherwise a PDB or PDBx/MMCIF file to '
+                             'be analyzed first by DSSR')
     args = parser.parse_args()
 
     if args.json:
@@ -26,10 +28,13 @@ if __name__ == '__main__':
         tempdir = tempfile.mkdtemp()
         shutil.copy(os.path.join(currdir, 'x3dna-dssr'), tempdir)
         shutil.copy(args.input, tempdir)
-        dssr = subprocess.Popen(['./x3dna-dssr', '-i={}'.format(os.path.basename(args.input)), '--json', '--symmetry', '--pair-only'], stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=tempdir)
+        dssr = subprocess.Popen(
+            ['./x3dna-dssr', '-i={}'.format(os.path.basename(args.input)), '--json', '--symmetry', '--pair-only'],
+            stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=tempdir)
         dssr, _ = dssr.communicate()
         shutil.rmtree(tempdir)
 
+    data = {}
     try:
         data = json.loads(dssr)
     except:
