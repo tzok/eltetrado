@@ -10,7 +10,7 @@ import string
 import sys
 import tempfile
 
-__version__ = '0.0.2-dev7'
+__version__ = '0.0.2-dev8'
 
 
 def index(nt):
