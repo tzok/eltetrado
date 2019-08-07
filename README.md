@@ -1,8 +1,16 @@
 # Project description
 
 This is an application to analyze base pairing patterns of DNA/RNA 3D
-structures to find and classify tetrads and quadruplexes. For more
-details, please refer to Popenda *et al.* (2019)
+structures to find and classify tetrads and quadruplexes. ElTetrado
+assigns tetrads to one of the ONZ classes (O, N, Z) alongside with the
+directionality of the tetrad (+/-) determined by the bonds between base
+and their non-canonical interactions. The interactions follow
+Leontis/Westhof classification (Leontis and Westhof, 2001). Watson-Crick
+(W) edge of first base in the tetrad structure exposed to the Hoogsteen
+(H) edge of the next nucleobase from the same tetrad sets the tetrad
+directionality, clockwise (+) or anticlockwise (-). For more details,
+please refer to Zok, Popenda and Szachniuk (2019) and Popenda *et al.*
+(2019)
 
 # Dependencies
 
@@ -149,6 +157,14 @@ A web server and R package for visualizing RNA secondary structures’,
 
 </div>
 
+<div id="ref-Leontis2001">
+
+Leontis, N. B. and Westhof, E. (2001) ‘Geometric nomenclature and
+classification of RNA base pairs’, *RNA*, 7(4), pp. 499–512. doi:
+[10.1017/s1355838201002515](https://doi.org/10.1017/s1355838201002515).
+
+</div>
+
 <div id="ref-Lu2015">
 
 Lu, X. J., Bussemaker, H. J. and Olson, W. K. (2015) ‘DSSR: An
@@ -161,8 +177,16 @@ integrated software tool for dissecting the spatial structure of RNA’,
 <div id="ref-Popenda2019">
 
 Popenda, M., Miskiewicz, J., Sarzynska, J., Zok, T. and Szachniuk, M.
-(2019) ‘Novel classification of tetrads and quadruplex structures’,
-*submitted*.
+(2019) ‘Topology-based classification of tetrads and quadruplex
+structures’, *in submission*.
+
+</div>
+
+<div id="ref-Zok2019">
+
+Zok, T., Popenda, M. and Szachniuk, M. (2019) ‘ElTetrado: a tool for
+identification and ONZ classification of tetrads and quadruplexes’, *in
+submission*.
 
 </div>
 
