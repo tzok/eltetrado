@@ -1,15 +1,23 @@
 #! /usr/bin/env python3
 import argparse
+import gzip
 import itertools
 import json
+import math
 import os
 import shutil
 import string
 import subprocess
 import sys
 import tempfile
+
 from collections import defaultdict, Counter
 from typing import Dict, Iterable, List, Tuple
+
+import numpy
+
+from Bio.PDB import PDBParser, MMCIFParser, Residue, Atom
+import Bio.PDB.Structure
 
 __version__ = '0.0.2-dev8'
 
@@ -21,23 +29,70 @@ LW_SCORE = {
 
 
 class Nucleotide:
-    def __init__(self, nt: dict):
-        self.id: str = nt['nt_id']
-        self.code = nt['nt_code']
+    '''
+    Metadata about a single nucleotide.
+
+    Attributes:
+        outermost_atoms     Dict representing expected name of atom involved in glycosidic bond
+        innermost_atoms     Dist representing expected name of atom closest to the tetrad center
+    '''
+    outermost_atoms = {'A': 'N9', 'G': 'N9', 'C': 'N1', 'U': 'N1', 'T': 'N1'}
+    innermost_atoms = {'A': 'O6', 'G': 'O6', 'C': 'N4', 'U': 'O4', 'T': 'O4'}
+
+    @staticmethod
+    def detect_molecule(resname):
+        # TODO
+        if resname in ('DA', 'DC', 'DG', 'DT'):
+            return 'DNA'
+        return 'RNA'
+
+    def __init__(self, nt: dict, structure3d: Bio.PDB.Structure):
+        self.model: int = 1 if nt['nt_id'].find(':') == -1 else int(nt['nt_id'].split(':')[0])
+        self.chain: str = nt['chain_name']
+        self.number: int = nt['nt_resnum']
+        self.icode: str = ' ' if nt['nt_id'].find('^') == -1 else nt['nt_id'].split('^')[1]
+        self.molecule: str = self.detect_molecule(nt['nt_name'])
+        self.full_name: str = nt['nt_id']
+        self.short_name: str = nt['nt_code']
+        self.glycosidic_bond: str = nt['glyco_bond']
         self.index: int = nt['index']
-        if self.id.find(':') != -1:
-            self.chain: str = '{}:{}'.format(self.id.split(':')[0], nt['chain_name'])
-        else:
-            self.chain: str = nt['chain_name']
+        self.model_chain = self.chain if nt['nt_id'].find(':') == -1 else '{}:{}'.format(self.model, self.chain)
+        self.residue3d: Bio.PDB.Residue = None
+
+        if structure3d:
+            if len(structure3d) == 1:
+                model3d = next(iter(structure3d))
+            else:
+                model3d = structure3d[self.model]
+            chain3d = model3d[self.chain]
+            self.residue3d = chain3d[(' ', self.number, self.icode)]
 
     def __hash__(self):
-        return hash(self.id)
+        return hash(self.full_name)
 
     def __lt__(self, other):
         return self.index < other.index
 
+    def __repr__(self):
+        return self.full_name
+
     def __str__(self):
-        return self.id
+        return self.full_name
+
+    def outermost_atom(self):
+        return self.find_atom(self.outermost_atoms[self.short_name.upper()])
+
+    def innermost_atom(self):
+        return self.find_atom(self.innermost_atoms[self.short_name.upper()])
+
+    def find_atom(self, expected_atom: str) -> Bio.PDB.Atom:
+        if self.residue3d:
+            for atom in self.residue3d.get_atoms():
+                if atom.name == expected_atom:
+                    return atom
+            raise RuntimeError('Failed to find atom {} in residue {}'.format(expected_atom, self))
+        else:
+            return None
 
 
 class Pair:
@@ -68,6 +123,9 @@ class Tetrad:
         self.pairs = [pairs[x] for x in ((nt1, nt2), (nt2, nt3), (nt3, nt4), (nt4, nt1))]
         self.direction = 'n/a'
         self.set = set(self.nucleotides)
+        self.planarity_deviation = self.__calculate_planarity_deviation()
+        self.rise = 0
+        self.twist = 0
         self._score = sum(x.score() for x in self.pairs)
         self._hash = hash(tuple(sorted(self.nucleotides)))
 
@@ -76,6 +134,9 @@ class Tetrad:
 
     def __iter__(self):
         return iter(self.nucleotides)
+
+    def __repr__(self):
+        return '{} {} {} {}'.format(*self.nucleotides)
 
     def __str__(self):
         return '    {} {} {} {} {}-{}-{}-{} {} {}\n'.format(self.nucleotides[0], self.nucleotides[1],
@@ -175,6 +236,47 @@ class Tetrad:
         else:
             self.direction = 'hybrid'
 
+    def calculate_parameters(self, other, stacking):
+        if all(nt.residue3d for nt in self.nucleotides):
+            self.rise = self.__calculate_rise(other)
+            self.twist = self.__calculate_twist(other, stacking)
+        else:
+            self.rise = self.twist = float('nan')
+
+    def __calculate_planarity_deviation(self):
+        if all(nt.residue3d for nt in self.nucleotides):
+            outer = [nt.outermost_atom() for nt in self.nucleotides]
+            inner = [nt.innermost_atom() for nt in self.nucleotides]
+            return numpy.linalg.norm(self.__center_of_mass(outer) - self.__center_of_mass(inner))
+        return float('nan')
+
+    def __calculate_rise(self, other):
+        f = lambda nt: nt.outermost_atom()
+        g = lambda nt: nt.innermost_atom()
+        mine = tuple(itertools.chain.from_iterable((f(nt), g(nt)) for nt in self.nucleotides))
+        theirs = tuple(itertools.chain.from_iterable((f(nt), g(nt)) for nt in other.nucleotides))
+        return numpy.linalg.norm(self.__center_of_mass(mine) - self.__center_of_mass(theirs))
+
+    def __calculate_twist(self, other, stacking):
+        nt1_self = self.nucleotides[0]
+        nt2_self = self.nucleotides[1]
+        stack1 = next(filter(lambda stack: nt1_self in stack, stacking))
+        stack2 = next(filter(lambda stack: nt2_self in stack, stacking))
+        nt1_other = next(filter(lambda nt: nt in other.set, stack1))
+        nt2_other = next(filter(lambda nt: nt in other.set, stack2))
+        v1 = nt1_self.find_atom("C1'").coord - nt2_self.find_atom("C1'").coord
+        v1 = v1 / numpy.linalg.norm(v1)
+        v2 = nt1_other.find_atom("C1'").coord - nt2_other.find_atom("C1'").coord
+        v2 = v2 / numpy.linalg.norm(v2)
+        return math.degrees(numpy.arccos(numpy.clip(numpy.dot(v1, v2), -1.0, 1.0)))
+
+    def __center_of_mass(self, atoms):
+        coords = [atom.coord for atom in atoms]
+        xs = (coord[0] for coord in coords)
+        ys = (coord[1] for coord in coords)
+        zs = (coord[2] for coord in coords)
+        return numpy.array((sum(xs) / len(coords), sum(ys) / len(coords), sum(zs) / len(coords)))
+
 
 class Quadruplex:
     def __init__(self, tetrads: List[Tetrad]):
@@ -184,13 +286,13 @@ class Quadruplex:
         if len(self.tetrads) == 1:
             builder = '  single tetrad\n'
         else:
-            builder = '  {}{} quadruplex with {} tetrads\n'.format(self._get_onzm(), self._get_direction(),
+            builder = '  {}{} quadruplex with {} tetrads\n'.format(self.get_onzm(), self.get_direction(),
                                                                    len(self.tetrads))
         for tetrad in self.tetrads:
             builder += str(tetrad)
         return builder
 
-    def _get_onzm(self) -> str:
+    def get_onzm(self) -> str:
         classifications = [t.get_classification()[0] for t in self.tetrads]
         if 'n/a' in classifications:
             return 'U'
@@ -200,7 +302,7 @@ class Quadruplex:
             return onz[0]  # O, N or Z
         return 'M'
 
-    def _get_direction(self) -> str:
+    def get_direction(self) -> str:
         if len(self.tetrads) == 1:
             return 'n/a'
         else:
@@ -214,7 +316,7 @@ class Quadruplex:
 class Helix:
     def __init__(self, tetrads: List[Tetrad]):
         self.tetrads = tetrads
-        self.quadruplexes = []
+        self.quadruplexes = list()
 
     def __iter__(self):
         return iter(self.tetrads)
@@ -228,13 +330,14 @@ class Helix:
             builder += str(quadruplex)
         return builder
 
-    def find_quadruplexes(self):
+    def find_quadruplexes(self, stacking):
         quadruplexes = []
         tetrads = []
         for tetrad in sorted(self.tetrads, key=lambda t: min(nt.index for nt in t.nucleotides)):
             if tetrads:
                 if tetrad.chains() == tetrads[-1].chains():
                     tetrad.determine_direction(tetrads[-1])
+                    tetrad.calculate_parameters(tetrads[-1], stacking)
                 else:
                     quadruplexes.append(Quadruplex(tetrads))
                     tetrads = []
@@ -244,8 +347,8 @@ class Helix:
 
 
 class Structure:
-    def __init__(self, data: dict):
-        self.nucleotides: Dict[str, Nucleotide] = {nt['nt_id']: Nucleotide(nt) for nt in data['nts']}
+    def __init__(self, data: dict, structure3d: Bio.PDB.Structure):
+        self.nucleotides = {nt['nt_id']: Nucleotide(nt, structure3d) for nt in data['nts']}
         self.stacking = {tuple(self.nucleotides[nt] for nt in stack['nts_long'].split(',')) for stack in data['stacks']}
         self.pairs = self._read_pairs(data)
         self.canonical = {pair for pair in self.pairs.values() if pair.saenger in ('19-XIX', '20-XX', '28-XXVIII')}
@@ -359,10 +462,10 @@ class Structure:
 
     def find_quadruplexes(self):
         for helix in self.helices:
-            helix.find_quadruplexes()
+            helix.find_quadruplexes(self.stacking)
 
     def chain_order(self) -> Iterable[str]:
-        return {nt.chain: 0 for nt in sorted(self.nucleotides.values(), key=lambda nt: nt.index)}
+        return {nt.model_chain: 0 for nt in sorted(self.nucleotides.values(), key=lambda nt: nt.index)}
 
     def compute_twoline_dotbracket(self):
         layer1, layer2 = [], []
@@ -457,23 +560,23 @@ class Structure:
         structure = ''
         chain = None
         for nt in sorted(self.nucleotides.values()):
-            if chain and chain != nt.chain:
+            if chain and chain != nt.model_chain:
                 sequence += '-'
                 structure += '-'
-            sequence += nt.code
+            sequence += nt.short_name
             structure += dotbracket.get(nt, '.')
-            chain = nt.chain
+            chain = nt.model_chain
         return sequence, structure
 
     def _reorder_chains(self, chain_order: Iterable):
         i = 1
         for chain in chain_order:
             for nt in self.nucleotides.values():
-                if nt.chain == chain:
+                if nt.model_chain == chain:
                     nt.index = i
                     i += 1
         for nt in self.nucleotides.values():
-            if nt.chain not in chain_order:
+            if nt.model_chain not in chain_order:
                 nt.index = i
                 i += 1
         for tetrad in self.tetrads:
@@ -482,7 +585,7 @@ class Structure:
     def _group_related_chains(self):
         chains = dict()
         for q in self.helices:
-            chains[q] = {n.chain for t in q.tetrads for n in t.nucleotides}
+            chains[q] = {n.model_chain for t in q.tetrads for n in t.nucleotides}
         changed = True
         while changed:
             changed = False
@@ -510,6 +613,75 @@ class Structure:
         return pairs
 
 
+class Encoder(json.JSONEncoder):
+    @staticmethod
+    def stericity(pair: Pair) -> str:
+        if pair.lw[0] == 'c':
+            return 'cis'
+        if pair.lw[0] == 't':
+            return 'trans'
+        raise RuntimeError('unrecognized stericity {} in Leontis-Westhof notation {}'.format(pair.lw[0], pair.lw))
+
+    @staticmethod
+    def edge(pair: Pair, edge5: bool = True) -> str:
+        letter = pair.lw[1] if edge5 else pair.lw[2]
+        if letter == 'W':
+            return 'Watson-Crick'
+        if letter == 'H':
+            return 'Hoogsteen'
+        if letter == 'S':
+            return 'Sugar'
+        raise RuntimeError('unrecognized edge {} in Leontis-Westhof notation {}'.format(letter, pair.lw))
+
+    def default(self, o):
+        if isinstance(o, Nucleotide):
+            return {
+                'model': o.model,
+                'chain': o.chain,
+                'number': o.number,
+                'icode': o.icode,
+                'molecule': o.molecule,
+                'full_name': o.full_name,
+                'short_name': o.short_name,
+                'glycosidic_bond': o.glycosidic_bond
+            }
+        if isinstance(o, Pair):
+            return {
+                'nt1': repr(o.pair[0]),
+                'nt2': repr(o.pair[1]),
+                'stericity': self.stericity(o),
+                'edge5': self.edge(o, True),
+                'edge3': self.edge(o, False)
+            }
+        if isinstance(o, Tetrad):
+            return {
+                'nt1': repr(o.nucleotides[0]),
+                'nt2': repr(o.nucleotides[1]),
+                'nt3': repr(o.nucleotides[2]),
+                'nt4': repr(o.nucleotides[3]),
+                'onz': o.get_classification(),
+                'direction': o.direction,
+                'planarity_deviation': o.planarity_deviation,
+                'rise': o.rise,
+                'twist': o.twist
+            }
+        if isinstance(o, Quadruplex):
+            return {
+                'tetrads': o.tetrads,
+                'onzm': o.get_onzm() + o.get_direction()
+            }
+        if isinstance(o, Helix):
+            return {
+                'quadruplexes': o.quadruplexes
+            }
+        if isinstance(o, Structure):
+            return {
+                'nucleotides': o.nucleotides,
+                'base_pairs': tuple(o.pairs.values()),
+                'helices': o.helices
+            }
+
+
 def parse_arguments():
     parser = argparse.ArgumentParser()
     parser.add_argument('--json', action='store_true', help='parse input file from JSON format')
@@ -533,6 +705,7 @@ def parse_arguments():
                              'the quadruplex')
     parser.add_argument('--no-image', action='store_true',
                         help='when set, the visualization will not be created at all')
+    parser.add_argument('--output-json', help='(optional) path for output JSON file')
     parser.add_argument('input',
                         help='a JSON file produced by DSSR if "--json" is used, otherwise a PDB or PDBx/MMCIF file to '
                              'be analyzed first by DSSR')
@@ -540,18 +713,31 @@ def parse_arguments():
 
 
 def load_dssr_results(args):
+    is_gzip = os.path.splitext(args.input)[1] == '.gz'
+
     if args.json:
-        with open(args.input) as jsonfile:
+        open_proxy = gzip.open if is_gzip else open
+        with open_proxy(args.input) as jsonfile:
             dssr = jsonfile.read()
     else:
-        currdir = os.path.dirname(os.path.realpath(__file__))
         tempdir = tempfile.mkdtemp()
+
+        if is_gzip:
+            fd, inputfile = tempfile.mkstemp(dir=tempdir)
+            os.close(fd)
+            with gzip.open(args.input) as compressed:
+                with open(inputfile, 'wb') as uncompressed:
+                    shutil.copyfileobj(compressed, uncompressed)
+        else:
+            inputfile = args.input
+
+        currdir = os.path.dirname(os.path.realpath(__file__))
         shutil.copy(os.path.join(currdir, 'x3dna-dssr'), tempdir)
-        shutil.copy(args.input, tempdir)
         dssr = subprocess.Popen(
-            ['./x3dna-dssr', '-i={}'.format(os.path.basename(args.input)), '--json', '--symmetry'],
+            ['./x3dna-dssr', '-i={}'.format(os.path.abspath(inputfile)), '--json'],
             stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=tempdir)
         dssr, _ = dssr.communicate()
+
         shutil.rmtree(tempdir)
 
     try:
@@ -570,7 +756,17 @@ if __name__ == '__main__':
         print('None')
         exit()
 
-    structure = Structure(dssr)
+    if args.json:
+        structure3d = None
+    else:
+        root, extension = os.path.splitext(args.input)
+        if extension == '.pdb':
+            parser = PDBParser()
+        else:
+            parser = MMCIFParser()
+        structure3d = parser.get_structure(os.path.basename(root), args.input)
+
+    structure = Structure(dssr, structure3d)
     structure.build_graph(args.strict)
     structure.find_tetrads()
 
@@ -595,3 +791,7 @@ if __name__ == '__main__':
 
     if not args.no_image:
         structure.visualize(args.input, args.complete_2d)
+
+    if args.output_json:
+        with open(args.output_json, 'w') as jsonfile:
+            json.dump(structure, jsonfile, cls=Encoder, indent=4)
