@@ -1,84 +1,111 @@
-#! /usr/bin/env python
+#! /usr/bin/env python3
 import argparse
-import itertools
+import gzip
 import json
 import os
-import subprocess
 import shutil
+import subprocess
 import sys
 import tempfile
 
-__version__ = '0.0.2-dev8'
+from collections import defaultdict
 
-if __name__ == '__main__':
+__version__ = '0.0.2-rc1'
+
+
+class Pair:
+    def __init__(self, nt1, nt2):
+        self.pair = (nt1, nt2)
+
+    def reverse(self):
+        return Pair(self.pair[1], self.pair[0])
+
+
+class Structure:
+    def __init__(self, data: dict):
+        self.pairs = self._read_pairs(data)
+        self.graph = dict()
+
+    def build_graph(self):
+        graph = defaultdict(list)
+        for pair in self.pairs.values():
+            nt1, nt2 = pair.pair
+            graph[nt1].append(nt2)
+        self.graph = graph
+
+    def has_tetrad(self):
+        for i in self.graph:
+            for j in filter(lambda x: x != i, self.graph[i]):
+                for k in filter(lambda x: x not in (i, j), self.graph[j]):
+                    for l in filter(lambda x: x not in (i, j, k) and x in self.graph[i], self.graph[k]):
+                        return True
+
+    def _read_pairs(self, data: dict):
+        pairs = dict()
+        for pair in data['pairs']:
+            nt1, nt2 = pair['nt1'], pair['nt2']
+            pair = Pair(nt1, nt2)
+            pairs[(nt1, nt2)] = pair
+            pairs[(nt2, nt1)] = pair.reverse()
+        return pairs
+
+
+def parse_arguments():
     parser = argparse.ArgumentParser()
     parser.add_argument('--json', action='store_true', help='parse input file from JSON format')
-    parser.add_argument('--strict', action='store_true', help='nucleotides in tetrad linked only by cWH pairing')
     parser.add_argument('--version', action='version', version='%(prog)s {}'.format(__version__))
     parser.add_argument('input',
                         help='a JSON file produced by DSSR if "--json" is used, otherwise a PDB or PDBx/MMCIF file to '
                              'be analyzed first by DSSR')
-    args = parser.parse_args()
+    return parser.parse_args()
+
+
+def load_dssr_results(args):
+    is_gzip = os.path.splitext(args.input)[1] == '.gz'
 
     if args.json:
-        with open(args.input) as jsonfile:
+        open_proxy = gzip.open if is_gzip else open
+        with open_proxy(args.input) as jsonfile:
             dssr = jsonfile.read()
     else:
-        currdir = os.path.dirname(os.path.realpath(__file__))
         tempdir = tempfile.mkdtemp()
+
+        if is_gzip:
+            fd, inputfile = tempfile.mkstemp(dir=tempdir)
+            os.close(fd)
+            with gzip.open(args.input) as compressed:
+                with open(inputfile, 'wb') as uncompressed:
+                    shutil.copyfileobj(compressed, uncompressed)
+        else:
+            inputfile = args.input
+
+        currdir = os.path.dirname(os.path.realpath(__file__))
         shutil.copy(os.path.join(currdir, 'x3dna-dssr'), tempdir)
-        shutil.copy(args.input, tempdir)
         dssr = subprocess.Popen(
-            ['./x3dna-dssr', '-i={}'.format(os.path.basename(args.input)), '--json', '--symmetry', '--pair-only'],
+            ['./x3dna-dssr', '-i={}'.format(os.path.abspath(inputfile)), '--json'],
             stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=tempdir)
         dssr, _ = dssr.communicate()
+
         shutil.rmtree(tempdir)
 
-    data = {}
     try:
-        data = json.loads(dssr)
-    except:
+        return json.loads(dssr)
+    except json.JSONDecodeError:
         print('Invalid JSON in', args.input, file=sys.stderr)
         exit(1)
 
-    if 'pairs' not in data:
+
+if __name__ == '__main__':
+    args = parse_arguments()
+    dssr = load_dssr_results(args)
+
+    if 'pairs' not in dssr:
         exit(1)
 
-    cwh = dict()
-    for pair in data['pairs']:
-        lw = pair['LW']
-        nt1 = pair['nt1']
-        nt2 = pair['nt2']
+    structure = Structure(dssr)
+    structure.build_graph()
 
-        if args.strict:
-            if lw == 'cWH':
-                if nt1 not in cwh:
-                    cwh[nt1] = list()
-                cwh[nt1].append(nt2)
-            elif lw == 'cHW':
-                if nt2 not in cwh:
-                    cwh[nt2] = list()
-                cwh[nt2].append(nt1)
-        else:
-            if nt1 not in cwh:
-                cwh[nt1] = list()
-            cwh[nt1].append(nt2)
-            if nt2 not in cwh:
-                cwh[nt2] = list()
-            cwh[nt2].append(nt1)
-
-    # search for a tetrad: i -> j -> k -> l -> i
-    used = set()
-    tetrads = list()
-    for i in cwh:
-        if i in used:
-            continue
-        for j in cwh[i]:
-            if j in cwh and j not in (i) and j not in used:
-                for k in cwh[j]:
-                    if k in cwh and k not in (i, j) and k not in used:
-                        for l in cwh[k]:
-                            if l in cwh and l not in (i, j, k) and l not in used and i in cwh[l]:
-                                exit(0)
-
-    exit(1)
+    if structure.has_tetrad():
+        exit()
+    else:
+        exit(1)

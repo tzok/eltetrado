@@ -16,9 +16,23 @@ if (length(args) != 4) {
     stop("Usage: ./mp.R fasta helix1 helix2 pdf\nExample: ./mp.R /tmp/seq.fasta /tmp/h1.helix /tmp/h2.helix /tmp/output.pdf")
 }
 
+# install main dependencies
+packages <- c('BiocManager')
+check <- match(packages, installed.packages()[,1])
+toinstall <- packages[is.na(check)]
+if (length(toinstall) > 0) {
+    install.packages(toinstall, repos = 'https://cloud.r-project.org/')
+}
+
+# install bioconductor dependencies
+packages <- c('R4RNA')
+check <- match(packages, installed.packages()[,1])
+toinstall <- packages[is.na(check)]
+if (length(toinstall) > 0) {
+    BiocManager::install(toinstall, update = FALSE)
+}
+
 library(R4RNA)
-library(Biostrings)
-library(RColorBrewer)
 
 fasta<-as.character(readBStringSet(args[1]))
 helix1<-readHelix(args[2])
