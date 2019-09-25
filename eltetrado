@@ -19,7 +19,7 @@ from Bio.PDB import PDBParser, MMCIFParser, Structure, Residue, Atom
 from Bio.PDB.Atom import DisorderedAtom
 from Bio.PDB.StructureBuilder import StructureBuilder
 
-__version__ = '0.0.2-rc1'
+__version__ = '0.0.2-rc2'
 
 LW_SCORE = {
     'cWW': 1, 'tWW': 2, 'cWH': 3, 'tWH': 4, 'cWS': 5, 'tWS': 6,
