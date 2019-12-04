@@ -384,8 +384,7 @@ class Quadruplex:
             raise RuntimeError('Tetrad classification different than [ONZ][+-]: {}'.format(onzs))
         if len(signs) == 1:
             return signs.pop()
-        else:
-            return '+-'
+        return '±'
 
 
 class Helix:
@@ -779,7 +778,7 @@ class Encoder(json.JSONEncoder):
         if isinstance(o, Quadruplex):
             return {
                 'tetrads': {repr(t): t for t in o.tetrads},
-                'onzm': o.get_onzm() + o.get_direction() if len(o.tetrads) > 1 else 'n/a'
+                'onzm': o.get_onzm() + o.get_direction() + o.get_sign() if len(o.tetrads) > 1 else 'n/a'
             }
         if isinstance(o, Helix):
             return {
