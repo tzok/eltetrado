@@ -348,8 +348,8 @@ class Quadruplex:
         if len(self.tetrads) == 1:
             builder = '  single tetrad\n'
         else:
-            builder = '  {}{} quadruplex with {} tetrads\n'.format(self.get_onzm(), self.get_direction(),
-                                                                   len(self.tetrads))
+            builder = '  {}{}{} quadruplex with {} tetrads\n'.format(self.get_onzm(), self.get_direction(),
+                                                                     self.get_sign(), len(self.tetrads))
         for tetrad in self.tetrads:
             builder += str(tetrad)
             pair = next((pair for pair in self.__tetrad_pairs if pair.tetrad2 == tetrad), None)
@@ -376,6 +376,16 @@ class Quadruplex:
             if support == len(self.tetrads) - 1:
                 return direction[0]
             return 'h'
+
+    def get_sign(self) -> str:
+        onzs = [tetrad.get_classification() for tetrad in self.tetrads]
+        signs = set(map(lambda x: x[1], onzs))
+        if len(signs - {'-', '+'}) > 0:
+            raise RuntimeError('Tetrad classification different than [ONZ][+-]: {}'.format(onzs))
+        if len(signs) == 1:
+            return signs.pop()
+        else:
+            return '+-'
 
 
 class Helix:
