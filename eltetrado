@@ -384,7 +384,7 @@ class Quadruplex:
             raise RuntimeError('Tetrad classification different than [ONZ][+-]: {}'.format(onzs))
         if len(signs) == 1:
             return signs.pop()
-        return '±'
+        return '*'
 
 
 class Helix:
