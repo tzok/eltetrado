@@ -19,7 +19,7 @@ from Bio.PDB import PDBParser, MMCIFParser, Structure, Residue, Atom
 from Bio.PDB.Atom import DisorderedAtom
 from Bio.PDB.StructureBuilder import StructureBuilder
 
-__version__ = '0.0.2-rc2'
+__version__ = '0.0.2-rc3'
 
 LW_SCORE = {
     'cWW': 1, 'tWW': 2, 'cWH': 3, 'tWH': 4, 'cWS': 5, 'tWS': 6,
@@ -165,12 +165,13 @@ class Tetrad:
         return True
 
     def __init__(self, nt1: Nucleotide, nt2: Nucleotide, nt3: Nucleotide, nt4: Nucleotide,
-                 pairs: Dict[Tuple[Nucleotide, Nucleotide], Pair]):
+                 pairs: Dict[Tuple[Nucleotide, Nucleotide], Pair], no_reorder=False):
         self.nucleotides: Tuple[Nucleotide, Nucleotide, Nucleotide, Nucleotide] = (nt1, nt2, nt3, nt4)
         self.pairs: Tuple[Pair, Pair, Pair, Pair] = (pairs[(nt1, nt2)], pairs[(nt2, nt3)], pairs[(nt3, nt4)],
                                                      pairs[(nt4, nt1)])
         self.set: FrozenSet[Nucleotide] = frozenset(self.nucleotides)
         self.planarity_deviation: float = self.__calculate_planarity_deviation()
+        self.no_reorder = no_reorder
         self.__score = sum(x.score() for x in self.pairs)
         self.__hash = hash(self.set)
 
@@ -244,6 +245,9 @@ class Tetrad:
         assert pi.score() <= pl.reverse().score(), 'Conflicting multiplet {} and {}'.format(pi, pl.reverse())
 
     def get_classification(self) -> str:
+        if self.no_reorder and len(set((nt.chain for nt in self.nucleotides))) > 1:
+            return 'n/a'
+
         self.reorder()
 
         # transform into (0, 1, 2, 3)
@@ -348,8 +352,11 @@ class Quadruplex:
         if len(self.tetrads) == 1:
             builder = '  single tetrad\n'
         else:
-            builder = '  {}{}{} quadruplex with {} tetrads\n'.format(self.get_onzm(), self.get_direction(),
-                                                                     self.get_sign(), len(self.tetrads))
+            if any(t.get_classification() == 'n/a' for t in self.tetrads):
+                builder = '  R quadruplex with {} tetrads\n'.format(len(self.tetrads))
+            else:
+                builder = '  {}{}{} quadruplex with {} tetrads\n'.format(self.get_onzm(), self.get_direction(),
+                                                                         self.get_sign(), len(self.tetrads))
         for tetrad in self.tetrads:
             builder += str(tetrad)
             pair = next((pair for pair in self.__tetrad_pairs if pair.tetrad2 == tetrad), None)
@@ -359,8 +366,6 @@ class Quadruplex:
 
     def get_onzm(self) -> str:
         classifications = [t.get_classification()[0] for t in self.tetrads]
-        if 'n/a' in classifications:
-            return 'U'
         counter = Counter(classifications)
         onz, support = counter.most_common()[0]
         if support == len(self.tetrads):
@@ -378,10 +383,9 @@ class Quadruplex:
             return 'h'
 
     def get_sign(self) -> str:
-        onzs = [tetrad.get_classification() for tetrad in self.tetrads]
-        signs = set(map(lambda x: x[1], onzs))
+        signs = set((tetrad.get_classification()[1] for tetrad in self.tetrads))
         if len(signs - {'-', '+'}) > 0:
-            raise RuntimeError('Tetrad classification different than [ONZ][+-]: {}'.format(onzs))
+            raise RuntimeError('Tetrad classification different than [ONZ][+-]')
         if len(signs) == 1:
             return signs.pop()
         return '*'
@@ -449,7 +453,7 @@ class Analysis:
             graph[nt1].append(nt2)
         self.graph = graph
 
-    def find_tetrads(self):
+    def find_tetrads(self, no_reorder=False):
         # search for a tetrad: i -> j -> k -> l
         #                      ^--------------^
         tetrads = set()
@@ -458,7 +462,7 @@ class Analysis:
                 for k in filter(lambda x: x not in (i, j), self.graph[j]):
                     for l in filter(lambda x: x not in (i, j, k) and x in self.graph[i], self.graph[k]):
                         if Tetrad.is_valid(i, j, k, l, self.pairs):
-                            tetrads.add(Tetrad(i, j, k, l, self.pairs))
+                            tetrads.add(Tetrad(i, j, k, l, self.pairs, no_reorder))
 
         # when two tetrads share some of the nucleotides, remove the one which has worse score
         flag = True
@@ -519,11 +523,13 @@ class Analysis:
         final_order = []
 
         for chains in filter(lambda x: len(x) > 1, chain_groups):
-            best_permutation, best_score = chains, 1e10
+            best_permutation, best_score = chains, (1e10, 1e10)
             for permutation in sorted(itertools.permutations(chains)):
                 self.__reorder_chains(permutation)
                 classification = list(self.__get_classification())
-                score = sum(scores[c] for c in classification)
+                score = (
+                    sum(scores[c] for c in classification),
+                    self.__sum_squares_chain_distances(chain_groups, permutation))
                 # print('Checking reorder:', ', '.join(permutation), ''.join(classification))
                 if score < best_score:
                     best_score = score
@@ -570,6 +576,15 @@ class Analysis:
                     changed = True
                     break
         return chains.values()
+
+    def __sum_squares_chain_distances(self, chain_groups: Iterable[set], chain_order: Tuple) -> int:
+        chain_pairs = set(
+            (frozenset((p.pair[0].chain, p.pair[1].chain)) for h in self.helices for t in h.tetrads for p in t.pairs))
+        index = {chain: chain_order.index(chain) for chain in chain_order}
+        sum_sq = 0
+        for c1, c2 in chain_pairs:
+            sum_sq += (index[c1] - index[c2]) ** 2
+        return sum_sq
 
     def __get_classification(self):
         for q in self.helices:
@@ -894,7 +909,7 @@ if __name__ == '__main__':
     structure3d = read_3d_structure(args.pdb) if args.pdb else None
     structure = Analysis(dssr, structure3d)
     structure.build_graph(args.strict)
-    structure.find_tetrads()
+    structure.find_tetrads(args.no_reorder)
 
     if not structure.tetrads:
         print('None')
