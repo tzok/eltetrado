@@ -90,6 +90,35 @@ it.
       --no-image            when set, the visualization will not be created at all
       --version             show program's version number and exit
 
+# Chains reorder
+
+ElTetrado keeps a global and unique 5’-3’ index for every nucleotide
+which is independent from residue numbers. For example, if a structure
+has chain M with 60 nucleotides and chain N with 15 nucleotides, then
+ElTetrado will keep index between 0 and 74 which uniquely identifes
+every nucleotide. Initially, ElTetrado assigns this indices according to
+the order of chains in the input file. Therefore, if M preceded N then
+nucleotides in M will be indexed from 0 to 59 and in N from 60 to 74.
+Otherwise, nucleotides in N will be indexed from 0 to 14 and in M from
+15 to 74.
+
+When `--no-reorder` is present, this initial assignment is used.
+Otherwise, ElTetrado exhaustively checks all permutations of chains’
+orders. Every permutation check induces recalculation of the global and
+unique 5’-3’ index and in effect it changes ONZ classification of
+tetrads.
+
+ElTetrado keeps a table of tetrad classification scores according to
+these rules:
+
+  - Type preference: `O` \> `N` \> `Z`
+  - Direction preference: `+` \> `-`
+
+The table keeps low values for preferred classes i.e. `O+` is 0, `O-` is
+1 and so on up to `Z-` with score 5. For every permutation of chain
+orders, ElTetrado computes sum of scores for tetrads classification
+induced by 5’-3’ indexing. We select permutation with the minimum value.
+
 # Examples
 
 ## 1MY9: Solution structure of a K+ cation stabilized dimeric RNA quadruplex containing two G:G(:A):G:G(:A) hexads, G:G:G:G tetrads and UUUU loops
@@ -205,7 +234,7 @@ it.
 
 <div id="ref-Lai2012">
 
-Lai, D., Proctor, J. R., Zhu, J. Y. A. and Meyer, I. M. (2012) ‘R-CHIE:
+Lai, D., Proctor, J. R., Zhu, J. Y. A. and Meyer, I. M. (2012) ‘R-chie :
 A web server and R package for visualizing RNA secondary structures’,
 *Nucleic Acids Research*, 40(12), p. e95. doi:
 [10.1093/nar/gks241](https://doi.org/10.1093/nar/gks241).
@@ -216,24 +245,25 @@ A web server and R package for visualizing RNA secondary structures’,
 
 Leontis, N. B. and Westhof, E. (2001) ‘Geometric nomenclature and
 classification of RNA base pairs’, *RNA*, 7(4), pp. 499–512. doi:
-[10.1017/s1355838201002515](https://doi.org/10.1017/s1355838201002515).
+[10.1017/S1355838201002515](https://doi.org/10.1017/S1355838201002515).
 
 </div>
 
 <div id="ref-Lu2015">
 
-Lu, X. J., Bussemaker, H. J. and Olson, W. K. (2015) ‘DSSR: An
+Lu, X.-J., Bussemaker, H. J. and Olson, W. K. (2015) ‘DSSR: An
 integrated software tool for dissecting the spatial structure of RNA’,
-*Nucleic Acids Research*, 43(21), p. gkv716. doi:
+*Nucleic Acids Research*, 43(21), p. e142. doi:
 [10.1093/nar/gkv716](https://doi.org/10.1093/nar/gkv716).
 
 </div>
 
 <div id="ref-Popenda2019">
 
-Popenda, M., Miskiewicz, J., Sarzynska, J., Zok, T. and Szachniuk, M.
-(2019) ‘Topology-based classification of tetrads and quadruplex
-structures’, *Bioinformatics*.
+Popenda, M., Joanna Miskiewicz, Joanna Sarzynska, Tomasz Zok and Marta
+Szachniuk (2019) ‘Topology-based classification of tetrads and
+quadruplex structures’, *Bioinformatics*. doi:
+[10.1093/bioinformatics/btz738](https://doi.org/10.1093/bioinformatics/btz738).
 
 </div>
 
