@@ -10,7 +10,7 @@ import tempfile
 
 from collections import defaultdict
 
-__version__ = '0.0.2-rc3'
+__version__ = '0.0.2-rc4'
 
 
 class Pair:
