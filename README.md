@@ -1,4 +1,5 @@
-# Project description
+Project description
+===================
 
 This is an application to analyze base pairing patterns of DNA/RNA 3D
 structures to find and classify tetrads and quadruplexes. ElTetrado
@@ -12,13 +13,19 @@ directionality, clockwise (+) or anticlockwise (-). For more details,
 please refer to Zok, Popenda and Szachniuk (2019) and Popenda *et al.*
 (2019)
 
-# Dependencies
+Dependencies
+============
 
 The project is written in Python 3.6+ and requires
 [Biopython](https://biopython.org/) and [NumPy](https://numpy.org/) in
 to run. These can be installed with the following command:
 
     pip install -r requirements.txt
+
+If you have both Python 2 and Python 3 installed, you need to explicitly
+call `pip3`:
+
+    pip3 install -r requirements.txt
 
 ElTetrado depends on DSSR (Lu, Bussemaker and Olson, 2015) in terms of
 detection of base pairing and stacking. The binary `x3dna-dssr` can be
@@ -32,17 +39,18 @@ Visualization is created by `R` 3.6+ script which uses
 [R4RNA](https://www.e-rna.org/r-chie/) (Lai *et al.*, 2012) library. The
 dependency will be automatically installed if not present.
 
-# Usage
+Usage
+=====
 
 ElTetrado is a command line application, which requires to be provided
 with:
 
-  - either `--dssr-json` and the path to JSON generated with `x3dna-dssr
-    --json` (fast, but quadruplex parameters like `rise` or `twist` are
-    not calculated)
-  - or `--pdb` and the path to PDB or PDBx/mmCIF file (slow, because the
+-   either `--dssr-json` and the path to JSON generated with
+    `x3dna-dssr --json` (fast, but quadruplex parameters like `rise` or
+    `twist` are not calculated)
+-   or `--pdb` and the path to PDB or PDBx/mmCIF file (slow, because the
     execution time is a sum of ElTetrado and DSSR times)
-  - or both `--pdb` and `--dssr-json` (recommended, all analyses are
+-   or both `--pdb` and `--dssr-json` (recommended, all analyses are
     made and only ElTetrado is executed while DSSR results are read from
     the file)
 
@@ -62,7 +70,7 @@ it.
                      [--stacking-mismatch STACKING_MISMATCH]
                      [--relaxed-stem-definition] [--strict] [--no-reorder]
                      [--complete-2d] [--no-image] [--version]
-    
+
     optional arguments:
       -h, --help            show this help message and exit
       --pdb PDB             path to input PDB or PDBx/mmCIF file
@@ -90,7 +98,8 @@ it.
       --no-image            when set, the visualization will not be created at all
       --version             show program's version number and exit
 
-# Chains reorder
+Chains reorder
+==============
 
 ElTetrado keeps a global and unique 5’-3’ index for every nucleotide
 which is independent from residue numbers. For example, if a structure
@@ -111,24 +120,26 @@ tetrads.
 ElTetrado keeps a table of tetrad classification scores according to
 these rules:
 
-  - Type preference: `O` \> `N` \> `Z`
-  - Direction preference: `+` \> `-`
+-   Type preference: `O` &gt; `N` &gt; `Z`
+-   Direction preference: `+` &gt; `-`
 
 The table keeps low values for preferred classes i.e. `O+` is 0, `O-` is
 1 and so on up to `Z-` with score 5. For every permutation of chain
 orders, ElTetrado computes sum of scores for tetrads classification
 induced by 5’-3’ indexing. We select permutation with the minimum value.
 
-# Examples
+Examples
+========
 
-## 1MY9: Solution structure of a K+ cation stabilized dimeric RNA quadruplex containing two G:G(:A):G:G(:A) hexads, G:G:G:G tetrads and UUUU loops
+1MY9: Solution structure of a K+ cation stabilized dimeric RNA quadruplex containing two G:G(:A):G:G(:A) hexads, G:G:G:G tetrads and UUUU loops
+-----------------------------------------------------------------------------------------------------------------------------------------------
 
 ![](1my9.png)
 
     $ curl ftp://ftp.wwpdb.org/pub/pdb/data/structures/divided/mmCIF/my/1my9.cif.gz | gzip -d > 1my9.cif
-    
+
     $ ./eltetrado --pdb 1my9.cif
-    
+
     Chain order: A, B
     n4-helix with 4 tetrads
       Op quadruplex with 2 tetrads
@@ -139,35 +150,36 @@ induced by 5’-3’ indexing. We select permutation with the minimum value.
         B.G15 B.G18 B.G24 B.G27 cWH-cWH-cWH-cWH O+ planarity=0.26
           direction=parallel rise=4.21 twist=33.45
         B.G16 B.G19 B.G25 B.G28 cWH-cWH-cWH-cWH O+ planarity=0.31
-    
+
     GGAGGUUUUGGAGG-GGAGGUUUUGGAGG
     ([.)]....([.)]-([.)]....([.)]
     ([.([....)].)]-([.([....)].)]
-    
+
     Plot: 1my9-str.pdf
-    
+
     Plot: 1my9-h1.pdf
-    
+
     Plot: 1my9-h1-q1.pdf
-    
+
     Plot: 1my9-h1-q1-t1.pdf
-    
+
     Plot: 1my9-h1-q1-t2.pdf
-    
+
     Plot: 1my9-h1-q2.pdf
-    
+
     Plot: 1my9-h1-q2-t1.pdf
-    
+
     Plot: 1my9-h1-q2-t2.pdf
 
-## 4RJ1: Structural variations and solvent structure of UGGGGU quadruplexes stabilized by Sr2+ ions
+4RJ1: Structural variations and solvent structure of UGGGGU quadruplexes stabilized by Sr2+ ions
+------------------------------------------------------------------------------------------------
 
 ![](4rj1.png)
 
     $ curl https://www.ebi.ac.uk/pdbe/static/entry/download/4rj1-assembly-1.cif.gz | gzip -d > 4rj1-1.cif
-    
+
     $ ./eltetrado --pdb 4rj1-1.cif
-    
+
     Chain order: A, AB, AA, AC, B, BC, BA, BB
     n4-helix with 9 tetrads
       Op quadruplex with 5 tetrads
@@ -191,44 +203,45 @@ induced by 5’-3’ indexing. We select permutation with the minimum value.
     single tetrad without stacking
       single tetrad
         B.U2006 BB.U2006 BA.U2006 BC.U2006 cWH-cWH-cWH-cWH O- planarity=1.58
-    
+
     UGGGGU-UGGGGU-UGGGGU-UGGGGU-UGGGGU-UGGGGU-UGGGGU-UGGGGU
     .([{<A-.)]}>A-.([{<a-.)]}>a-.([{<A-.)]}>A-.([{<a-.)]}>a
     .([{<A-.([{<a-.)]}>A-.)]}>a-.([{<A-.([{<a-.)]}>A-.)]}>a
-    
+
     Plot: 4rj1-1-str.pdf
-    
+
     Plot: 4rj1-1-h1.pdf
-    
+
     Plot: 4rj1-1-h1-q1.pdf
-    
+
     Plot: 4rj1-1-h1-q1-t1.pdf
-    
+
     Plot: 4rj1-1-h1-q1-t2.pdf
-    
+
     Plot: 4rj1-1-h1-q1-t3.pdf
-    
+
     Plot: 4rj1-1-h1-q1-t4.pdf
-    
+
     Plot: 4rj1-1-h1-q1-t5.pdf
-    
+
     Plot: 4rj1-1-h1-q2.pdf
-    
+
     Plot: 4rj1-1-h1-q2-t1.pdf
-    
+
     Plot: 4rj1-1-h1-q2-t2.pdf
-    
+
     Plot: 4rj1-1-h1-q2-t3.pdf
-    
+
     Plot: 4rj1-1-h1-q2-t4.pdf
-    
+
     Plot: 4rj1-1-h2.pdf
-    
+
     Plot: 4rj1-1-h2-q1.pdf
-    
+
     Plot: 4rj1-1-h2-q1-t1.pdf
 
-# Bibliography
+Bibliography
+============
 
 <div id="refs" class="references">
 
