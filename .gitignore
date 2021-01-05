@@ -7,4 +7,6 @@ README-pandoc.md
 README.html
 bibliography.bib
 harvard-cite-them-right.csl
+ieee.csl
+pandoc-bibliography-as-list.py
 x3dna-dssr

@@ -1,20 +1,17 @@
-Project description
-===================
+# Project description
 
 This is an application to analyze base pairing patterns of DNA/RNA 3D
 structures to find and classify tetrads and quadruplexes. ElTetrado
 assigns tetrads to one of the ONZ classes (O, N, Z) alongside with the
 directionality of the tetrad (+/-) determined by the bonds between bases
 and their non-canonical interactions. The interactions follow
-Leontis/Westhof classification (Leontis and Westhof, 2001). Watson-Crick
-(W) edge of first base in the tetrad structure exposed to the Hoogsteen
-(H) edge of the next nucleobase from the same tetrad sets the tetrad
-directionality, clockwise (+) or anticlockwise (-). For more details,
-please refer to Zok, Popenda and Szachniuk (2019) and Popenda *et al.*
-(2019)
+Leontis/Westhof classification \[1\]. Watson-Crick (W) edge of first
+base in the tetrad structure exposed to the Hoogsteen (H) edge of the
+next nucleobase from the same tetrad sets the tetrad directionality,
+clockwise (+) or anticlockwise (-). For more details, please refer to
+\[2\] and \[3\]
 
-Dependencies
-============
+# Dependencies
 
 The project is written in Python 3.6+ and requires
 [Biopython](https://biopython.org/) and [NumPy](https://numpy.org/) in
@@ -27,20 +24,19 @@ call `pip3`:
 
     pip3 install -r requirements.txt
 
-ElTetrado depends on DSSR (Lu, Bussemaker and Olson, 2015) in terms of
-detection of base pairing and stacking. The binary `x3dna-dssr` can be
+ElTetrado depends on DSSR \[4\] in terms of detection of base pairing
+and stacking. The binary `x3dna-dssr` can be
 [downloaded](http://forum.x3dna.org/site-announcements/download-instructions/)
 and put in the same directory as `eltetrado` which will execute it
-during analysis. Alternatively, one can preprocess the 3D data with
+during analysis. Alternatively, one can pre-process the 3D data with
 `x3dna-dssr --json` and provide the JSON result as an input to ElTetrado
 (see Usage section below).
 
 Visualization is created by `R` 3.6+ script which uses
-[R4RNA](https://www.e-rna.org/r-chie/) (Lai *et al.*, 2012) library. The
-dependency will be automatically installed if not present.
+[R4RNA](https://www.e-rna.org/r-chie/) \[5\] library. The dependency
+will be automatically installed if not present.
 
-Usage
-=====
+# Usage
 
 ElTetrado is a command line application, which requires to be provided
 with:
@@ -62,7 +58,7 @@ ElTetrado prepares visualization of the whole structure and of each
 N4-helices, quadruplexes and tetrads. This can be supplemented with
 canonical base pairs visualization when `--complete-2d` is set. All
 color settings are located in the first several lines of the `quadraw.R`
-file, you can easily change them without knowledge of R langauge. If you
+file, you can easily change them without knowledge of R language. If you
 want ElTetrado to not visualize anything, pass `--no-image` switch to
 it.
 
@@ -98,13 +94,12 @@ it.
       --no-image            when set, the visualization will not be created at all
       --version             show program's version number and exit
 
-Chains reorder
-==============
+# Chains reorder
 
 ElTetrado keeps a global and unique 5’-3’ index for every nucleotide
 which is independent from residue numbers. For example, if a structure
 has chain M with 60 nucleotides and chain N with 15 nucleotides, then
-ElTetrado will keep index between 0 and 74 which uniquely identifes
+ElTetrado will keep index between 0 and 74 which uniquely identifies
 every nucleotide. Initially, ElTetrado assigns this indices according to
 the order of chains in the input file. Therefore, if M preceded N then
 nucleotides in M will be indexed from 0 to 59 and in N from 60 to 74.
@@ -128,11 +123,9 @@ The table keeps low values for preferred classes i.e. `O+` is 0, `O-` is
 orders, ElTetrado computes sum of scores for tetrads classification
 induced by 5’-3’ indexing. We select permutation with the minimum value.
 
-Examples
-========
+# Examples
 
-1MY9: Solution structure of a K+ cation stabilized dimeric RNA quadruplex containing two G:G(:A):G:G(:A) hexads, G:G:G:G tetrads and UUUU loops
------------------------------------------------------------------------------------------------------------------------------------------------
+## 1MY9: Solution structure of a K+ cation stabilized dimeric RNA quadruplex containing two G:G(:A):G:G(:A) hexads, G:G:G:G tetrads and UUUU loops
 
 ![](1my9.png)
 
@@ -171,8 +164,7 @@ Examples
 
     Plot: 1my9-h1-q2-t2.pdf
 
-4RJ1: Structural variations and solvent structure of UGGGGU quadruplexes stabilized by Sr2+ ions
-------------------------------------------------------------------------------------------------
+## 4RJ1: Structural variations and solvent structure of UGGGGU quadruplexes stabilized by Sr2+ ions
 
 ![](4rj1.png)
 
@@ -240,52 +232,48 @@ Examples
 
     Plot: 4rj1-1-h2-q1-t1.pdf
 
-Bibliography
-============
+# Funding
 
-<div id="refs" class="references">
+This research was supported by the National Science Centre, Poland
+\[2016/23/B/ST6/03931\] and Mloda Kadra project \[09/91/SBAD/0684\] from
+Poznan University of Technology, and carried out in the European Centre
+for Bioinformatics and Genomics (Poland). The authors also acknowledge
+partial support by the statutory funds of Poznan University of
+Technology, Polish Ministry of Science and Higher Education, and the
+Institute of Bioorganic Chemistry, PAS within intramural financing
+program.
 
-<div id="ref-Lai2012">
+# Bibliography
 
-Lai, D., Proctor, J. R., Zhu, J. Y. A. and Meyer, I. M. (2012) ‘R-chie :
-A web server and R package for visualizing RNA secondary structures’,
-*Nucleic Acids Research*, 40(12), p. e95. doi:
-[10.1093/nar/gks241](https://doi.org/10.1093/nar/gks241).
+<div id="refs" class="references csl-bib-body">
 
-</div>
+1.  <span class="csl-right-inline">N. B. Leontis and E. Westhof,
+    “Geometric nomenclature and classification of RNA base pairs,”
+    *RNA*, vol. 7, no. 4, pp. 499–512, 2001, doi:
+    [10.1017/S1355838201002515](https://doi.org/10.1017/S1355838201002515).</span>
 
-<div id="ref-Leontis2001">
+2.  <span class="csl-right-inline">T. Zok, M. Popenda, and M. Szachniuk,
+    “ElTetrado: A tool for identification and classification of tetrads
+    and quadruplexes,” *BMC Bioinformatics*, vol. 21, no. 1, p. 40,
+    2020, doi:
+    [10.1186/s12859-020-3385-1](https://doi.org/10.1186/s12859-020-3385-1).</span>
 
-Leontis, N. B. and Westhof, E. (2001) ‘Geometric nomenclature and
-classification of RNA base pairs’, *RNA*, 7(4), pp. 499–512. doi:
-[10.1017/S1355838201002515](https://doi.org/10.1017/S1355838201002515).
+3.  <span class="csl-right-inline">M. Popenda, J. Miskiewicz, J.
+    Sarzynska, T. Zok, and M. Szachniuk, “Topology-based classification
+    of tetrads and quadruplex structures,” *Bioinformatics*, vol. 36,
+    no. 4, pp. 1129–1134, 2020, doi:
+    [10.1093/bioinformatics/btz738](https://doi.org/10.1093/bioinformatics/btz738).</span>
 
-</div>
+4.  <span class="csl-right-inline">X.-J. Lu, H. J. Bussemaker, and W. K.
+    Olson, “DSSR: An integrated software tool for dissecting the spatial
+    structure of RNA,” *Nucleic Acids Research*, vol. 43, no. 21, p.
+    e142, 2015, doi:
+    [10.1093/nar/gkv716](https://doi.org/10.1093/nar/gkv716).</span>
 
-<div id="ref-Lu2015">
-
-Lu, X.-J., Bussemaker, H. J. and Olson, W. K. (2015) ‘DSSR: An
-integrated software tool for dissecting the spatial structure of RNA’,
-*Nucleic Acids Research*, 43(21), p. e142. doi:
-[10.1093/nar/gkv716](https://doi.org/10.1093/nar/gkv716).
-
-</div>
-
-<div id="ref-Popenda2019">
-
-Popenda, M., Joanna Miskiewicz, Joanna Sarzynska, Tomasz Zok and Marta
-Szachniuk (2019) ‘Topology-based classification of tetrads and
-quadruplex structures’, *Bioinformatics*. doi:
-[10.1093/bioinformatics/btz738](https://doi.org/10.1093/bioinformatics/btz738).
-
-</div>
-
-<div id="ref-Zok2019">
-
-Zok, T., Popenda, M. and Szachniuk, M. (2019) ‘ElTetrado: a tool for
-identification and ONZ classification of tetrads and quadruplexes’, *in
-submission*.
-
-</div>
+5.  <span class="csl-right-inline">D. Lai, J. R. Proctor, J. Y. A. Zhu,
+    and I. M. Meyer, “R-chie : A web server and R package for
+    visualizing RNA secondary structures,” *Nucleic Acids Research*,
+    vol. 40, no. 12, p. e95, 2012, doi:
+    [10.1093/nar/gks241](https://doi.org/10.1093/nar/gks241).</span>
 
 </div>
