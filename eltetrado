@@ -52,6 +52,12 @@ class Nucleotide:
             return 'RNA'
         return 'Other'
 
+    @staticmethod
+    def syn_anti(chi: float) -> str:
+        if chi is None:
+            return '...'
+        return 'syn' if -90 < chi < 90 else 'anti'
+
     def __init__(self, nt: dict, structure3d: Structure):
         self.model: int = 1 if nt['nt_id'].find(':') == -1 else int(nt['nt_id'].split(':')[0])
         self.chain: str = nt['chain_name']
@@ -60,7 +66,8 @@ class Nucleotide:
         self.molecule: str = self.detect_molecule(nt['nt_name'])
         self.full_name: str = nt['nt_id']
         self.short_name: str = nt['nt_code']
-        self.glycosidic_bond: str = nt['glyco_bond']
+        self.chi: float = nt['chi']
+        self.glycosidic_bond: str = self.syn_anti(self.chi)
         self.index: int = nt['index']
         self.model_chain: str = self.chain if nt['nt_id'].find(':') == -1 else f'{self.model}:{self.chain}'
         self.residue3d: Residue = None
@@ -300,6 +307,7 @@ class Tetrad:
             return 'n/a'
 
         # for Webba da Silva's classifcation, the original order needs to be maintained
+        self.reorder()
         if self.nucleotides[1] < self.nucleotides[3]:
             nucleotides = self.nucleotides
         else:
@@ -1012,6 +1020,7 @@ class Encoder(json.JSONEncoder):
                 'molecule': o.molecule,
                 'full_name': o.full_name,
                 'short_name': o.short_name,
+                'chi': o.chi,
                 'glycosidic_bond': o.glycosidic_bond
             }
         if isinstance(o, Pair):
