@@ -21,7 +21,7 @@ from Bio.PDB import PDBParser, MMCIFParser, Structure, Residue, Atom
 from Bio.PDB.Atom import DisorderedAtom
 from Bio.PDB.StructureBuilder import StructureBuilder
 
-__version__ = '1.1.0.dev1'
+__version__ = '1.1.0'
 
 logging.basicConfig(level=os.environ.get("LOGLEVEL", "INFO"))
 log = logging.getLogger('eltetrado')
