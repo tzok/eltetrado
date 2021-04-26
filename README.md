@@ -63,9 +63,8 @@ want ElTetrado to not visualize anything, pass `--no-image` switch to
 it.
 
     usage: eltetrado [-h] [--pdb PDB] [--dssr-json DSSR_JSON] [--output OUTPUT]
-                     [--stacking-mismatch STACKING_MISMATCH]
-                     [--relaxed-stem-definition] [--strict] [--no-reorder]
-                     [--complete-2d] [--no-image] [--version]
+                     [--stacking-mismatch STACKING_MISMATCH] [--strict]
+                     [--no-reorder] [--complete-2d] [--no-image] [--version]
 
     optional arguments:
       -h, --help            show this help message and exit
@@ -79,9 +78,6 @@ it.
                             option can be used with value 1 or 2 to allow this
                             number of nucleotides to be non-stacked with otherwise
                             well aligned tetrad [default=2]
-      --relaxed-stem-definition
-                            when set, two sequentially close tetrades will be
-                            considered a stem regardless of their stacking
       --strict              nucleotides in tetrad are found when linked only by
                             cWH pairing
       --no-reorder          chains of bi- and tetramolecular quadruplexes are
@@ -135,14 +131,38 @@ induced by 5’-3’ indexing. We select permutation with the minimum value.
 
     Chain order: A, B
     n4-helix with 4 tetrads
-      Op quadruplex with 2 tetrads
-        A.G1 A.G4 A.G10 A.G13 cWH-cWH-cWH-cWH O+ planarity=0.63
-          direction=parallel rise=4.12 twist=28.66
-        A.G2 A.G5 A.G11 A.G14 cWH-cWH-cWH-cWH O+ planarity=0.5
-      Op quadruplex with 2 tetrads
-        B.G15 B.G18 B.G24 B.G27 cWH-cWH-cWH-cWH O+ planarity=0.26
+      Op+ VIII 1a quadruplex with 2 tetrads
+        B.G16 B.G19 B.G25 B.G28 cWH-cWH-cWH-cWH O+ VIIIa planarity=0.31
           direction=parallel rise=4.21 twist=33.45
-        B.G16 B.G19 B.G25 B.G28 cWH-cWH-cWH-cWH O+ planarity=0.31
+        B.G15 B.G18 B.G24 B.G27 cWH-cWH-cWH-cWH O+ VIIIa planarity=0.26
+
+        Tracts:
+          B.G25, B.G24
+          B.G28, B.G27
+          B.G16, B.G15
+          B.G19, B.G18
+
+        Loops:
+          propeller- B.A17
+          propeller- B.U20, B.U21, B.U22, B.U23
+          propeller- B.A26
+
+      Op+ VIII 1a quadruplex with 2 tetrads
+        A.G1 A.G4 A.G10 A.G13 cWH-cWH-cWH-cWH O+ VIIIa planarity=0.63
+          direction=parallel rise=4.12 twist=28.66
+        A.G2 A.G5 A.G11 A.G14 cWH-cWH-cWH-cWH O+ VIIIa planarity=0.5
+
+        Tracts:
+          A.G10, A.G11
+          A.G13, A.G14
+          A.G1, A.G2
+          A.G4, A.G5
+
+        Loops:
+          propeller- A.A3
+          propeller- A.U6, A.U7, A.U8, A.U9
+          propeller- A.A12
+
 
     GGAGGUUUUGGAGG-GGAGGUUUUGGAGG
     ([.)]....([.)]-([.)]....([.)]
@@ -173,28 +193,41 @@ induced by 5’-3’ indexing. We select permutation with the minimum value.
     $ ./eltetrado --pdb 4rj1-1.cif
 
     Chain order: A, AB, AA, AC, B, BC, BA, BB
-    n4-helix with 9 tetrads
-      Op quadruplex with 5 tetrads
-        A.G1002 AB.G1002 AA.G1002 AC.G1002 cWH-cWH-cWH-cWH O+ planarity=0.54
-          direction=parallel rise=3.29 twist=27.12
-        A.G1003 AB.G1003 AA.G1003 AC.G1003 cWH-cWH-cWH-cWH O+ planarity=0.56
-          direction=parallel rise=3.34 twist=35.81
-        A.G1004 AB.G1004 AA.G1004 AC.G1004 cWH-cWH-cWH-cWH O+ planarity=0.41
-          direction=parallel rise=3.31 twist=25.9
-        A.G1005 AB.G1005 AA.G1005 AC.G1005 cWH-cWH-cWH-cWH O+ planarity=0.8
+    n4-helix with 10 tetrads
+      Op* VIII n/a quadruplex with 5 tetrads
+        A.U1006 AC.U1006 AA.U1006 AB.U1006 cWH-cWH-cWH-cWH O- VIIIa planarity=1.06
           direction=parallel rise=3.37 twist=39.96
-        A.U1006 AC.U1006 AA.U1006 AB.U1006 cWH-cWH-cWH-cWH O- planarity=1.06
-      Op quadruplex with 4 tetrads
-        B.G2002 BC.G2002 BA.G2002 BB.G2002 cWH-cWH-cWH-cWH O+ planarity=0.67
+        A.G1005 AB.G1005 AA.G1005 AC.G1005 cWH-cWH-cWH-cWH O+ VIIIa planarity=0.8
+          direction=parallel rise=3.31 twist=25.9
+        A.G1004 AB.G1004 AA.G1004 AC.G1004 cWH-cWH-cWH-cWH O+ VIIIa planarity=0.41
+          direction=parallel rise=3.34 twist=35.81
+        A.G1003 AB.G1003 AA.G1003 AC.G1003 cWH-cWH-cWH-cWH O+ VIIIa planarity=0.56
+          direction=parallel rise=3.29 twist=27.12
+        A.G1002 AB.G1002 AA.G1002 AC.G1002 cWH-cWH-cWH-cWH O+ VIIIa planarity=0.54
+
+        Tracts:
+          AB.U1006, AB.G1005, AB.G1004, AB.G1003, AB.G1002
+          A.U1006, A.G1005, A.G1004, A.G1003, A.G1002
+          AC.U1006, AC.G1005, AC.G1004, AC.G1003, AC.G1002
+          AA.U1006, AA.G1005, AA.G1004, AA.G1003, AA.G1002
+
+      Op* VIII n/a quadruplex with 5 tetrads
+        B.G2002 BC.G2002 BA.G2002 BB.G2002 cWH-cWH-cWH-cWH O+ VIIIa planarity=0.67
           direction=parallel rise=3.37 twist=27.41
-        B.G2003 BC.G2003 BA.G2003 BB.G2003 cWH-cWH-cWH-cWH O+ planarity=0.58
+        B.G2003 BC.G2003 BA.G2003 BB.G2003 cWH-cWH-cWH-cWH O+ VIIIa planarity=0.58
           direction=parallel rise=3.32 twist=35.04
-        B.G2004 BC.G2004 BA.G2004 BB.G2004 cWH-cWH-cWH-cWH O+ planarity=0.23
+        B.G2004 BC.G2004 BA.G2004 BB.G2004 cWH-cWH-cWH-cWH O+ VIIIa planarity=0.23
           direction=parallel rise=3.27 twist=25.15
-        B.G2005 BC.G2005 BA.G2005 BB.G2005 cWH-cWH-cWH-cWH O+ planarity=0.78
-    single tetrad without stacking
-      single tetrad
-        B.U2006 BB.U2006 BA.U2006 BC.U2006 cWH-cWH-cWH-cWH O- planarity=1.58
+        B.G2005 BC.G2005 BA.G2005 BB.G2005 cWH-cWH-cWH-cWH O+ VIIIa planarity=0.78
+          direction=parallel rise=7.14 twist=43.41
+        B.U2006 BB.U2006 BA.U2006 BC.U2006 cWH-cWH-cWH-cWH O- VIIIa planarity=1.58
+
+        Tracts:
+          BC.G2002, BC.G2003, BC.G2004, BC.G2005, BC.U2006
+          BA.G2002, BA.G2003, BA.G2004, BA.G2005, BA.U2006
+          BB.G2002, BB.G2003, BB.G2004, BB.G2005, BB.U2006
+          B.G2002, B.G2003, B.G2004, B.G2005, B.U2006
+
 
     UGGGGU-UGGGGU-UGGGGU-UGGGGU-UGGGGU-UGGGGU-UGGGGU-UGGGGU
     .([{<A-.)]}>A-.([{<a-.)]}>a-.([{<A-.)]}>A-.([{<a-.)]}>a
@@ -235,13 +268,13 @@ induced by 5’-3’ indexing. We select permutation with the minimum value.
 # Funding
 
 This research was supported by the National Science Centre, Poland
-\[2016/23/B/ST6/03931\] and Mloda Kadra project \[09/91/SBAD/0684\] from
-Poznan University of Technology, and carried out in the European Centre
-for Bioinformatics and Genomics (Poland). The authors also acknowledge
-partial support by the statutory funds of Poznan University of
-Technology, Polish Ministry of Science and Higher Education, and the
-Institute of Bioorganic Chemistry, PAS within intramural financing
-program.
+\[2016/23/B/ST6/03931, 2019/35/B/ST6/03074\] and Mloda Kadra project
+\[09/91/SBAD/0684\] from Poznan University of Technology, and carried
+out in the European Centre for Bioinformatics and Genomics (Poland). The
+authors also acknowledge partial support by the statutory funds of
+Poznan University of Technology, Polish Ministry of Science and Higher
+Education, and the Institute of Bioorganic Chemistry, PAS within
+intramural financing program.
 
 # Bibliography
 
