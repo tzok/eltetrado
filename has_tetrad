@@ -10,15 +10,17 @@ import tempfile
 
 from collections import defaultdict
 
-__version__ = '1.0.0'
+__version__ = '1.1.0'
 
 
 class Pair:
-    def __init__(self, nt1, nt2):
+    def __init__(self, nt1, nt2, lw):
         self.pair = (nt1, nt2)
+        self.lw = lw
 
     def reverse(self):
-        return Pair(self.pair[1], self.pair[0])
+        lw = '{}{}{}'.format(self.lw[0], self.lw[2], self.lw[1])
+        return Pair(self.pair[1], self.pair[0], lw)
 
 
 class Structure:
@@ -33,18 +35,30 @@ class Structure:
             graph[nt1].append(nt2)
         self.graph = graph
 
-    def has_tetrad(self):
+    def is_valid_tetrad(self, nt1, nt2, nt3, nt4):
+        p1, p2, p3, p4 = self.pairs[(nt1, nt2)], self.pairs[(nt2, nt3)], self.pairs[(nt3, nt4)], self.pairs[(nt4, nt1)]
+        for pi, pj in ((p1, p4), (p2, p1), (p3, p2), (p4, p3)):
+            if pi.lw[1] == pj.lw[2]:
+                return False
+        return True
+
+    def has_tetrads(self):
+        tetrads = set()
         for i in self.graph:
             for j in filter(lambda x: x != i, self.graph[i]):
                 for k in filter(lambda x: x not in (i, j), self.graph[j]):
                     for l in filter(lambda x: x not in (i, j, k) and x in self.graph[i], self.graph[k]):
-                        return True
+                        if self.is_valid_tetrad(i, j, k, l):
+                            tetrads.add(frozenset([i, j, k, l]))
+                        if len(tetrads) > 1:
+                            return True
+        return False
 
     def _read_pairs(self, data: dict):
         pairs = dict()
         for pair in data['pairs']:
             nt1, nt2 = pair['nt1'], pair['nt2']
-            pair = Pair(nt1, nt2)
+            pair = Pair(nt1, nt2, pair['LW'])
             pairs[(nt1, nt2)] = pair
             pairs[(nt2, nt1)] = pair.reverse()
         return pairs
@@ -105,7 +119,7 @@ if __name__ == '__main__':
     structure = Structure(dssr)
     structure.build_graph()
 
-    if structure.has_tetrad():
+    if structure.has_tetrads():
         exit()
     else:
         exit(1)
