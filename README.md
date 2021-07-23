@@ -1,3 +1,5 @@
+![](logo.svg)
+
 # Project description
 
 This is an application to analyze base pairing patterns of DNA/RNA 3D
@@ -5,11 +7,11 @@ structures to find and classify tetrads and quadruplexes. ElTetrado
 assigns tetrads to one of the ONZ classes (O, N, Z) alongside with the
 directionality of the tetrad (+/-) determined by the bonds between bases
 and their non-canonical interactions. The interactions follow
-Leontis/Westhof classification \[1\]. Watson-Crick (W) edge of first
-base in the tetrad structure exposed to the Hoogsteen (H) edge of the
-next nucleobase from the same tetrad sets the tetrad directionality,
-clockwise (+) or anticlockwise (-). For more details, please refer to
-\[2\] and \[3\]
+Leontis/Westhof classification (Leontis and Westhof, 2001). Watson-Crick
+(W) edge of first base in the tetrad structure exposed to the Hoogsteen
+(H) edge of the next nucleobase from the same tetrad sets the tetrad
+directionality, clockwise (+) or anticlockwise (-). For more details,
+please refer to Zok *et al.* (2020) and Popenda *et al.* (2020)
 
 # Dependencies
 
@@ -24,8 +26,8 @@ call `pip3`:
 
     pip3 install -r requirements.txt
 
-ElTetrado depends on DSSR \[4\] in terms of detection of base pairing
-and stacking. The binary `x3dna-dssr` can be
+ElTetrado depends on DSSR (Lu *et al.*, 2015) in terms of detection of
+base pairing and stacking. The binary `x3dna-dssr` can be
 [downloaded](http://forum.x3dna.org/site-announcements/download-instructions/)
 and put in the same directory as `eltetrado` which will execute it
 during analysis. Alternatively, one can pre-process the 3D data with
@@ -33,8 +35,8 @@ during analysis. Alternatively, one can pre-process the 3D data with
 (see Usage section below).
 
 Visualization is created by `R` 3.6+ script which uses
-[R4RNA](https://www.e-rna.org/r-chie/) \[5\] library. The dependency
-will be automatically installed if not present.
+[R4RNA](https://www.e-rna.org/r-chie/) (Lai *et al.*, 2012) library. The
+dependency will be automatically installed if not present.
 
 # Usage
 
@@ -111,8 +113,8 @@ tetrads.
 ElTetrado keeps a table of tetrad classification scores according to
 these rules:
 
--   Type preference: `O` &gt; `N` &gt; `Z`
--   Direction preference: `+` &gt; `-`
+-   Type preference: `O` > `N` > `Z`
+-   Direction preference: `+` > `-`
 
 The table keeps low values for preferred classes i.e. `O+` is 0, `O-` is
 1 and so on up to `Z-` with score 5. For every permutation of chain
@@ -126,15 +128,14 @@ induced by 5’-3’ indexing. We select permutation with the minimum value.
 ![](1my9.png)
 
     $ curl ftp://ftp.wwpdb.org/pub/pdb/data/structures/divided/mmCIF/my/1my9.cif.gz | gzip -d > 1my9.cif
-
-    $ ./eltetrado --pdb 1my9.cif
+    $ ./eltetrado --pdb 1my9.cif --output 1my9.json
 
     Chain order: A, B
     n4-helix with 4 tetrads
       Op+ VIII 1a quadruplex with 2 tetrads
-        B.G16 B.G19 B.G25 B.G28 cWH-cWH-cWH-cWH O+ VIIIa planarity=0.31
+        B.G16 B.G19 B.G25 B.G28 cWH-cWH-cWH-cWH O+ VIIIa planarity=0.31 ions_channel= ions_outside={}
           direction=parallel rise=4.21 twist=33.45
-        B.G15 B.G18 B.G24 B.G27 cWH-cWH-cWH-cWH O+ VIIIa planarity=0.26
+        B.G15 B.G18 B.G24 B.G27 cWH-cWH-cWH-cWH O+ VIIIa planarity=0.26 ions_channel= ions_outside={}
 
         Tracts:
           B.G25, B.G24
@@ -148,9 +149,9 @@ induced by 5’-3’ indexing. We select permutation with the minimum value.
           propeller- B.A26
 
       Op+ VIII 1a quadruplex with 2 tetrads
-        A.G1 A.G4 A.G10 A.G13 cWH-cWH-cWH-cWH O+ VIIIa planarity=0.63
+        A.G1 A.G4 A.G10 A.G13 cWH-cWH-cWH-cWH O+ VIIIa planarity=0.63 ions_channel= ions_outside={}
           direction=parallel rise=4.12 twist=28.66
-        A.G2 A.G5 A.G11 A.G14 cWH-cWH-cWH-cWH O+ VIIIa planarity=0.5
+        A.G2 A.G5 A.G11 A.G14 cWH-cWH-cWH-cWH O+ VIIIa planarity=0.5 ions_channel= ions_outside={}
 
         Tracts:
           A.G10, A.G11
@@ -168,102 +169,2443 @@ induced by 5’-3’ indexing. We select permutation with the minimum value.
     ([.)]....([.)]-([.)]....([.)]
     ([.([....)].)]-([.([....)].)]
 
-    Plot: 1my9-str.pdf
+<details>
+<summary>
+Click to see the output JSON
+</summary>
 
-    Plot: 1my9-h1.pdf
+``` json
+{
+  "metals": "",
+  "nucleotides": {
+    "A.G1": {
+      "index": 1,
+      "model": 1,
+      "chain": "A",
+      "number": 1,
+      "icode": " ",
+      "molecule": "RNA",
+      "full_name": "A.G1",
+      "short_name": "G",
+      "chi": -114.063,
+      "glycosidic_bond": "anti"
+    },
+    "A.G2": {
+      "index": 2,
+      "model": 1,
+      "chain": "A",
+      "number": 2,
+      "icode": " ",
+      "molecule": "RNA",
+      "full_name": "A.G2",
+      "short_name": "G",
+      "chi": -136.905,
+      "glycosidic_bond": "anti"
+    },
+    "A.A3": {
+      "index": 3,
+      "model": 1,
+      "chain": "A",
+      "number": 3,
+      "icode": " ",
+      "molecule": "RNA",
+      "full_name": "A.A3",
+      "short_name": "A",
+      "chi": -53.884,
+      "glycosidic_bond": "syn"
+    },
+    "A.G4": {
+      "index": 4,
+      "model": 1,
+      "chain": "A",
+      "number": 4,
+      "icode": " ",
+      "molecule": "RNA",
+      "full_name": "A.G4",
+      "short_name": "G",
+      "chi": 167.763,
+      "glycosidic_bond": "anti"
+    },
+    "A.G5": {
+      "index": 5,
+      "model": 1,
+      "chain": "A",
+      "number": 5,
+      "icode": " ",
+      "molecule": "RNA",
+      "full_name": "A.G5",
+      "short_name": "G",
+      "chi": -98.198,
+      "glycosidic_bond": "anti"
+    },
+    "A.U6": {
+      "index": 6,
+      "model": 1,
+      "chain": "A",
+      "number": 6,
+      "icode": " ",
+      "molecule": "RNA",
+      "full_name": "A.U6",
+      "short_name": "U",
+      "chi": -150.069,
+      "glycosidic_bond": "anti"
+    },
+    "A.U7": {
+      "index": 7,
+      "model": 1,
+      "chain": "A",
+      "number": 7,
+      "icode": " ",
+      "molecule": "RNA",
+      "full_name": "A.U7",
+      "short_name": "U",
+      "chi": -130.523,
+      "glycosidic_bond": "anti"
+    },
+    "A.U8": {
+      "index": 8,
+      "model": 1,
+      "chain": "A",
+      "number": 8,
+      "icode": " ",
+      "molecule": "RNA",
+      "full_name": "A.U8",
+      "short_name": "U",
+      "chi": -158.504,
+      "glycosidic_bond": "anti"
+    },
+    "A.U9": {
+      "index": 9,
+      "model": 1,
+      "chain": "A",
+      "number": 9,
+      "icode": " ",
+      "molecule": "RNA",
+      "full_name": "A.U9",
+      "short_name": "U",
+      "chi": -149.743,
+      "glycosidic_bond": "anti"
+    },
+    "A.G10": {
+      "index": 10,
+      "model": 1,
+      "chain": "A",
+      "number": 10,
+      "icode": " ",
+      "molecule": "RNA",
+      "full_name": "A.G10",
+      "short_name": "G",
+      "chi": -113.245,
+      "glycosidic_bond": "anti"
+    },
+    "A.G11": {
+      "index": 11,
+      "model": 1,
+      "chain": "A",
+      "number": 11,
+      "icode": " ",
+      "molecule": "RNA",
+      "full_name": "A.G11",
+      "short_name": "G",
+      "chi": -138.466,
+      "glycosidic_bond": "anti"
+    },
+    "A.A12": {
+      "index": 12,
+      "model": 1,
+      "chain": "A",
+      "number": 12,
+      "icode": " ",
+      "molecule": "RNA",
+      "full_name": "A.A12",
+      "short_name": "A",
+      "chi": -70.627,
+      "glycosidic_bond": "syn"
+    },
+    "A.G13": {
+      "index": 13,
+      "model": 1,
+      "chain": "A",
+      "number": 13,
+      "icode": " ",
+      "molecule": "RNA",
+      "full_name": "A.G13",
+      "short_name": "G",
+      "chi": 150.585,
+      "glycosidic_bond": "anti"
+    },
+    "A.G14": {
+      "index": 14,
+      "model": 1,
+      "chain": "A",
+      "number": 14,
+      "icode": " ",
+      "molecule": "RNA",
+      "full_name": "A.G14",
+      "short_name": "G",
+      "chi": -158.594,
+      "glycosidic_bond": "anti"
+    },
+    "B.G15": {
+      "index": 15,
+      "model": 1,
+      "chain": "B",
+      "number": 15,
+      "icode": " ",
+      "molecule": "RNA",
+      "full_name": "B.G15",
+      "short_name": "G",
+      "chi": -114.303,
+      "glycosidic_bond": "anti"
+    },
+    "B.G16": {
+      "index": 16,
+      "model": 1,
+      "chain": "B",
+      "number": 16,
+      "icode": " ",
+      "molecule": "RNA",
+      "full_name": "B.G16",
+      "short_name": "G",
+      "chi": -134.388,
+      "glycosidic_bond": "anti"
+    },
+    "B.A17": {
+      "index": 17,
+      "model": 1,
+      "chain": "B",
+      "number": 17,
+      "icode": " ",
+      "molecule": "RNA",
+      "full_name": "B.A17",
+      "short_name": "A",
+      "chi": -52.702,
+      "glycosidic_bond": "syn"
+    },
+    "B.G18": {
+      "index": 18,
+      "model": 1,
+      "chain": "B",
+      "number": 18,
+      "icode": " ",
+      "molecule": "RNA",
+      "full_name": "B.G18",
+      "short_name": "G",
+      "chi": 156.482,
+      "glycosidic_bond": "anti"
+    },
+    "B.G19": {
+      "index": 19,
+      "model": 1,
+      "chain": "B",
+      "number": 19,
+      "icode": " ",
+      "molecule": "RNA",
+      "full_name": "B.G19",
+      "short_name": "G",
+      "chi": -100.234,
+      "glycosidic_bond": "anti"
+    },
+    "B.U20": {
+      "index": 20,
+      "model": 1,
+      "chain": "B",
+      "number": 20,
+      "icode": " ",
+      "molecule": "RNA",
+      "full_name": "B.U20",
+      "short_name": "U",
+      "chi": -146.822,
+      "glycosidic_bond": "anti"
+    },
+    "B.U21": {
+      "index": 21,
+      "model": 1,
+      "chain": "B",
+      "number": 21,
+      "icode": " ",
+      "molecule": "RNA",
+      "full_name": "B.U21",
+      "short_name": "U",
+      "chi": -144.09,
+      "glycosidic_bond": "anti"
+    },
+    "B.U22": {
+      "index": 22,
+      "model": 1,
+      "chain": "B",
+      "number": 22,
+      "icode": " ",
+      "molecule": "RNA",
+      "full_name": "B.U22",
+      "short_name": "U",
+      "chi": -160.945,
+      "glycosidic_bond": "anti"
+    },
+    "B.U23": {
+      "index": 23,
+      "model": 1,
+      "chain": "B",
+      "number": 23,
+      "icode": " ",
+      "molecule": "RNA",
+      "full_name": "B.U23",
+      "short_name": "U",
+      "chi": -144.171,
+      "glycosidic_bond": "anti"
+    },
+    "B.G24": {
+      "index": 24,
+      "model": 1,
+      "chain": "B",
+      "number": 24,
+      "icode": " ",
+      "molecule": "RNA",
+      "full_name": "B.G24",
+      "short_name": "G",
+      "chi": -121.507,
+      "glycosidic_bond": "anti"
+    },
+    "B.G25": {
+      "index": 25,
+      "model": 1,
+      "chain": "B",
+      "number": 25,
+      "icode": " ",
+      "molecule": "RNA",
+      "full_name": "B.G25",
+      "short_name": "G",
+      "chi": -132.739,
+      "glycosidic_bond": "anti"
+    },
+    "B.A26": {
+      "index": 26,
+      "model": 1,
+      "chain": "B",
+      "number": 26,
+      "icode": " ",
+      "molecule": "RNA",
+      "full_name": "B.A26",
+      "short_name": "A",
+      "chi": -72.432,
+      "glycosidic_bond": "syn"
+    },
+    "B.G27": {
+      "index": 27,
+      "model": 1,
+      "chain": "B",
+      "number": 27,
+      "icode": " ",
+      "molecule": "RNA",
+      "full_name": "B.G27",
+      "short_name": "G",
+      "chi": -178.717,
+      "glycosidic_bond": "anti"
+    },
+    "B.G28": {
+      "index": 28,
+      "model": 1,
+      "chain": "B",
+      "number": 28,
+      "icode": " ",
+      "molecule": "RNA",
+      "full_name": "B.G28",
+      "short_name": "G",
+      "chi": -130.902,
+      "glycosidic_bond": "anti"
+    }
+  },
+  "base_pairs": [
+    {
+      "nt1": "A.G1",
+      "nt2": "A.A3",
+      "stericity": "trans",
+      "edge5": "Sugar",
+      "edge3": "Hoogsteen"
+    },
+    {
+      "nt1": "A.A3",
+      "nt2": "A.G1",
+      "stericity": "trans",
+      "edge5": "Hoogsteen",
+      "edge3": "Sugar"
+    },
+    {
+      "nt1": "A.G1",
+      "nt2": "A.G4",
+      "stericity": "cis",
+      "edge5": "Watson-Crick",
+      "edge3": "Hoogsteen"
+    },
+    {
+      "nt1": "A.G4",
+      "nt2": "A.G1",
+      "stericity": "cis",
+      "edge5": "Hoogsteen",
+      "edge3": "Watson-Crick"
+    },
+    {
+      "nt1": "A.G1",
+      "nt2": "A.G13",
+      "stericity": "cis",
+      "edge5": "Hoogsteen",
+      "edge3": "Watson-Crick"
+    },
+    {
+      "nt1": "A.G13",
+      "nt2": "A.G1",
+      "stericity": "cis",
+      "edge5": "Watson-Crick",
+      "edge3": "Hoogsteen"
+    },
+    {
+      "nt1": "A.G2",
+      "nt2": "A.G5",
+      "stericity": "cis",
+      "edge5": "Watson-Crick",
+      "edge3": "Hoogsteen"
+    },
+    {
+      "nt1": "A.G5",
+      "nt2": "A.G2",
+      "stericity": "cis",
+      "edge5": "Hoogsteen",
+      "edge3": "Watson-Crick"
+    },
+    {
+      "nt1": "A.G2",
+      "nt2": "A.G11",
+      "stericity": "trans",
+      "edge5": "Watson-Crick",
+      "edge3": "Watson-Crick"
+    },
+    {
+      "nt1": "A.G11",
+      "nt2": "A.G2",
+      "stericity": "trans",
+      "edge5": "Watson-Crick",
+      "edge3": "Watson-Crick"
+    },
+    {
+      "nt1": "A.G2",
+      "nt2": "A.G14",
+      "stericity": "cis",
+      "edge5": "Hoogsteen",
+      "edge3": "Watson-Crick"
+    },
+    {
+      "nt1": "A.G14",
+      "nt2": "A.G2",
+      "stericity": "cis",
+      "edge5": "Watson-Crick",
+      "edge3": "Hoogsteen"
+    },
+    {
+      "nt1": "A.G4",
+      "nt2": "A.G10",
+      "stericity": "cis",
+      "edge5": "Watson-Crick",
+      "edge3": "Hoogsteen"
+    },
+    {
+      "nt1": "A.G10",
+      "nt2": "A.G4",
+      "stericity": "cis",
+      "edge5": "Hoogsteen",
+      "edge3": "Watson-Crick"
+    },
+    {
+      "nt1": "A.G4",
+      "nt2": "B.A17",
+      "stericity": "trans",
+      "edge5": "Hoogsteen",
+      "edge3": "Hoogsteen"
+    },
+    {
+      "nt1": "B.A17",
+      "nt2": "A.G4",
+      "stericity": "trans",
+      "edge5": "Hoogsteen",
+      "edge3": "Hoogsteen"
+    },
+    {
+      "nt1": "A.G5",
+      "nt2": "A.G11",
+      "stericity": "cis",
+      "edge5": "Watson-Crick",
+      "edge3": "Hoogsteen"
+    },
+    {
+      "nt1": "A.G11",
+      "nt2": "A.G5",
+      "stericity": "cis",
+      "edge5": "Hoogsteen",
+      "edge3": "Watson-Crick"
+    },
+    {
+      "nt1": "A.G10",
+      "nt2": "A.A12",
+      "stericity": "trans",
+      "edge5": "Sugar",
+      "edge3": "Hoogsteen"
+    },
+    {
+      "nt1": "A.A12",
+      "nt2": "A.G10",
+      "stericity": "trans",
+      "edge5": "Hoogsteen",
+      "edge3": "Sugar"
+    },
+    {
+      "nt1": "A.G10",
+      "nt2": "A.G13",
+      "stericity": "cis",
+      "edge5": "Watson-Crick",
+      "edge3": "Hoogsteen"
+    },
+    {
+      "nt1": "A.G13",
+      "nt2": "A.G10",
+      "stericity": "cis",
+      "edge5": "Hoogsteen",
+      "edge3": "Watson-Crick"
+    },
+    {
+      "nt1": "A.G11",
+      "nt2": "A.G14",
+      "stericity": "cis",
+      "edge5": "Watson-Crick",
+      "edge3": "Hoogsteen"
+    },
+    {
+      "nt1": "A.G14",
+      "nt2": "A.G11",
+      "stericity": "cis",
+      "edge5": "Hoogsteen",
+      "edge3": "Watson-Crick"
+    },
+    {
+      "nt1": "A.G13",
+      "nt2": "B.G27",
+      "stericity": "cis",
+      "edge5": "Hoogsteen",
+      "edge3": "Hoogsteen"
+    },
+    {
+      "nt1": "B.G27",
+      "nt2": "A.G13",
+      "stericity": "cis",
+      "edge5": "Hoogsteen",
+      "edge3": "Hoogsteen"
+    },
+    {
+      "nt1": "B.G15",
+      "nt2": "B.A17",
+      "stericity": "trans",
+      "edge5": "Sugar",
+      "edge3": "Hoogsteen"
+    },
+    {
+      "nt1": "B.A17",
+      "nt2": "B.G15",
+      "stericity": "trans",
+      "edge5": "Hoogsteen",
+      "edge3": "Sugar"
+    },
+    {
+      "nt1": "B.G15",
+      "nt2": "B.G18",
+      "stericity": "cis",
+      "edge5": "Watson-Crick",
+      "edge3": "Hoogsteen"
+    },
+    {
+      "nt1": "B.G18",
+      "nt2": "B.G15",
+      "stericity": "cis",
+      "edge5": "Hoogsteen",
+      "edge3": "Watson-Crick"
+    },
+    {
+      "nt1": "B.G15",
+      "nt2": "B.G27",
+      "stericity": "cis",
+      "edge5": "Hoogsteen",
+      "edge3": "Watson-Crick"
+    },
+    {
+      "nt1": "B.G27",
+      "nt2": "B.G15",
+      "stericity": "cis",
+      "edge5": "Watson-Crick",
+      "edge3": "Hoogsteen"
+    },
+    {
+      "nt1": "B.G16",
+      "nt2": "B.G19",
+      "stericity": "cis",
+      "edge5": "Watson-Crick",
+      "edge3": "Hoogsteen"
+    },
+    {
+      "nt1": "B.G19",
+      "nt2": "B.G16",
+      "stericity": "cis",
+      "edge5": "Hoogsteen",
+      "edge3": "Watson-Crick"
+    },
+    {
+      "nt1": "B.G16",
+      "nt2": "B.G28",
+      "stericity": "cis",
+      "edge5": "Hoogsteen",
+      "edge3": "Watson-Crick"
+    },
+    {
+      "nt1": "B.G28",
+      "nt2": "B.G16",
+      "stericity": "cis",
+      "edge5": "Watson-Crick",
+      "edge3": "Hoogsteen"
+    },
+    {
+      "nt1": "B.G18",
+      "nt2": "B.G24",
+      "stericity": "cis",
+      "edge5": "Watson-Crick",
+      "edge3": "Hoogsteen"
+    },
+    {
+      "nt1": "B.G24",
+      "nt2": "B.G18",
+      "stericity": "cis",
+      "edge5": "Hoogsteen",
+      "edge3": "Watson-Crick"
+    },
+    {
+      "nt1": "B.G19",
+      "nt2": "B.G25",
+      "stericity": "cis",
+      "edge5": "Watson-Crick",
+      "edge3": "Hoogsteen"
+    },
+    {
+      "nt1": "B.G25",
+      "nt2": "B.G19",
+      "stericity": "cis",
+      "edge5": "Hoogsteen",
+      "edge3": "Watson-Crick"
+    },
+    {
+      "nt1": "B.G24",
+      "nt2": "B.A26",
+      "stericity": "trans",
+      "edge5": "Sugar",
+      "edge3": "Hoogsteen"
+    },
+    {
+      "nt1": "B.A26",
+      "nt2": "B.G24",
+      "stericity": "trans",
+      "edge5": "Hoogsteen",
+      "edge3": "Sugar"
+    },
+    {
+      "nt1": "B.G24",
+      "nt2": "B.G27",
+      "stericity": "cis",
+      "edge5": "Watson-Crick",
+      "edge3": "Hoogsteen"
+    },
+    {
+      "nt1": "B.G27",
+      "nt2": "B.G24",
+      "stericity": "cis",
+      "edge5": "Hoogsteen",
+      "edge3": "Watson-Crick"
+    },
+    {
+      "nt1": "B.G25",
+      "nt2": "B.G28",
+      "stericity": "cis",
+      "edge5": "Watson-Crick",
+      "edge3": "Hoogsteen"
+    },
+    {
+      "nt1": "B.G28",
+      "nt2": "B.G25",
+      "stericity": "cis",
+      "edge5": "Hoogsteen",
+      "edge3": "Watson-Crick"
+    }
+  ],
+  "helices": [
+    {
+      "quadruplexes": [
+        {
+          "tetrads": {
+            "B.G16-B.G19-B.G25-B.G28": {
+              "nt1": "B.G16",
+              "nt2": "B.G19",
+              "nt3": "B.G25",
+              "nt4": "B.G28",
+              "onz": "O+",
+              "gba_classification": "VIIIa",
+              "planarity_deviation": 0.31002684978384765,
+              "ions_channel": [],
+              "ions_outside": {}
+            },
+            "B.G15-B.G18-B.G24-B.G27": {
+              "nt1": "B.G15",
+              "nt2": "B.G18",
+              "nt3": "B.G24",
+              "nt4": "B.G27",
+              "onz": "O+",
+              "gba_classification": "VIIIa",
+              "planarity_deviation": 0.2616979115189099,
+              "ions_channel": [],
+              "ions_outside": {}
+            }
+          },
+          "onzm": "Op+",
+          "loop_classification": "1a",
+          "gba_classification": "VIII",
+          "tracts": [
+            [
+              "B.G25",
+              "B.G24"
+            ],
+            [
+              "B.G28",
+              "B.G27"
+            ],
+            [
+              "B.G16",
+              "B.G15"
+            ],
+            [
+              "B.G19",
+              "B.G18"
+            ]
+          ],
+          "loops": [
+            {
+              "loop_type": "propeller-",
+              "nucleotides": [
+                "B.A17"
+              ]
+            },
+            {
+              "loop_type": "propeller-",
+              "nucleotides": [
+                "B.U20",
+                "B.U21",
+                "B.U22",
+                "B.U23"
+              ]
+            },
+            {
+              "loop_type": "propeller-",
+              "nucleotides": [
+                "B.A26"
+              ]
+            }
+          ]
+        },
+        {
+          "tetrads": {
+            "A.G1-A.G4-A.G10-A.G13": {
+              "nt1": "A.G1",
+              "nt2": "A.G4",
+              "nt3": "A.G10",
+              "nt4": "A.G13",
+              "onz": "O+",
+              "gba_classification": "VIIIa",
+              "planarity_deviation": 0.6331163330540677,
+              "ions_channel": [],
+              "ions_outside": {}
+            },
+            "A.G2-A.G5-A.G11-A.G14": {
+              "nt1": "A.G2",
+              "nt2": "A.G5",
+              "nt3": "A.G11",
+              "nt4": "A.G14",
+              "onz": "O+",
+              "gba_classification": "VIIIa",
+              "planarity_deviation": 0.49745503003636027,
+              "ions_channel": [],
+              "ions_outside": {}
+            }
+          },
+          "onzm": "Op+",
+          "loop_classification": "1a",
+          "gba_classification": "VIII",
+          "tracts": [
+            [
+              "A.G10",
+              "A.G11"
+            ],
+            [
+              "A.G13",
+              "A.G14"
+            ],
+            [
+              "A.G1",
+              "A.G2"
+            ],
+            [
+              "A.G4",
+              "A.G5"
+            ]
+          ],
+          "loops": [
+            {
+              "loop_type": "propeller-",
+              "nucleotides": [
+                "A.A3"
+              ]
+            },
+            {
+              "loop_type": "propeller-",
+              "nucleotides": [
+                "A.U6",
+                "A.U7",
+                "A.U8",
+                "A.U9"
+              ]
+            },
+            {
+              "loop_type": "propeller-",
+              "nucleotides": [
+                "A.A12"
+              ]
+            }
+          ]
+        }
+      ],
+      "tetrad_pairs": [
+        {
+          "tetrad1": "B.G16-B.G19-B.G25-B.G28",
+          "tetrad2": "B.G15-B.G18-B.G24-B.G27",
+          "direction": "parallel",
+          "rise": 4.211160689840694,
+          "twist": 33.44705121023191
+        },
+        {
+          "tetrad1": "B.G15-B.G18-B.G24-B.G27",
+          "tetrad2": "A.G1-A.G4-A.G10-A.G13",
+          "direction": "parallel",
+          "rise": 3.184510351147094,
+          "twist": 2.4776498925690027
+        },
+        {
+          "tetrad1": "A.G1-A.G4-A.G10-A.G13",
+          "tetrad2": "A.G2-A.G5-A.G11-A.G14",
+          "direction": "parallel",
+          "rise": 4.121721871766505,
+          "twist": 28.658873381786407
+        }
+      ]
+    }
+  ]
+}
+```
 
-    Plot: 1my9-h1-q1.pdf
-
-    Plot: 1my9-h1-q1-t1.pdf
-
-    Plot: 1my9-h1-q1-t2.pdf
-
-    Plot: 1my9-h1-q2.pdf
-
-    Plot: 1my9-h1-q2-t1.pdf
-
-    Plot: 1my9-h1-q2-t2.pdf
+</details>
 
 ## 4RJ1: Structural variations and solvent structure of UGGGGU quadruplexes stabilized by Sr2+ ions
 
 ![](4rj1.png)
 
     $ curl https://www.ebi.ac.uk/pdbe/static/entry/download/4rj1-assembly-1.cif.gz | gzip -d > 4rj1-1.cif
-
-    $ ./eltetrado --pdb 4rj1-1.cif
+    $ ./eltetrado --pdb 4rj1-1.cif --output 4rj1-1.json
 
     Chain order: A, AB, AA, AC, B, BC, BA, BB
     n4-helix with 10 tetrads
       Op* VIII n/a quadruplex with 5 tetrads
-        A.U1006 AC.U1006 AA.U1006 AB.U1006 cWH-cWH-cWH-cWH O- VIIIa planarity=1.06
-          direction=parallel rise=3.37 twist=39.96
-        A.G1005 AB.G1005 AA.G1005 AC.G1005 cWH-cWH-cWH-cWH O+ VIIIa planarity=0.8
-          direction=parallel rise=3.31 twist=25.9
-        A.G1004 AB.G1004 AA.G1004 AC.G1004 cWH-cWH-cWH-cWH O+ VIIIa planarity=0.41
-          direction=parallel rise=3.34 twist=35.81
-        A.G1003 AB.G1003 AA.G1003 AC.G1003 cWH-cWH-cWH-cWH O+ VIIIa planarity=0.56
-          direction=parallel rise=3.29 twist=27.12
-        A.G1002 AB.G1002 AA.G1002 AC.G1002 cWH-cWH-cWH-cWH O+ VIIIa planarity=0.54
+        B.U2006 BB.U2006 BA.U2006 BC.U2006 cWH-cWH-cWH-cWH O- VIIIa planarity=1.58 ions_channel=NA,NA ions_outside={}
+          direction=parallel rise=7.14 twist=43.41
+        B.G2005 BC.G2005 BA.G2005 BB.G2005 cWH-cWH-cWH-cWH O+ VIIIa planarity=0.78 ions_channel= ions_outside={}
+          direction=parallel rise=3.27 twist=25.15
+        B.G2004 BC.G2004 BA.G2004 BB.G2004 cWH-cWH-cWH-cWH O+ VIIIa planarity=0.23 ions_channel=SR ions_outside={}
+          direction=parallel rise=3.32 twist=35.04
+        B.G2003 BC.G2003 BA.G2003 BB.G2003 cWH-cWH-cWH-cWH O+ VIIIa planarity=0.58 ions_channel=SR ions_outside={}
+          direction=parallel rise=3.37 twist=27.41
+        B.G2002 BC.G2002 BA.G2002 BB.G2002 cWH-cWH-cWH-cWH O+ VIIIa planarity=0.67 ions_channel= ions_outside={}
 
         Tracts:
-          AB.U1006, AB.G1005, AB.G1004, AB.G1003, AB.G1002
-          A.U1006, A.G1005, A.G1004, A.G1003, A.G1002
-          AC.U1006, AC.G1005, AC.G1004, AC.G1003, AC.G1002
-          AA.U1006, AA.G1005, AA.G1004, AA.G1003, AA.G1002
+          BA.U2006, BA.G2005, BA.G2004, BA.G2003, BA.G2002
+          BC.U2006, BC.G2005, BC.G2004, BC.G2003, BC.G2002
+          B.U2006, B.G2005, B.G2004, B.G2003, B.G2002
+          BB.U2006, BB.G2005, BB.G2004, BB.G2003, BB.G2002
 
       Op* VIII n/a quadruplex with 5 tetrads
-        B.G2002 BC.G2002 BA.G2002 BB.G2002 cWH-cWH-cWH-cWH O+ VIIIa planarity=0.67
-          direction=parallel rise=3.37 twist=27.41
-        B.G2003 BC.G2003 BA.G2003 BB.G2003 cWH-cWH-cWH-cWH O+ VIIIa planarity=0.58
-          direction=parallel rise=3.32 twist=35.04
-        B.G2004 BC.G2004 BA.G2004 BB.G2004 cWH-cWH-cWH-cWH O+ VIIIa planarity=0.23
-          direction=parallel rise=3.27 twist=25.15
-        B.G2005 BC.G2005 BA.G2005 BB.G2005 cWH-cWH-cWH-cWH O+ VIIIa planarity=0.78
-          direction=parallel rise=7.14 twist=43.41
-        B.U2006 BB.U2006 BA.U2006 BC.U2006 cWH-cWH-cWH-cWH O- VIIIa planarity=1.58
+        A.G1002 AB.G1002 AA.G1002 AC.G1002 cWH-cWH-cWH-cWH O+ VIIIa planarity=0.54 ions_channel= ions_outside={}
+          direction=parallel rise=3.29 twist=27.12
+        A.G1003 AB.G1003 AA.G1003 AC.G1003 cWH-cWH-cWH-cWH O+ VIIIa planarity=0.56 ions_channel=SR ions_outside={}
+          direction=parallel rise=3.34 twist=35.81
+        A.G1004 AB.G1004 AA.G1004 AC.G1004 cWH-cWH-cWH-cWH O+ VIIIa planarity=0.41 ions_channel= ions_outside={}
+          direction=parallel rise=3.31 twist=25.9
+        A.G1005 AB.G1005 AA.G1005 AC.G1005 cWH-cWH-cWH-cWH O+ VIIIa planarity=0.8 ions_channel=SR ions_outside={}
+          direction=parallel rise=3.37 twist=39.96
+        A.U1006 AC.U1006 AA.U1006 AB.U1006 cWH-cWH-cWH-cWH O- VIIIa planarity=1.06 ions_channel= ions_outside={A.U1006: 'SR', AA.U1006: 'SR', AB.U1006: 'SR', AC.U1006: 'SR'}
 
         Tracts:
-          BC.G2002, BC.G2003, BC.G2004, BC.G2005, BC.U2006
-          BA.G2002, BA.G2003, BA.G2004, BA.G2005, BA.U2006
-          BB.G2002, BB.G2003, BB.G2004, BB.G2005, BB.U2006
-          B.G2002, B.G2003, B.G2004, B.G2005, B.U2006
+          AA.G1002, AA.G1003, AA.G1004, AA.G1005, AA.U1006
+          AC.G1002, AC.G1003, AC.G1004, AC.G1005, AC.U1006
+          A.G1002, A.G1003, A.G1004, A.G1005, A.U1006
+          AB.G1002, AB.G1003, AB.G1004, AB.G1005, AB.U1006
 
 
     UGGGGU-UGGGGU-UGGGGU-UGGGGU-UGGGGU-UGGGGU-UGGGGU-UGGGGU
     .([{<A-.)]}>A-.([{<a-.)]}>a-.([{<A-.)]}>A-.([{<a-.)]}>a
     .([{<A-.([{<a-.)]}>A-.)]}>a-.([{<A-.([{<a-.)]}>A-.)]}>a
 
-    Plot: 4rj1-1-str.pdf
+<details>
+<summary>
+Click to see the output JSON
+</summary>
 
-    Plot: 4rj1-1-h1.pdf
+``` json
+{
+  "metals": "Ca=12,Na=2,Sr=8",
+  "nucleotides": {
+    "A.U1001": {
+      "index": 1,
+      "model": 1,
+      "chain": "A",
+      "number": 1001,
+      "icode": " ",
+      "molecule": "RNA",
+      "full_name": "A.U1001",
+      "short_name": "U",
+      "chi": -141.927,
+      "glycosidic_bond": "anti"
+    },
+    "A.G1002": {
+      "index": 2,
+      "model": 1,
+      "chain": "A",
+      "number": 1002,
+      "icode": " ",
+      "molecule": "RNA",
+      "full_name": "A.G1002",
+      "short_name": "G",
+      "chi": -165.93,
+      "glycosidic_bond": "anti"
+    },
+    "A.G1003": {
+      "index": 3,
+      "model": 1,
+      "chain": "A",
+      "number": 1003,
+      "icode": " ",
+      "molecule": "RNA",
+      "full_name": "A.G1003",
+      "short_name": "G",
+      "chi": -121.565,
+      "glycosidic_bond": "anti"
+    },
+    "A.G1004": {
+      "index": 4,
+      "model": 1,
+      "chain": "A",
+      "number": 1004,
+      "icode": " ",
+      "molecule": "RNA",
+      "full_name": "A.G1004",
+      "short_name": "G",
+      "chi": -156.01,
+      "glycosidic_bond": "anti"
+    },
+    "A.G1005": {
+      "index": 5,
+      "model": 1,
+      "chain": "A",
+      "number": 1005,
+      "icode": " ",
+      "molecule": "RNA",
+      "full_name": "A.G1005",
+      "short_name": "G",
+      "chi": -148.101,
+      "glycosidic_bond": "anti"
+    },
+    "A.U1006": {
+      "index": 6,
+      "model": 1,
+      "chain": "A",
+      "number": 1006,
+      "icode": " ",
+      "molecule": "RNA",
+      "full_name": "A.U1006",
+      "short_name": "U",
+      "chi": -137.28,
+      "glycosidic_bond": "anti"
+    },
+    "AA.U1001": {
+      "index": 13,
+      "model": 1,
+      "chain": "AA",
+      "number": 1001,
+      "icode": " ",
+      "molecule": "RNA",
+      "full_name": "AA.U1001",
+      "short_name": "U",
+      "chi": -141.927,
+      "glycosidic_bond": "anti"
+    },
+    "AA.G1002": {
+      "index": 14,
+      "model": 1,
+      "chain": "AA",
+      "number": 1002,
+      "icode": " ",
+      "molecule": "RNA",
+      "full_name": "AA.G1002",
+      "short_name": "G",
+      "chi": -165.93,
+      "glycosidic_bond": "anti"
+    },
+    "AA.G1003": {
+      "index": 15,
+      "model": 1,
+      "chain": "AA",
+      "number": 1003,
+      "icode": " ",
+      "molecule": "RNA",
+      "full_name": "AA.G1003",
+      "short_name": "G",
+      "chi": -121.565,
+      "glycosidic_bond": "anti"
+    },
+    "AA.G1004": {
+      "index": 16,
+      "model": 1,
+      "chain": "AA",
+      "number": 1004,
+      "icode": " ",
+      "molecule": "RNA",
+      "full_name": "AA.G1004",
+      "short_name": "G",
+      "chi": -156.01,
+      "glycosidic_bond": "anti"
+    },
+    "AA.G1005": {
+      "index": 17,
+      "model": 1,
+      "chain": "AA",
+      "number": 1005,
+      "icode": " ",
+      "molecule": "RNA",
+      "full_name": "AA.G1005",
+      "short_name": "G",
+      "chi": -148.101,
+      "glycosidic_bond": "anti"
+    },
+    "AA.U1006": {
+      "index": 18,
+      "model": 1,
+      "chain": "AA",
+      "number": 1006,
+      "icode": " ",
+      "molecule": "RNA",
+      "full_name": "AA.U1006",
+      "short_name": "U",
+      "chi": -137.28,
+      "glycosidic_bond": "anti"
+    },
+    "AB.U1001": {
+      "index": 7,
+      "model": 1,
+      "chain": "AB",
+      "number": 1001,
+      "icode": " ",
+      "molecule": "RNA",
+      "full_name": "AB.U1001",
+      "short_name": "U",
+      "chi": -141.927,
+      "glycosidic_bond": "anti"
+    },
+    "AB.G1002": {
+      "index": 8,
+      "model": 1,
+      "chain": "AB",
+      "number": 1002,
+      "icode": " ",
+      "molecule": "RNA",
+      "full_name": "AB.G1002",
+      "short_name": "G",
+      "chi": -165.93,
+      "glycosidic_bond": "anti"
+    },
+    "AB.G1003": {
+      "index": 9,
+      "model": 1,
+      "chain": "AB",
+      "number": 1003,
+      "icode": " ",
+      "molecule": "RNA",
+      "full_name": "AB.G1003",
+      "short_name": "G",
+      "chi": -121.565,
+      "glycosidic_bond": "anti"
+    },
+    "AB.G1004": {
+      "index": 10,
+      "model": 1,
+      "chain": "AB",
+      "number": 1004,
+      "icode": " ",
+      "molecule": "RNA",
+      "full_name": "AB.G1004",
+      "short_name": "G",
+      "chi": -156.01,
+      "glycosidic_bond": "anti"
+    },
+    "AB.G1005": {
+      "index": 11,
+      "model": 1,
+      "chain": "AB",
+      "number": 1005,
+      "icode": " ",
+      "molecule": "RNA",
+      "full_name": "AB.G1005",
+      "short_name": "G",
+      "chi": -148.101,
+      "glycosidic_bond": "anti"
+    },
+    "AB.U1006": {
+      "index": 12,
+      "model": 1,
+      "chain": "AB",
+      "number": 1006,
+      "icode": " ",
+      "molecule": "RNA",
+      "full_name": "AB.U1006",
+      "short_name": "U",
+      "chi": -137.28,
+      "glycosidic_bond": "anti"
+    },
+    "AC.U1001": {
+      "index": 19,
+      "model": 1,
+      "chain": "AC",
+      "number": 1001,
+      "icode": " ",
+      "molecule": "RNA",
+      "full_name": "AC.U1001",
+      "short_name": "U",
+      "chi": -141.927,
+      "glycosidic_bond": "anti"
+    },
+    "AC.G1002": {
+      "index": 20,
+      "model": 1,
+      "chain": "AC",
+      "number": 1002,
+      "icode": " ",
+      "molecule": "RNA",
+      "full_name": "AC.G1002",
+      "short_name": "G",
+      "chi": -165.93,
+      "glycosidic_bond": "anti"
+    },
+    "AC.G1003": {
+      "index": 21,
+      "model": 1,
+      "chain": "AC",
+      "number": 1003,
+      "icode": " ",
+      "molecule": "RNA",
+      "full_name": "AC.G1003",
+      "short_name": "G",
+      "chi": -121.565,
+      "glycosidic_bond": "anti"
+    },
+    "AC.G1004": {
+      "index": 22,
+      "model": 1,
+      "chain": "AC",
+      "number": 1004,
+      "icode": " ",
+      "molecule": "RNA",
+      "full_name": "AC.G1004",
+      "short_name": "G",
+      "chi": -156.01,
+      "glycosidic_bond": "anti"
+    },
+    "AC.G1005": {
+      "index": 23,
+      "model": 1,
+      "chain": "AC",
+      "number": 1005,
+      "icode": " ",
+      "molecule": "RNA",
+      "full_name": "AC.G1005",
+      "short_name": "G",
+      "chi": -148.101,
+      "glycosidic_bond": "anti"
+    },
+    "AC.U1006": {
+      "index": 24,
+      "model": 1,
+      "chain": "AC",
+      "number": 1006,
+      "icode": " ",
+      "molecule": "RNA",
+      "full_name": "AC.U1006",
+      "short_name": "U",
+      "chi": -137.28,
+      "glycosidic_bond": "anti"
+    },
+    "B.U2001": {
+      "index": 25,
+      "model": 1,
+      "chain": "B",
+      "number": 2001,
+      "icode": " ",
+      "molecule": "RNA",
+      "full_name": "B.U2001",
+      "short_name": "U",
+      "chi": -146.462,
+      "glycosidic_bond": "anti"
+    },
+    "B.G2002": {
+      "index": 26,
+      "model": 1,
+      "chain": "B",
+      "number": 2002,
+      "icode": " ",
+      "molecule": "RNA",
+      "full_name": "B.G2002",
+      "short_name": "G",
+      "chi": -170.797,
+      "glycosidic_bond": "anti"
+    },
+    "B.G2003": {
+      "index": 27,
+      "model": 1,
+      "chain": "B",
+      "number": 2003,
+      "icode": " ",
+      "molecule": "RNA",
+      "full_name": "B.G2003",
+      "short_name": "G",
+      "chi": -117.687,
+      "glycosidic_bond": "anti"
+    },
+    "B.G2004": {
+      "index": 28,
+      "model": 1,
+      "chain": "B",
+      "number": 2004,
+      "icode": " ",
+      "molecule": "RNA",
+      "full_name": "B.G2004",
+      "short_name": "G",
+      "chi": -153.886,
+      "glycosidic_bond": "anti"
+    },
+    "B.G2005": {
+      "index": 29,
+      "model": 1,
+      "chain": "B",
+      "number": 2005,
+      "icode": " ",
+      "molecule": "RNA",
+      "full_name": "B.G2005",
+      "short_name": "G",
+      "chi": -148.852,
+      "glycosidic_bond": "anti"
+    },
+    "B.U2006": {
+      "index": 30,
+      "model": 1,
+      "chain": "B",
+      "number": 2006,
+      "icode": " ",
+      "molecule": "RNA",
+      "full_name": "B.U2006",
+      "short_name": "U",
+      "chi": -159.437,
+      "glycosidic_bond": "anti"
+    },
+    "BA.U2001": {
+      "index": 37,
+      "model": 1,
+      "chain": "BA",
+      "number": 2001,
+      "icode": " ",
+      "molecule": "RNA",
+      "full_name": "BA.U2001",
+      "short_name": "U",
+      "chi": -146.462,
+      "glycosidic_bond": "anti"
+    },
+    "BA.G2002": {
+      "index": 38,
+      "model": 1,
+      "chain": "BA",
+      "number": 2002,
+      "icode": " ",
+      "molecule": "RNA",
+      "full_name": "BA.G2002",
+      "short_name": "G",
+      "chi": -170.797,
+      "glycosidic_bond": "anti"
+    },
+    "BA.G2003": {
+      "index": 39,
+      "model": 1,
+      "chain": "BA",
+      "number": 2003,
+      "icode": " ",
+      "molecule": "RNA",
+      "full_name": "BA.G2003",
+      "short_name": "G",
+      "chi": -117.687,
+      "glycosidic_bond": "anti"
+    },
+    "BA.G2004": {
+      "index": 40,
+      "model": 1,
+      "chain": "BA",
+      "number": 2004,
+      "icode": " ",
+      "molecule": "RNA",
+      "full_name": "BA.G2004",
+      "short_name": "G",
+      "chi": -153.886,
+      "glycosidic_bond": "anti"
+    },
+    "BA.G2005": {
+      "index": 41,
+      "model": 1,
+      "chain": "BA",
+      "number": 2005,
+      "icode": " ",
+      "molecule": "RNA",
+      "full_name": "BA.G2005",
+      "short_name": "G",
+      "chi": -148.852,
+      "glycosidic_bond": "anti"
+    },
+    "BA.U2006": {
+      "index": 42,
+      "model": 1,
+      "chain": "BA",
+      "number": 2006,
+      "icode": " ",
+      "molecule": "RNA",
+      "full_name": "BA.U2006",
+      "short_name": "U",
+      "chi": -159.437,
+      "glycosidic_bond": "anti"
+    },
+    "BB.U2001": {
+      "index": 43,
+      "model": 1,
+      "chain": "BB",
+      "number": 2001,
+      "icode": " ",
+      "molecule": "RNA",
+      "full_name": "BB.U2001",
+      "short_name": "U",
+      "chi": -146.462,
+      "glycosidic_bond": "anti"
+    },
+    "BB.G2002": {
+      "index": 44,
+      "model": 1,
+      "chain": "BB",
+      "number": 2002,
+      "icode": " ",
+      "molecule": "RNA",
+      "full_name": "BB.G2002",
+      "short_name": "G",
+      "chi": -170.797,
+      "glycosidic_bond": "anti"
+    },
+    "BB.G2003": {
+      "index": 45,
+      "model": 1,
+      "chain": "BB",
+      "number": 2003,
+      "icode": " ",
+      "molecule": "RNA",
+      "full_name": "BB.G2003",
+      "short_name": "G",
+      "chi": -117.687,
+      "glycosidic_bond": "anti"
+    },
+    "BB.G2004": {
+      "index": 46,
+      "model": 1,
+      "chain": "BB",
+      "number": 2004,
+      "icode": " ",
+      "molecule": "RNA",
+      "full_name": "BB.G2004",
+      "short_name": "G",
+      "chi": -153.886,
+      "glycosidic_bond": "anti"
+    },
+    "BB.G2005": {
+      "index": 47,
+      "model": 1,
+      "chain": "BB",
+      "number": 2005,
+      "icode": " ",
+      "molecule": "RNA",
+      "full_name": "BB.G2005",
+      "short_name": "G",
+      "chi": -148.852,
+      "glycosidic_bond": "anti"
+    },
+    "BB.U2006": {
+      "index": 48,
+      "model": 1,
+      "chain": "BB",
+      "number": 2006,
+      "icode": " ",
+      "molecule": "RNA",
+      "full_name": "BB.U2006",
+      "short_name": "U",
+      "chi": -159.437,
+      "glycosidic_bond": "anti"
+    },
+    "BC.U2001": {
+      "index": 31,
+      "model": 1,
+      "chain": "BC",
+      "number": 2001,
+      "icode": " ",
+      "molecule": "RNA",
+      "full_name": "BC.U2001",
+      "short_name": "U",
+      "chi": -146.462,
+      "glycosidic_bond": "anti"
+    },
+    "BC.G2002": {
+      "index": 32,
+      "model": 1,
+      "chain": "BC",
+      "number": 2002,
+      "icode": " ",
+      "molecule": "RNA",
+      "full_name": "BC.G2002",
+      "short_name": "G",
+      "chi": -170.797,
+      "glycosidic_bond": "anti"
+    },
+    "BC.G2003": {
+      "index": 33,
+      "model": 1,
+      "chain": "BC",
+      "number": 2003,
+      "icode": " ",
+      "molecule": "RNA",
+      "full_name": "BC.G2003",
+      "short_name": "G",
+      "chi": -117.687,
+      "glycosidic_bond": "anti"
+    },
+    "BC.G2004": {
+      "index": 34,
+      "model": 1,
+      "chain": "BC",
+      "number": 2004,
+      "icode": " ",
+      "molecule": "RNA",
+      "full_name": "BC.G2004",
+      "short_name": "G",
+      "chi": -153.886,
+      "glycosidic_bond": "anti"
+    },
+    "BC.G2005": {
+      "index": 35,
+      "model": 1,
+      "chain": "BC",
+      "number": 2005,
+      "icode": " ",
+      "molecule": "RNA",
+      "full_name": "BC.G2005",
+      "short_name": "G",
+      "chi": -148.852,
+      "glycosidic_bond": "anti"
+    },
+    "BC.U2006": {
+      "index": 36,
+      "model": 1,
+      "chain": "BC",
+      "number": 2006,
+      "icode": " ",
+      "molecule": "RNA",
+      "full_name": "BC.U2006",
+      "short_name": "U",
+      "chi": -159.437,
+      "glycosidic_bond": "anti"
+    }
+  },
+  "base_pairs": [
+    {
+      "nt1": "A.U1001",
+      "nt2": "B.G2003",
+      "stericity": "cis",
+      "edge5": "Sugar",
+      "edge3": "Sugar"
+    },
+    {
+      "nt1": "B.G2003",
+      "nt2": "A.U1001",
+      "stericity": "cis",
+      "edge5": "Sugar",
+      "edge3": "Sugar"
+    },
+    {
+      "nt1": "A.G1002",
+      "nt2": "AB.G1002",
+      "stericity": "cis",
+      "edge5": "Watson-Crick",
+      "edge3": "Hoogsteen"
+    },
+    {
+      "nt1": "AB.G1002",
+      "nt2": "A.G1002",
+      "stericity": "cis",
+      "edge5": "Hoogsteen",
+      "edge3": "Watson-Crick"
+    },
+    {
+      "nt1": "A.G1002",
+      "nt2": "AC.G1002",
+      "stericity": "cis",
+      "edge5": "Hoogsteen",
+      "edge3": "Watson-Crick"
+    },
+    {
+      "nt1": "AC.G1002",
+      "nt2": "A.G1002",
+      "stericity": "cis",
+      "edge5": "Watson-Crick",
+      "edge3": "Hoogsteen"
+    },
+    {
+      "nt1": "A.G1003",
+      "nt2": "AB.G1003",
+      "stericity": "cis",
+      "edge5": "Watson-Crick",
+      "edge3": "Hoogsteen"
+    },
+    {
+      "nt1": "AB.G1003",
+      "nt2": "A.G1003",
+      "stericity": "cis",
+      "edge5": "Hoogsteen",
+      "edge3": "Watson-Crick"
+    },
+    {
+      "nt1": "A.G1003",
+      "nt2": "AC.G1003",
+      "stericity": "cis",
+      "edge5": "Hoogsteen",
+      "edge3": "Watson-Crick"
+    },
+    {
+      "nt1": "AC.G1003",
+      "nt2": "A.G1003",
+      "stericity": "cis",
+      "edge5": "Watson-Crick",
+      "edge3": "Hoogsteen"
+    },
+    {
+      "nt1": "A.G1003",
+      "nt2": "B.U2001",
+      "stericity": "cis",
+      "edge5": "Sugar",
+      "edge3": "Sugar"
+    },
+    {
+      "nt1": "B.U2001",
+      "nt2": "A.G1003",
+      "stericity": "cis",
+      "edge5": "Sugar",
+      "edge3": "Sugar"
+    },
+    {
+      "nt1": "A.G1004",
+      "nt2": "AB.G1004",
+      "stericity": "cis",
+      "edge5": "Watson-Crick",
+      "edge3": "Hoogsteen"
+    },
+    {
+      "nt1": "AB.G1004",
+      "nt2": "A.G1004",
+      "stericity": "cis",
+      "edge5": "Hoogsteen",
+      "edge3": "Watson-Crick"
+    },
+    {
+      "nt1": "A.G1004",
+      "nt2": "AC.G1004",
+      "stericity": "cis",
+      "edge5": "Hoogsteen",
+      "edge3": "Watson-Crick"
+    },
+    {
+      "nt1": "AC.G1004",
+      "nt2": "A.G1004",
+      "stericity": "cis",
+      "edge5": "Watson-Crick",
+      "edge3": "Hoogsteen"
+    },
+    {
+      "nt1": "A.G1005",
+      "nt2": "AB.G1005",
+      "stericity": "cis",
+      "edge5": "Watson-Crick",
+      "edge3": "Hoogsteen"
+    },
+    {
+      "nt1": "AB.G1005",
+      "nt2": "A.G1005",
+      "stericity": "cis",
+      "edge5": "Hoogsteen",
+      "edge3": "Watson-Crick"
+    },
+    {
+      "nt1": "A.G1005",
+      "nt2": "AC.G1005",
+      "stericity": "cis",
+      "edge5": "Hoogsteen",
+      "edge3": "Watson-Crick"
+    },
+    {
+      "nt1": "AC.G1005",
+      "nt2": "A.G1005",
+      "stericity": "cis",
+      "edge5": "Watson-Crick",
+      "edge3": "Hoogsteen"
+    },
+    {
+      "nt1": "A.U1006",
+      "nt2": "AB.U1006",
+      "stericity": "cis",
+      "edge5": "Hoogsteen",
+      "edge3": "Watson-Crick"
+    },
+    {
+      "nt1": "AB.U1006",
+      "nt2": "A.U1006",
+      "stericity": "cis",
+      "edge5": "Watson-Crick",
+      "edge3": "Hoogsteen"
+    },
+    {
+      "nt1": "A.U1006",
+      "nt2": "AC.U1006",
+      "stericity": "cis",
+      "edge5": "Watson-Crick",
+      "edge3": "Hoogsteen"
+    },
+    {
+      "nt1": "AC.U1006",
+      "nt2": "A.U1006",
+      "stericity": "cis",
+      "edge5": "Hoogsteen",
+      "edge3": "Watson-Crick"
+    },
+    {
+      "nt1": "AA.U1001",
+      "nt2": "BA.G2003",
+      "stericity": "cis",
+      "edge5": "Sugar",
+      "edge3": "Sugar"
+    },
+    {
+      "nt1": "BA.G2003",
+      "nt2": "AA.U1001",
+      "stericity": "cis",
+      "edge5": "Sugar",
+      "edge3": "Sugar"
+    },
+    {
+      "nt1": "AA.G1002",
+      "nt2": "AB.G1002",
+      "stericity": "cis",
+      "edge5": "Hoogsteen",
+      "edge3": "Watson-Crick"
+    },
+    {
+      "nt1": "AB.G1002",
+      "nt2": "AA.G1002",
+      "stericity": "cis",
+      "edge5": "Watson-Crick",
+      "edge3": "Hoogsteen"
+    },
+    {
+      "nt1": "AA.G1002",
+      "nt2": "AC.G1002",
+      "stericity": "cis",
+      "edge5": "Watson-Crick",
+      "edge3": "Hoogsteen"
+    },
+    {
+      "nt1": "AC.G1002",
+      "nt2": "AA.G1002",
+      "stericity": "cis",
+      "edge5": "Hoogsteen",
+      "edge3": "Watson-Crick"
+    },
+    {
+      "nt1": "AA.G1003",
+      "nt2": "AB.G1003",
+      "stericity": "cis",
+      "edge5": "Hoogsteen",
+      "edge3": "Watson-Crick"
+    },
+    {
+      "nt1": "AB.G1003",
+      "nt2": "AA.G1003",
+      "stericity": "cis",
+      "edge5": "Watson-Crick",
+      "edge3": "Hoogsteen"
+    },
+    {
+      "nt1": "AA.G1003",
+      "nt2": "AC.G1003",
+      "stericity": "cis",
+      "edge5": "Watson-Crick",
+      "edge3": "Hoogsteen"
+    },
+    {
+      "nt1": "AC.G1003",
+      "nt2": "AA.G1003",
+      "stericity": "cis",
+      "edge5": "Hoogsteen",
+      "edge3": "Watson-Crick"
+    },
+    {
+      "nt1": "AA.G1003",
+      "nt2": "BA.U2001",
+      "stericity": "cis",
+      "edge5": "Sugar",
+      "edge3": "Sugar"
+    },
+    {
+      "nt1": "BA.U2001",
+      "nt2": "AA.G1003",
+      "stericity": "cis",
+      "edge5": "Sugar",
+      "edge3": "Sugar"
+    },
+    {
+      "nt1": "AA.G1004",
+      "nt2": "AB.G1004",
+      "stericity": "cis",
+      "edge5": "Hoogsteen",
+      "edge3": "Watson-Crick"
+    },
+    {
+      "nt1": "AB.G1004",
+      "nt2": "AA.G1004",
+      "stericity": "cis",
+      "edge5": "Watson-Crick",
+      "edge3": "Hoogsteen"
+    },
+    {
+      "nt1": "AA.G1004",
+      "nt2": "AC.G1004",
+      "stericity": "cis",
+      "edge5": "Watson-Crick",
+      "edge3": "Hoogsteen"
+    },
+    {
+      "nt1": "AC.G1004",
+      "nt2": "AA.G1004",
+      "stericity": "cis",
+      "edge5": "Hoogsteen",
+      "edge3": "Watson-Crick"
+    },
+    {
+      "nt1": "AA.G1005",
+      "nt2": "AB.G1005",
+      "stericity": "cis",
+      "edge5": "Hoogsteen",
+      "edge3": "Watson-Crick"
+    },
+    {
+      "nt1": "AB.G1005",
+      "nt2": "AA.G1005",
+      "stericity": "cis",
+      "edge5": "Watson-Crick",
+      "edge3": "Hoogsteen"
+    },
+    {
+      "nt1": "AA.G1005",
+      "nt2": "AC.G1005",
+      "stericity": "cis",
+      "edge5": "Watson-Crick",
+      "edge3": "Hoogsteen"
+    },
+    {
+      "nt1": "AC.G1005",
+      "nt2": "AA.G1005",
+      "stericity": "cis",
+      "edge5": "Hoogsteen",
+      "edge3": "Watson-Crick"
+    },
+    {
+      "nt1": "AA.U1006",
+      "nt2": "AB.U1006",
+      "stericity": "cis",
+      "edge5": "Watson-Crick",
+      "edge3": "Hoogsteen"
+    },
+    {
+      "nt1": "AB.U1006",
+      "nt2": "AA.U1006",
+      "stericity": "cis",
+      "edge5": "Hoogsteen",
+      "edge3": "Watson-Crick"
+    },
+    {
+      "nt1": "AA.U1006",
+      "nt2": "AC.U1006",
+      "stericity": "cis",
+      "edge5": "Hoogsteen",
+      "edge3": "Watson-Crick"
+    },
+    {
+      "nt1": "AC.U1006",
+      "nt2": "AA.U1006",
+      "stericity": "cis",
+      "edge5": "Watson-Crick",
+      "edge3": "Hoogsteen"
+    },
+    {
+      "nt1": "AB.U1001",
+      "nt2": "BB.G2003",
+      "stericity": "cis",
+      "edge5": "Sugar",
+      "edge3": "Sugar"
+    },
+    {
+      "nt1": "BB.G2003",
+      "nt2": "AB.U1001",
+      "stericity": "cis",
+      "edge5": "Sugar",
+      "edge3": "Sugar"
+    },
+    {
+      "nt1": "AB.G1003",
+      "nt2": "BB.U2001",
+      "stericity": "cis",
+      "edge5": "Sugar",
+      "edge3": "Sugar"
+    },
+    {
+      "nt1": "BB.U2001",
+      "nt2": "AB.G1003",
+      "stericity": "cis",
+      "edge5": "Sugar",
+      "edge3": "Sugar"
+    },
+    {
+      "nt1": "AC.U1001",
+      "nt2": "BC.G2003",
+      "stericity": "cis",
+      "edge5": "Sugar",
+      "edge3": "Sugar"
+    },
+    {
+      "nt1": "BC.G2003",
+      "nt2": "AC.U1001",
+      "stericity": "cis",
+      "edge5": "Sugar",
+      "edge3": "Sugar"
+    },
+    {
+      "nt1": "AC.G1003",
+      "nt2": "BC.U2001",
+      "stericity": "cis",
+      "edge5": "Sugar",
+      "edge3": "Sugar"
+    },
+    {
+      "nt1": "BC.U2001",
+      "nt2": "AC.G1003",
+      "stericity": "cis",
+      "edge5": "Sugar",
+      "edge3": "Sugar"
+    },
+    {
+      "nt1": "B.G2002",
+      "nt2": "BB.G2002",
+      "stericity": "cis",
+      "edge5": "Hoogsteen",
+      "edge3": "Watson-Crick"
+    },
+    {
+      "nt1": "BB.G2002",
+      "nt2": "B.G2002",
+      "stericity": "cis",
+      "edge5": "Watson-Crick",
+      "edge3": "Hoogsteen"
+    },
+    {
+      "nt1": "B.G2002",
+      "nt2": "BC.G2002",
+      "stericity": "cis",
+      "edge5": "Watson-Crick",
+      "edge3": "Hoogsteen"
+    },
+    {
+      "nt1": "BC.G2002",
+      "nt2": "B.G2002",
+      "stericity": "cis",
+      "edge5": "Hoogsteen",
+      "edge3": "Watson-Crick"
+    },
+    {
+      "nt1": "B.G2003",
+      "nt2": "BB.G2003",
+      "stericity": "cis",
+      "edge5": "Hoogsteen",
+      "edge3": "Watson-Crick"
+    },
+    {
+      "nt1": "BB.G2003",
+      "nt2": "B.G2003",
+      "stericity": "cis",
+      "edge5": "Watson-Crick",
+      "edge3": "Hoogsteen"
+    },
+    {
+      "nt1": "B.G2003",
+      "nt2": "BC.G2003",
+      "stericity": "cis",
+      "edge5": "Watson-Crick",
+      "edge3": "Hoogsteen"
+    },
+    {
+      "nt1": "BC.G2003",
+      "nt2": "B.G2003",
+      "stericity": "cis",
+      "edge5": "Hoogsteen",
+      "edge3": "Watson-Crick"
+    },
+    {
+      "nt1": "B.G2004",
+      "nt2": "BB.G2004",
+      "stericity": "cis",
+      "edge5": "Hoogsteen",
+      "edge3": "Watson-Crick"
+    },
+    {
+      "nt1": "BB.G2004",
+      "nt2": "B.G2004",
+      "stericity": "cis",
+      "edge5": "Watson-Crick",
+      "edge3": "Hoogsteen"
+    },
+    {
+      "nt1": "B.G2004",
+      "nt2": "BC.G2004",
+      "stericity": "cis",
+      "edge5": "Watson-Crick",
+      "edge3": "Hoogsteen"
+    },
+    {
+      "nt1": "BC.G2004",
+      "nt2": "B.G2004",
+      "stericity": "cis",
+      "edge5": "Hoogsteen",
+      "edge3": "Watson-Crick"
+    },
+    {
+      "nt1": "B.G2005",
+      "nt2": "BB.G2005",
+      "stericity": "cis",
+      "edge5": "Hoogsteen",
+      "edge3": "Watson-Crick"
+    },
+    {
+      "nt1": "BB.G2005",
+      "nt2": "B.G2005",
+      "stericity": "cis",
+      "edge5": "Watson-Crick",
+      "edge3": "Hoogsteen"
+    },
+    {
+      "nt1": "B.G2005",
+      "nt2": "BC.G2005",
+      "stericity": "cis",
+      "edge5": "Watson-Crick",
+      "edge3": "Hoogsteen"
+    },
+    {
+      "nt1": "BC.G2005",
+      "nt2": "B.G2005",
+      "stericity": "cis",
+      "edge5": "Hoogsteen",
+      "edge3": "Watson-Crick"
+    },
+    {
+      "nt1": "B.U2006",
+      "nt2": "BB.U2006",
+      "stericity": "cis",
+      "edge5": "Watson-Crick",
+      "edge3": "Hoogsteen"
+    },
+    {
+      "nt1": "BB.U2006",
+      "nt2": "B.U2006",
+      "stericity": "cis",
+      "edge5": "Hoogsteen",
+      "edge3": "Watson-Crick"
+    },
+    {
+      "nt1": "B.U2006",
+      "nt2": "BC.U2006",
+      "stericity": "cis",
+      "edge5": "Hoogsteen",
+      "edge3": "Watson-Crick"
+    },
+    {
+      "nt1": "BC.U2006",
+      "nt2": "B.U2006",
+      "stericity": "cis",
+      "edge5": "Watson-Crick",
+      "edge3": "Hoogsteen"
+    },
+    {
+      "nt1": "BA.G2002",
+      "nt2": "BB.G2002",
+      "stericity": "cis",
+      "edge5": "Watson-Crick",
+      "edge3": "Hoogsteen"
+    },
+    {
+      "nt1": "BB.G2002",
+      "nt2": "BA.G2002",
+      "stericity": "cis",
+      "edge5": "Hoogsteen",
+      "edge3": "Watson-Crick"
+    },
+    {
+      "nt1": "BA.G2002",
+      "nt2": "BC.G2002",
+      "stericity": "cis",
+      "edge5": "Hoogsteen",
+      "edge3": "Watson-Crick"
+    },
+    {
+      "nt1": "BC.G2002",
+      "nt2": "BA.G2002",
+      "stericity": "cis",
+      "edge5": "Watson-Crick",
+      "edge3": "Hoogsteen"
+    },
+    {
+      "nt1": "BA.G2003",
+      "nt2": "BB.G2003",
+      "stericity": "cis",
+      "edge5": "Watson-Crick",
+      "edge3": "Hoogsteen"
+    },
+    {
+      "nt1": "BB.G2003",
+      "nt2": "BA.G2003",
+      "stericity": "cis",
+      "edge5": "Hoogsteen",
+      "edge3": "Watson-Crick"
+    },
+    {
+      "nt1": "BA.G2003",
+      "nt2": "BC.G2003",
+      "stericity": "cis",
+      "edge5": "Hoogsteen",
+      "edge3": "Watson-Crick"
+    },
+    {
+      "nt1": "BC.G2003",
+      "nt2": "BA.G2003",
+      "stericity": "cis",
+      "edge5": "Watson-Crick",
+      "edge3": "Hoogsteen"
+    },
+    {
+      "nt1": "BA.G2004",
+      "nt2": "BB.G2004",
+      "stericity": "cis",
+      "edge5": "Watson-Crick",
+      "edge3": "Hoogsteen"
+    },
+    {
+      "nt1": "BB.G2004",
+      "nt2": "BA.G2004",
+      "stericity": "cis",
+      "edge5": "Hoogsteen",
+      "edge3": "Watson-Crick"
+    },
+    {
+      "nt1": "BA.G2004",
+      "nt2": "BC.G2004",
+      "stericity": "cis",
+      "edge5": "Hoogsteen",
+      "edge3": "Watson-Crick"
+    },
+    {
+      "nt1": "BC.G2004",
+      "nt2": "BA.G2004",
+      "stericity": "cis",
+      "edge5": "Watson-Crick",
+      "edge3": "Hoogsteen"
+    },
+    {
+      "nt1": "BA.G2005",
+      "nt2": "BB.G2005",
+      "stericity": "cis",
+      "edge5": "Watson-Crick",
+      "edge3": "Hoogsteen"
+    },
+    {
+      "nt1": "BB.G2005",
+      "nt2": "BA.G2005",
+      "stericity": "cis",
+      "edge5": "Hoogsteen",
+      "edge3": "Watson-Crick"
+    },
+    {
+      "nt1": "BA.G2005",
+      "nt2": "BC.G2005",
+      "stericity": "cis",
+      "edge5": "Hoogsteen",
+      "edge3": "Watson-Crick"
+    },
+    {
+      "nt1": "BC.G2005",
+      "nt2": "BA.G2005",
+      "stericity": "cis",
+      "edge5": "Watson-Crick",
+      "edge3": "Hoogsteen"
+    },
+    {
+      "nt1": "BA.U2006",
+      "nt2": "BB.U2006",
+      "stericity": "cis",
+      "edge5": "Hoogsteen",
+      "edge3": "Watson-Crick"
+    },
+    {
+      "nt1": "BB.U2006",
+      "nt2": "BA.U2006",
+      "stericity": "cis",
+      "edge5": "Watson-Crick",
+      "edge3": "Hoogsteen"
+    },
+    {
+      "nt1": "BA.U2006",
+      "nt2": "BC.U2006",
+      "stericity": "cis",
+      "edge5": "Watson-Crick",
+      "edge3": "Hoogsteen"
+    },
+    {
+      "nt1": "BC.U2006",
+      "nt2": "BA.U2006",
+      "stericity": "cis",
+      "edge5": "Hoogsteen",
+      "edge3": "Watson-Crick"
+    }
+  ],
+  "helices": [
+    {
+      "quadruplexes": [
+        {
+          "tetrads": {
+            "B.U2006-BB.U2006-BA.U2006-BC.U2006": {
+              "nt1": "B.U2006",
+              "nt2": "BB.U2006",
+              "nt3": "BA.U2006",
+              "nt4": "BC.U2006",
+              "onz": "O-",
+              "gba_classification": "VIIIa",
+              "planarity_deviation": 1.5839996337890805,
+              "ions_channel": [
+                "Na",
+                "Na"
+              ],
+              "ions_outside": {}
+            },
+            "B.G2005-BC.G2005-BA.G2005-BB.G2005": {
+              "nt1": "B.G2005",
+              "nt2": "BC.G2005",
+              "nt3": "BA.G2005",
+              "nt4": "BB.G2005",
+              "onz": "O+",
+              "gba_classification": "VIIIa",
+              "planarity_deviation": 0.7810001373291016,
+              "ions_channel": [],
+              "ions_outside": {}
+            },
+            "B.G2004-BC.G2004-BA.G2004-BB.G2004": {
+              "nt1": "B.G2004",
+              "nt2": "BC.G2004",
+              "nt3": "BA.G2004",
+              "nt4": "BB.G2004",
+              "onz": "O+",
+              "gba_classification": "VIIIa",
+              "planarity_deviation": 0.2290000915528585,
+              "ions_channel": [
+                "Sr"
+              ],
+              "ions_outside": {}
+            },
+            "B.G2003-BC.G2003-BA.G2003-BB.G2003": {
+              "nt1": "B.G2003",
+              "nt2": "BC.G2003",
+              "nt3": "BA.G2003",
+              "nt4": "BB.G2003",
+              "onz": "O+",
+              "gba_classification": "VIIIa",
+              "planarity_deviation": 0.5770015716552734,
+              "ions_channel": [
+                "Sr"
+              ],
+              "ions_outside": {}
+            },
+            "B.G2002-BC.G2002-BA.G2002-BB.G2002": {
+              "nt1": "B.G2002",
+              "nt2": "BC.G2002",
+              "nt3": "BA.G2002",
+              "nt4": "BB.G2002",
+              "onz": "O+",
+              "gba_classification": "VIIIa",
+              "planarity_deviation": 0.6730003356935284,
+              "ions_channel": [],
+              "ions_outside": {}
+            }
+          },
+          "onzm": "Op*",
+          "loop_classification": "n/a",
+          "gba_classification": "VIII",
+          "tracts": [
+            [
+              "BA.U2006",
+              "BA.G2005",
+              "BA.G2004",
+              "BA.G2003",
+              "BA.G2002"
+            ],
+            [
+              "BC.U2006",
+              "BC.G2005",
+              "BC.G2004",
+              "BC.G2003",
+              "BC.G2002"
+            ],
+            [
+              "B.U2006",
+              "B.G2005",
+              "B.G2004",
+              "B.G2003",
+              "B.G2002"
+            ],
+            [
+              "BB.U2006",
+              "BB.G2005",
+              "BB.G2004",
+              "BB.G2003",
+              "BB.G2002"
+            ]
+          ],
+          "loops": []
+        },
+        {
+          "tetrads": {
+            "A.G1002-AB.G1002-AA.G1002-AC.G1002": {
+              "nt1": "A.G1002",
+              "nt2": "AB.G1002",
+              "nt3": "AA.G1002",
+              "nt4": "AC.G1002",
+              "onz": "O+",
+              "gba_classification": "VIIIa",
+              "planarity_deviation": 0.5419998168945837,
+              "ions_channel": [],
+              "ions_outside": {}
+            },
+            "A.G1003-AB.G1003-AA.G1003-AC.G1003": {
+              "nt1": "A.G1003",
+              "nt2": "AB.G1003",
+              "nt3": "AA.G1003",
+              "nt4": "AC.G1003",
+              "onz": "O+",
+              "gba_classification": "VIIIa",
+              "planarity_deviation": 0.5550003051758324,
+              "ions_channel": [
+                "Sr"
+              ],
+              "ions_outside": {}
+            },
+            "A.G1004-AB.G1004-AA.G1004-AC.G1004": {
+              "nt1": "A.G1004",
+              "nt2": "AB.G1004",
+              "nt3": "AA.G1004",
+              "nt4": "AC.G1004",
+              "onz": "O+",
+              "gba_classification": "VIIIa",
+              "planarity_deviation": 0.4060020446780144,
+              "ions_channel": [],
+              "ions_outside": {}
+            },
+            "A.G1005-AB.G1005-AA.G1005-AC.G1005": {
+              "nt1": "A.G1005",
+              "nt2": "AB.G1005",
+              "nt3": "AA.G1005",
+              "nt4": "AC.G1005",
+              "onz": "O+",
+              "gba_classification": "VIIIa",
+              "planarity_deviation": 0.7999992370605469,
+              "ions_channel": [
+                "Sr"
+              ],
+              "ions_outside": {}
+            },
+            "A.U1006-AC.U1006-AA.U1006-AB.U1006": {
+              "nt1": "A.U1006",
+              "nt2": "AC.U1006",
+              "nt3": "AA.U1006",
+              "nt4": "AB.U1006",
+              "onz": "O-",
+              "gba_classification": "VIIIa",
+              "planarity_deviation": 1.0610008239746362,
+              "ions_channel": [],
+              "ions_outside": {
+                "A.U1006": [
+                  "Sr"
+                ],
+                "AA.U1006": [
+                  "Sr"
+                ],
+                "AB.U1006": [
+                  "Sr"
+                ],
+                "AC.U1006": [
+                  "Sr"
+                ]
+              }
+            }
+          },
+          "onzm": "Op*",
+          "loop_classification": "n/a",
+          "gba_classification": "VIII",
+          "tracts": [
+            [
+              "AA.G1002",
+              "AA.G1003",
+              "AA.G1004",
+              "AA.G1005",
+              "AA.U1006"
+            ],
+            [
+              "AC.G1002",
+              "AC.G1003",
+              "AC.G1004",
+              "AC.G1005",
+              "AC.U1006"
+            ],
+            [
+              "A.G1002",
+              "A.G1003",
+              "A.G1004",
+              "A.G1005",
+              "A.U1006"
+            ],
+            [
+              "AB.G1002",
+              "AB.G1003",
+              "AB.G1004",
+              "AB.G1005",
+              "AB.U1006"
+            ]
+          ],
+          "loops": []
+        }
+      ],
+      "tetrad_pairs": [
+        {
+          "tetrad1": "B.U2006-BB.U2006-BA.U2006-BC.U2006",
+          "tetrad2": "B.G2005-BC.G2005-BA.G2005-BB.G2005",
+          "direction": "parallel",
+          "rise": 7.140500068664552,
+          "twist": 43.40609929753353
+        },
+        {
+          "tetrad1": "B.G2005-BC.G2005-BA.G2005-BB.G2005",
+          "tetrad2": "B.G2004-BC.G2004-BA.G2004-BB.G2004",
+          "direction": "parallel",
+          "rise": 3.269000053405764,
+          "twist": 25.149991205206657
+        },
+        {
+          "tetrad1": "B.G2004-BC.G2004-BA.G2004-BB.G2004",
+          "tetrad2": "B.G2003-BC.G2003-BA.G2003-BB.G2003",
+          "direction": "parallel",
+          "rise": 3.317999839782717,
+          "twist": 35.04072151642772
+        },
+        {
+          "tetrad1": "B.G2003-BC.G2003-BA.G2003-BB.G2003",
+          "tetrad2": "B.G2002-BC.G2002-BA.G2002-BB.G2002",
+          "direction": "parallel",
+          "rise": 3.370999336242684,
+          "twist": 27.410094298550373
+        },
+        {
+          "tetrad1": "B.G2002-BC.G2002-BA.G2002-BB.G2002",
+          "tetrad2": "A.G1002-AB.G1002-AA.G1002-AC.G1002",
+          "direction": "parallel",
+          "rise": 3.3695011138916207,
+          "twist": 28.9931716392613
+        },
+        {
+          "tetrad1": "A.G1002-AB.G1002-AA.G1002-AC.G1002",
+          "tetrad2": "A.G1003-AB.G1003-AA.G1003-AC.G1003",
+          "direction": "parallel",
+          "rise": 3.2864990234375084,
+          "twist": 27.115165766478476
+        },
+        {
+          "tetrad1": "A.G1003-AB.G1003-AA.G1003-AC.G1003",
+          "tetrad2": "A.G1004-AB.G1004-AA.G1004-AC.G1004",
+          "direction": "parallel",
+          "rise": 3.339500427246096,
+          "twist": 35.811154582473115
+        },
+        {
+          "tetrad1": "A.G1004-AB.G1004-AA.G1004-AC.G1004",
+          "tetrad2": "A.G1005-AB.G1005-AA.G1005-AC.G1005",
+          "direction": "parallel",
+          "rise": 3.307998657226571,
+          "twist": 25.896146524668296
+        },
+        {
+          "tetrad1": "A.G1005-AB.G1005-AA.G1005-AC.G1005",
+          "tetrad2": "A.U1006-AC.U1006-AA.U1006-AB.U1006",
+          "direction": "parallel",
+          "rise": 3.3665008544921897,
+          "twist": 39.962534923679286
+        }
+      ]
+    }
+  ]
+}
+```
 
-    Plot: 4rj1-1-h1-q1.pdf
-
-    Plot: 4rj1-1-h1-q1-t1.pdf
-
-    Plot: 4rj1-1-h1-q1-t2.pdf
-
-    Plot: 4rj1-1-h1-q1-t3.pdf
-
-    Plot: 4rj1-1-h1-q1-t4.pdf
-
-    Plot: 4rj1-1-h1-q1-t5.pdf
-
-    Plot: 4rj1-1-h1-q2.pdf
-
-    Plot: 4rj1-1-h1-q2-t1.pdf
-
-    Plot: 4rj1-1-h1-q2-t2.pdf
-
-    Plot: 4rj1-1-h1-q2-t3.pdf
-
-    Plot: 4rj1-1-h1-q2-t4.pdf
-
-    Plot: 4rj1-1-h2.pdf
-
-    Plot: 4rj1-1-h2-q1.pdf
-
-    Plot: 4rj1-1-h2-q1-t1.pdf
+</details>
 
 # Funding
 
@@ -280,33 +2622,28 @@ intramural financing program.
 
 <div id="refs" class="references csl-bib-body">
 
-1.  <span class="csl-right-inline">N. B. Leontis and E. Westhof,
-    “Geometric nomenclature and classification of RNA base pairs,”
-    *RNA*, vol. 7, no. 4, pp. 499–512, 2001, doi:
-    [10.1017/S1355838201002515](https://doi.org/10.1017/S1355838201002515).</span>
+1.  Topology-based classification of tetrads and quadruplex
+    structures. M. Popenda, J. Miskiewicz, J. Sarzynska, T. Zok, M.
+    Szachniuk. *Bioinformatics*. 2020. 36(4):1129–1134.
+    doi:[10.1093/bioinformatics/btz738](https://doi.org/10.1093/bioinformatics/btz738)
 
-2.  <span class="csl-right-inline">T. Zok, M. Popenda, and M. Szachniuk,
-    “ElTetrado: A tool for identification and classification of tetrads
-    and quadruplexes,” *BMC Bioinformatics*, vol. 21, no. 1, p. 40,
-    2020, doi:
-    [10.1186/s12859-020-3385-1](https://doi.org/10.1186/s12859-020-3385-1).</span>
+2.  ElTetrado: A tool for identification and classification of tetrads
+    and quadruplexes. T. Zok, M. Popenda, M. Szachniuk. *BMC
+    Bioinformatics*. 2020. 21(1):40.
+    doi:[10.1186/s12859-020-3385-1](https://doi.org/10.1186/s12859-020-3385-1)
 
-3.  <span class="csl-right-inline">M. Popenda, J. Miskiewicz, J.
-    Sarzynska, T. Zok, and M. Szachniuk, “Topology-based classification
-    of tetrads and quadruplex structures,” *Bioinformatics*, vol. 36,
-    no. 4, pp. 1129–1134, 2020, doi:
-    [10.1093/bioinformatics/btz738](https://doi.org/10.1093/bioinformatics/btz738).</span>
+3.  DSSR: An integrated software tool for dissecting the spatial
+    structure of RNA. X.-J. Lu, H.J. Bussemaker, W.K. Olson. *Nucleic
+    Acids Research*. 2015. 43(21):e142.
+    doi:[10.1093/nar/gkv716](https://doi.org/10.1093/nar/gkv716)
 
-4.  <span class="csl-right-inline">X.-J. Lu, H. J. Bussemaker, and W. K.
-    Olson, “DSSR: An integrated software tool for dissecting the spatial
-    structure of RNA,” *Nucleic Acids Research*, vol. 43, no. 21, p.
-    e142, 2015, doi:
-    [10.1093/nar/gkv716](https://doi.org/10.1093/nar/gkv716).</span>
+4.  R-chie : A web server and R package for visualizing RNA secondary
+    structures. D. Lai, J.R. Proctor, J.Y.A. Zhu, I.M. Meyer. *Nucleic
+    Acids Research*. 2012. 40(12):e95.
+    doi:[10.1093/nar/gks241](https://doi.org/10.1093/nar/gks241)
 
-5.  <span class="csl-right-inline">D. Lai, J. R. Proctor, J. Y. A. Zhu,
-    and I. M. Meyer, “R-chie : A web server and R package for
-    visualizing RNA secondary structures,” *Nucleic Acids Research*,
-    vol. 40, no. 12, p. e95, 2012, doi:
-    [10.1093/nar/gks241](https://doi.org/10.1093/nar/gks241).</span>
+5.  Geometric nomenclature and classification of RNA base pairs. N.B.
+    Leontis, E. Westhof. *RNA*. 2001. 7(4):499–512.
+    doi:[10.1017/S1355838201002515](https://doi.org/10.1017/S1355838201002515)
 
 </div>
