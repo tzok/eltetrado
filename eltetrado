@@ -639,8 +639,8 @@ class Analysis:
         self.pairs: Dict[Tuple[Nucleotide, Nucleotide], Pair] = self.__read_pairs(data)
         self.canonical: Set[Pair] = {pair for pair in self.pairs.values() if
                                      pair.saenger in ('19-XIX', '20-XX', '28-XXVIII')}
-        self.metals: str = data['metadata']['metals_desc'] if 'metals_desc' in data['metadata'] else ''
         self.metal_ions: List = self.__find_metal_ions(structure3d)
+        self.metals = self.__format_metal_ions()
         self.graph: Dict[Nucleotide, List[Nucleotide]] = dict()
         self.tetrads: Set[Tetrad] = set()
         self.tetrad_pairs: List[TetradPair] = list()
@@ -925,6 +925,10 @@ class Analysis:
             pairs[(nt2, nt1)] = pair.reverse()
         return pairs
 
+    def __format_metal_ions(self):
+        counter = Counter(map(lambda atom: atom.name.title(), self.metal_ions))
+        return ','.join(f'{k}={v}' for k, v in sorted(counter.items()))
+
 
 class Visualizer:
     def __init__(self, tetrads: Iterable[Tetrad], nucleotides: Iterable[Nucleotide] = tuple(),
@@ -1098,8 +1102,8 @@ class Encoder(json.JSONEncoder):
                 'onz': o.get_classification(),
                 'gba_classification': o.gba_classification(),
                 'planarity_deviation': o.planarity_deviation,
-                'ions_channel': [atom.name for atom in o.ions_channel],
-                'ions_outside': {repr(k): [atom.name for atom in v] for k, v in o.ions_outside.items()}
+                'ions_channel': [atom.name.title() for atom in o.ions_channel],
+                'ions_outside': {repr(k): [atom.name.title() for atom in v] for k, v in o.ions_outside.items()}
             }
         if isinstance(o, TetradPair):
             return {
