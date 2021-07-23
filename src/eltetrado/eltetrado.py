@@ -1,4 +1,3 @@
-#! /usr/bin/env python3
 import argparse
 import gzip
 import itertools
@@ -1188,9 +1187,12 @@ def load_dssr_results(args):
         with open(args.dssr_json) as jsonfile:
             dssr = jsonfile.read()
     else:
+        app = shutil.which('x3dna-dssr')
+        if app is None:
+            log.error('Missing x3dna-dssr on $PATH, please install the application')
+            sys.exit(1)
         tempdir = tempfile.mkdtemp()
-        currdir = os.path.dirname(os.path.realpath(__file__))
-        shutil.copy(os.path.join(currdir, 'x3dna-dssr'), tempdir)
+        shutil.copy(app, tempdir)
         dssr = subprocess.Popen(
             ['./x3dna-dssr', '-i={}'.format(os.path.abspath(args.pdb)), '--json'],
             stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=tempdir)
@@ -1240,7 +1242,7 @@ def return_empty_output_and_exit(args):
     sys.exit()
 
 
-if __name__ == '__main__':
+def main():
     args = parse_arguments()
     dssr = load_dssr_results(args)
 
@@ -1312,3 +1314,6 @@ if __name__ == '__main__':
     if args.output:
         with open(args.output, 'w') as jsonfile:
             json.dump(structure, jsonfile, cls=Encoder)
+
+if __name__ == '__main__':
+    main()

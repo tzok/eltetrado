@@ -1,5 +1,7 @@
 .idea
 Makefile
 README.html
+__pycache__
 assets
+dist
 x3dna-dssr
