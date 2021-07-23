@@ -1,0 +1,24 @@
+[tool.poetry]
+name = "eltetrado"
+version = "1.2.0"
+description = "A Python application to find and classify tetrads and quadruplexes in DNA/RNA 3D structure"
+license = "MIT"
+authors = ["Tomasz Żok <Tomasz.Zok@cs.put.poznan.pl>"]
+readme = "README.md"
+homepage = "https://github.com/tzok/eltetrado"
+packages = [{ include = "eltetrado", from = "src" }]
+
+[tool.poetry.dependencies]
+python = "^3.6"
+biopython = "^1.78"
+numpy = "^1.20.3"
+
+[tool.poetry.dev-dependencies]
+
+[tool.poetry.scripts]
+eltetrado = "eltetrado.eltetrado:main"
+has_tetrad = "eltetrado.has_tetrad:main"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"

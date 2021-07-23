@@ -1,4 +1,3 @@
-#! /usr/bin/env python3
 import argparse
 import gzip
 import itertools
@@ -21,7 +20,7 @@ from Bio.PDB import PDBParser, MMCIFParser, Structure, Residue, Atom
 from Bio.PDB.Atom import DisorderedAtom
 from Bio.PDB.StructureBuilder import StructureBuilder
 
-__version__ = '1.1.0'
+__version__ = '1.2.0'
 
 logging.basicConfig(level=os.environ.get("LOGLEVEL", "INFO"))
 log = logging.getLogger('eltetrado')
@@ -31,6 +30,10 @@ LW_SCORE = {
     'cHW': 7, 'tHW': 8, 'cHH': 9, 'tHH': 10, 'cHS': 11, 'tHS': 12,
     'cSW': 13, 'tSW': 14, 'cSH': 15, 'tSH': 16, 'cSS': 17, 'tSS': 18
 }
+
+METALS = {x.casefold() for x in
+          ['Ag', 'Au', 'Ba', 'Ca', 'Co', 'Cs', 'Cu', 'Eu', 'Fe', 'Ir', 'K', 'Li', 'Mg', 'Mn', 'Na', 'Ni', 'Os', 'Pb',
+           'Pt', 'Ru', 'Sr', 'Tl', 'V', 'Zn']}
 
 
 class Nucleotide:
@@ -185,6 +188,9 @@ class Tetrad:
         self.planarity_deviation: float = self.__calculate_planarity_deviation()
         self.no_reorder = no_reorder
         self.chains: Set[str] = self.__chains()
+        self.center: numpy.ndarray = self.__calculate_center_point()
+        self.ions_channel: List[Atom] = []
+        self.ions_outside: Dict[Nucleotide, List] = {}
         self.__score = sum(x.score() for x in self.pairs)
         self.__hash = hash(self.set)
 
@@ -198,13 +204,16 @@ class Tetrad:
         return '{}-{}-{}-{}'.format(*self.nucleotides)
 
     def __str__(self):
-        return '    {} {} {} {} {}-{}-{}-{} {} {} planarity={}\n'.format(self.nucleotides[0], self.nucleotides[1],
-                                                                         self.nucleotides[2], self.nucleotides[3],
-                                                                         self.pairs[0].lw, self.pairs[1].lw,
-                                                                         self.pairs[2].lw, self.pairs[3].lw,
-                                                                         self.get_classification(),
-                                                                         self.gba_classification(),
-                                                                         round(self.planarity_deviation, 2))
+        return '    {} {} {} {} {}-{}-{}-{} {} {} ' \
+               'planarity={} ' \
+               'ions_channel={} ' \
+               'ions_outside={}\n'.format(self.nucleotides[0], self.nucleotides[1], self.nucleotides[2],
+                                          self.nucleotides[3], self.pairs[0].lw, self.pairs[1].lw, self.pairs[2].lw,
+                                          self.pairs[3].lw, self.get_classification(), self.gba_classification(),
+                                          round(self.planarity_deviation, 2),
+                                          ','.join([atom.name for atom in self.ions_channel]),
+                                          {k: ','.join(map(lambda atom: atom.name, v)) for k, v in
+                                           self.ions_outside.items()})
 
     def stems_with(self, other) -> bool:
         index_diff = (j - i for i, j in zip(self.sorted_indices(), other.sorted_indices()))
@@ -343,6 +352,9 @@ class Tetrad:
             if all(outer) and all(inner):
                 return numpy.linalg.norm(center_of_mass(outer) - center_of_mass(inner))
         return float('nan')
+
+    def __calculate_center_point(self):
+        return sum(atom.coord for atom in map(lambda nt: nt.innermost_atom(), self.nucleotides)) / len(self.nucleotides)
 
 
 class TetradPair:
@@ -626,6 +638,8 @@ class Analysis:
         self.pairs: Dict[Tuple[Nucleotide, Nucleotide], Pair] = self.__read_pairs(data)
         self.canonical: Set[Pair] = {pair for pair in self.pairs.values() if
                                      pair.saenger in ('19-XIX', '20-XX', '28-XXVIII')}
+        self.metal_ions: List = self.__find_metal_ions(structure3d)
+        self.metals = self.__format_metal_ions()
         self.graph: Dict[Nucleotide, List[Nucleotide]] = dict()
         self.tetrads: Set[Tetrad] = set()
         self.tetrad_pairs: List[TetradPair] = list()
@@ -801,6 +815,49 @@ class Analysis:
     def chain_order(self) -> Dict[str, int]:
         return {nt.model_chain: 0 for nt in sorted(self.nucleotides.values(), key=lambda nt: nt.index)}
 
+    def analyze_metal_ions(self):
+        for ion in self.metal_ions:
+            min_distance = float('inf')
+            min_tetrad = None
+            min_nt = None
+            channel = None
+
+            for tetrad in self.tetrads:
+                distance = numpy.linalg.norm(ion.coord - tetrad.center)
+                if distance < min_distance:
+                    min_distance = distance
+                    min_tetrad = tetrad
+                    min_nt = None
+                    channel = True
+
+                for nt in tetrad.nucleotides:
+                    distance = numpy.linalg.norm(ion.coord - nt.outermost_atom().coord)
+                    if distance < min_distance:
+                        min_distance = distance
+                        min_tetrad = tetrad
+                        min_nt = nt
+                        channel = False
+
+            # TODO: verify threshold of 6.0 Angstroms
+            if min_distance < 6.0:
+                if channel:
+                    min_tetrad.ions_channel.append(ion)
+                else:
+                    if min_nt not in min_tetrad.ions_outside:
+                        min_tetrad.ions_outside[min_nt] = []
+                    min_tetrad.ions_outside[min_nt].append(ion)
+            else:
+                logging.info(f'Skipping an ion, because it is too far from any tetrad (distance={min_distance})')
+
+    def __find_metal_ions(self, structure3d: Structure):
+        atoms = []
+        used = set()
+        for atom in structure3d.get_atoms():
+            if atom.name.casefold() in METALS and tuple(atom.coord) not in used:
+                atoms.append(atom)
+                used.add(tuple(atom.coord))
+        return atoms
+
     def __reorder_chains(self, chain_order: Iterable[str]):
         i = 1
         for chain in chain_order:
@@ -866,6 +923,10 @@ class Analysis:
             pairs[(nt1, nt2)] = pair
             pairs[(nt2, nt1)] = pair.reverse()
         return pairs
+
+    def __format_metal_ions(self):
+        counter = Counter(map(lambda atom: atom.name.title(), self.metal_ions))
+        return ','.join(f'{k}={v}' for k, v in sorted(counter.items()))
 
 
 class Visualizer:
@@ -1039,7 +1100,9 @@ class Encoder(json.JSONEncoder):
                 'nt4': repr(o.nucleotides[3]),
                 'onz': o.get_classification(),
                 'gba_classification': o.gba_classification(),
-                'planarity_deviation': o.planarity_deviation
+                'planarity_deviation': o.planarity_deviation,
+                'ions_channel': [atom.name.title() for atom in o.ions_channel],
+                'ions_outside': {repr(k): [atom.name.title() for atom in v] for k, v in o.ions_outside.items()}
             }
         if isinstance(o, TetradPair):
             return {
@@ -1066,6 +1129,7 @@ class Encoder(json.JSONEncoder):
             }
         if isinstance(o, Analysis):
             return {
+                'metals': o.metals,
                 'nucleotides': o.nucleotides,
                 'base_pairs': tuple(o.pairs.values()),
                 'helices': o.helices
@@ -1123,9 +1187,12 @@ def load_dssr_results(args):
         with open(args.dssr_json) as jsonfile:
             dssr = jsonfile.read()
     else:
+        app = shutil.which('x3dna-dssr')
+        if app is None:
+            log.error('Missing x3dna-dssr on $PATH, please install the application')
+            sys.exit(1)
         tempdir = tempfile.mkdtemp()
-        currdir = os.path.dirname(os.path.realpath(__file__))
-        shutil.copy(os.path.join(currdir, 'x3dna-dssr'), tempdir)
+        shutil.copy(app, tempdir)
         dssr = subprocess.Popen(
             ['./x3dna-dssr', '-i={}'.format(os.path.abspath(args.pdb)), '--json'],
             stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=tempdir)
@@ -1175,7 +1242,7 @@ def return_empty_output_and_exit(args):
     sys.exit()
 
 
-if __name__ == '__main__':
+def main():
     args = parse_arguments()
     dssr = load_dssr_results(args)
 
@@ -1217,6 +1284,8 @@ if __name__ == '__main__':
     if not args.no_reorder:
         structure.find_best_chain_reorder()
 
+    structure.analyze_metal_ions()
+
     print(structure)
 
     visualizer = Visualizer(structure.tetrads, structure.nucleotides.values(),
@@ -1245,3 +1314,6 @@ if __name__ == '__main__':
     if args.output:
         with open(args.output, 'w') as jsonfile:
             json.dump(structure, jsonfile, cls=Encoder)
+
+if __name__ == '__main__':
+    main()

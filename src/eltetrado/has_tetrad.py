@@ -1,4 +1,3 @@
-#! /usr/bin/env python3
 import argparse
 import gzip
 import json
@@ -10,7 +9,7 @@ import tempfile
 
 from collections import defaultdict
 
-__version__ = '1.1.0'
+__version__ = '1.2.0'
 
 
 class Pair:
@@ -109,7 +108,7 @@ def load_dssr_results(args):
         exit(1)
 
 
-if __name__ == '__main__':
+def main():
     args = parse_arguments()
     dssr = load_dssr_results(args)
 
@@ -123,3 +122,6 @@ if __name__ == '__main__':
         exit()
     else:
         exit(1)
+
+if __name__ == '__main__':
+    main()
