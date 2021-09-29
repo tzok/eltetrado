@@ -15,12 +15,15 @@ from collections import defaultdict, Counter
 from typing import Dict, Iterable, List, Tuple, FrozenSet, Set
 
 import numpy
+import orjson
 
 from Bio.PDB import PDBParser, MMCIFParser, Structure, Residue, Atom
 from Bio.PDB.Atom import DisorderedAtom
 from Bio.PDB.StructureBuilder import StructureBuilder
 
 __version__ = '1.3.0.dev1'
+
+from eltetrado import model
 
 logging.basicConfig(level=os.environ.get("LOGLEVEL", "INFO"))
 log = logging.getLogger('eltetrado')
@@ -1312,8 +1315,12 @@ def main():
                     tv.visualize(prefix, '{}-q{}-t{}'.format(suffix, j + 1, k + 1))
 
     if args.output:
+        dto = model.generate_dto(structure)
+        print(orjson.dumps(dto))
+
         with open(args.output, 'w') as jsonfile:
             json.dump(structure, jsonfile, cls=Encoder)
+
 
 if __name__ == '__main__':
     main()

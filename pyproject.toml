@@ -12,11 +12,12 @@ packages = [{ include = "eltetrado", from = "src" }]
 python = "^3.6"
 biopython = "^1.78"
 numpy = "^1.20.3"
+orjson = "^3.6.3"
 
 [tool.poetry.dev-dependencies]
 
 [tool.poetry.scripts]
-eltetrado = "eltetrado.eltetrado:main"
+eltetrado = "eltetrado.main:main"
 has_tetrad = "eltetrado.has_tetrad:main"
 
 [build-system]
