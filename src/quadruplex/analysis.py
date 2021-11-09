@@ -1085,7 +1085,7 @@ class StructureSimplified:
         pairs = dict()
         for pair in data['pairs']:
             nt1, nt2 = pair['nt1'], pair['nt2']
-            pair = Pair(nt1, nt2, pair['LW'])
+            pair = Pair(nt1, nt2, pair['LW'], 'n/a')
             pairs[(nt1, nt2)] = pair
             pairs[(nt2, nt1)] = pair.reverse()
         return pairs
