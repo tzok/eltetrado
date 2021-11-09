@@ -23,10 +23,8 @@ from Bio.PDB.StructureBuilder import StructureBuilder
 
 __version__ = '1.3.0.dev1'
 
-from eltetrado import model
-
 logging.basicConfig(level=os.environ.get("LOGLEVEL", "INFO"))
-log = logging.getLogger('eltetrado')
+log = logging.getLogger('quadruplex')
 
 LW_SCORE = {
     'cWW': 1, 'tWW': 2, 'cWH': 3, 'tWH': 4, 'cWS': 5, 'tWS': 6,
@@ -451,7 +449,8 @@ class Quadruplex:
         else:
             if any(t.get_classification() == 'n/a' for t in self.tetrads):
                 builder += '  R {} {} quadruplex with {} tetrads\n'.format(self.gba_classification,
-                                                                           self.loop_classification, len(self.tetrads))
+                                                                           self.loop_classification,
+                                                                           len(self.tetrads))
             else:
                 builder += '  {}{}{} {} {} quadruplex with {} tetrads\n'.format(self.onzm_classification(),
                                                                                 self.direction(),
@@ -945,7 +944,7 @@ class Visualizer:
         return '{}\n{}\n{}'.format(self.sequence, *self.dotbracket)
 
     def visualize(self, prefix: str, suffix: str):
-        tempdir = os.path.join(tempfile.gettempdir(), '.eltetrado')
+        tempdir = os.path.join(tempfile.gettempdir(), '.tetrads')
         os.makedirs(tempdir, exist_ok=True)
 
         fd, fasta = tempfile.mkstemp('.fasta', dir=tempdir)
@@ -1051,92 +1050,45 @@ class Visualizer:
         return sequence, structure, shifts
 
 
-class Encoder(json.JSONEncoder):
-    @staticmethod
-    def stericity(pair: Pair) -> str:
-        if pair.lw[0] == 'c':
-            return 'cis'
-        if pair.lw[0] == 't':
-            return 'trans'
-        log.error(f'Unrecognized stericity {pair.lw[0]} in Leontis-Westhof notation {pair.lw}')
-        return 'n/a'
+class StructureSimplified:
+    def __init__(self, data: dict):
+        self.pairs = self._read_pairs(data)
+        self.graph = dict()
 
-    @staticmethod
-    def edge(pair: Pair, edge5: bool = True) -> str:
-        letter = pair.lw[1] if edge5 else pair.lw[2]
-        if letter == 'W':
-            return 'Watson-Crick'
-        if letter == 'H':
-            return 'Hoogsteen'
-        if letter == 'S':
-            return 'Sugar'
-        log.error(f'Unrecognized edge {letter} in Leontis-Westhof notation {pair.lw}')
-        return 'n/a'
+    def build_graph(self):
+        graph = defaultdict(list)
+        for pair in self.pairs.values():
+            nt1, nt2 = pair.pair
+            graph[nt1].append(nt2)
+        self.graph = graph
 
-    def default(self, o):
-        if isinstance(o, Nucleotide):
-            return {
-                'index': o.index,
-                'model': o.model,
-                'chain': o.chain,
-                'number': o.number,
-                'icode': o.icode,
-                'molecule': o.molecule,
-                'full_name': o.full_name,
-                'short_name': o.short_name,
-                'chi': o.chi,
-                'glycosidic_bond': o.glycosidic_bond
-            }
-        if isinstance(o, Pair):
-            return {
-                'nt1': repr(o.pair[0]),
-                'nt2': repr(o.pair[1]),
-                'stericity': self.stericity(o),
-                'edge5': self.edge(o, True),
-                'edge3': self.edge(o, False)
-            }
-        if isinstance(o, Tetrad):
-            return {
-                'nt1': repr(o.nucleotides[0]),
-                'nt2': repr(o.nucleotides[1]),
-                'nt3': repr(o.nucleotides[2]),
-                'nt4': repr(o.nucleotides[3]),
-                'onz': o.get_classification(),
-                'gba_classification': o.gba_classification(),
-                'planarity_deviation': o.planarity_deviation,
-                'ions_channel': [atom.name.title() for atom in o.ions_channel],
-                'ions_outside': {repr(k): [atom.name.title() for atom in v] for k, v in o.ions_outside.items()}
-            }
-        if isinstance(o, TetradPair):
-            return {
-                'tetrad1': repr(o.tetrad1),
-                'tetrad2': repr(o.tetrad2),
-                'direction': o.direction,
-                'rise': o.rise,
-                'twist': o.twist
-            }
-        if isinstance(o, Quadruplex):
-            return {
-                'tetrads': {repr(tetrad): tetrad for tetrad in o.tetrads},
-                'onzm': o.onzm_classification() + o.direction() + o.sign() if len(o.tetrads) > 1 else 'n/a',
-                'loop_classification': o.loop_classification,
-                'gba_classification': o.gba_classification,
-                'tracts': [[nt.full_name for nt in tract] for tract in o.tracts],
-                'loops': [{'loop_type': loop.loop_type,
-                           'nucleotides': [nt.full_name for nt in loop]} for loop in o.loops]
-            }
-        if isinstance(o, Helix):
-            return {
-                'quadruplexes': o.quadruplexes,
-                'tetrad_pairs': o.tetrad_pairs
-            }
-        if isinstance(o, Analysis):
-            return {
-                'metals': o.metals,
-                'nucleotides': o.nucleotides,
-                'base_pairs': tuple(o.pairs.values()),
-                'helices': o.helices
-            }
+    def is_valid_tetrad(self, nt1, nt2, nt3, nt4):
+        p1, p2, p3, p4 = self.pairs[(nt1, nt2)], self.pairs[(nt2, nt3)], self.pairs[(nt3, nt4)], self.pairs[(nt4, nt1)]
+        for pi, pj in ((p1, p4), (p2, p1), (p3, p2), (p4, p3)):
+            if pi.lw[1] == pj.lw[2]:
+                return False
+        return True
+
+    def has_tetrads(self):
+        tetrads = set()
+        for i in self.graph:
+            for j in filter(lambda x: x != i, self.graph[i]):
+                for k in filter(lambda x: x not in (i, j), self.graph[j]):
+                    for l in filter(lambda x: x not in (i, j, k) and x in self.graph[i], self.graph[k]):
+                        if self.is_valid_tetrad(i, j, k, l):
+                            tetrads.add(frozenset([i, j, k, l]))
+                        if len(tetrads) > 1:
+                            return True
+        return False
+
+    def _read_pairs(self, data: dict):
+        pairs = dict()
+        for pair in data['pairs']:
+            nt1, nt2 = pair['nt1'], pair['nt2']
+            pair = Pair(nt1, nt2, pair['LW'])
+            pairs[(nt1, nt2)] = pair
+            pairs[(nt2, nt1)] = pair.reverse()
+        return pairs
 
 
 def filter_tetrad_pairs(tetrad_pairs: List[TetradPair], tetrads: Iterable[Tetrad]) -> List[TetradPair]:
@@ -1245,7 +1197,7 @@ def return_empty_output_and_exit(args):
     sys.exit()
 
 
-def main():
+def eltetrado():
     args = parse_arguments()
     dssr = load_dssr_results(args)
 
@@ -1315,12 +1267,29 @@ def main():
                     tv.visualize(prefix, '{}-q{}-t{}'.format(suffix, j + 1, k + 1))
 
     if args.output:
+        from quadruplex import model
         dto = model.generate_dto(structure)
-        print(orjson.dumps(dto))
 
-        with open(args.output, 'w') as jsonfile:
-            json.dump(structure, jsonfile, cls=Encoder)
+        with open(args.output, 'wb') as jsonfile:
+            jsonfile.write(orjson.dumps(dto))
 
 
-if __name__ == '__main__':
-    main()
+def has_tetrad():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--pdb', help='path to input PDB or PDBx/mmCIF file')
+    parser.add_argument('--dssr-json', help='path to input JSON file generated with `x3dna-dssr --json`')
+    parser.add_argument('--version', action='version', version='%(prog)s {}'.format(__version__))
+    args = parser.parse_args()
+
+    if not args.pdb and not args.dssr_json:
+        print(parser.print_help())
+        sys.exit()
+
+    dssr = load_dssr_results(args)
+
+    if 'pairs' not in dssr:
+        sys.exit(1)
+
+    structure = StructureSimplified(dssr)
+    structure.build_graph()
+    sys.exit(0 if structure.has_tetrads() else 1)

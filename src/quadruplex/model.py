@@ -3,8 +3,7 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import List
 
-import eltetrado
-from eltetrado.main import Analysis
+import quadruplex.analysis
 
 
 class Ion(Enum):
@@ -258,12 +257,12 @@ class Result:
     helices: List[Helix]
 
 
-def convert_metals(analysis: Analysis):
+def convert_metals(analysis: quadruplex.analysis.Analysis):
     counter = Counter(map(lambda atom: atom.name.title(), analysis.metal_ions))
     return [Metal(Ion(k.title()), v) for k, v in counter.items()]
 
 
-def convert_nucleotides(analysis: Analysis):
+def convert_nucleotides(analysis: quadruplex.analysis.Analysis):
     return [
         Nucleotide(nt.index, nt.model, nt.chain, nt.number, nt.icode, Molecule(nt.molecule), nt.full_name,
                    nt.short_name, float(nt.chi), GlycosidicBond(nt.glycosidic_bond))
@@ -271,7 +270,7 @@ def convert_nucleotides(analysis: Analysis):
     ]
 
 
-def convert_base_pairs(analysis: Analysis):
+def convert_base_pairs(analysis: quadruplex.analysis.Analysis):
     lw2stericity = lambda lw: Stericity.cis if lw[0] == 'c' else Stericity.trans
     lw2edge = lambda lw: Edge.WC if lw == 'W' else Edge.H if lw == 'H' else Edge.S
     return [
@@ -280,18 +279,18 @@ def convert_base_pairs(analysis: Analysis):
     ]
 
 
-def convert_ions_channel(tetrad: eltetrado.main.Tetrad):
+def convert_ions_channel(tetrad: quadruplex.analysis.Tetrad):
     return [Ion(atom.name.title()) for atom in tetrad.ions_channel]
 
 
-def convert_ions_outside(tetrad: eltetrado.main.Tetrad):
+def convert_ions_outside(tetrad: quadruplex.analysis.Tetrad):
     return [
         IonOutside(nt.full_name, Ion(ion.name.title()))
         for nt, ions_list in tetrad.ions_outside.items() for ion in ions_list
     ]
 
 
-def convert_tetrads(quadruplex: eltetrado.main.Quadruplex):
+def convert_tetrads(quadruplex: quadruplex.analysis.Quadruplex):
     return [
         Tetrad(repr(t), t.nucleotides[0].full_name, t.nucleotides[1].full_name, t.nucleotides[2].full_name,
                t.nucleotides[3].full_name, ONZ(t.get_classification()), GbaTetradClassification(t.gba_classification()),
@@ -300,15 +299,15 @@ def convert_tetrads(quadruplex: eltetrado.main.Quadruplex):
     ]
 
 
-def convert_tracts(quadruplex: eltetrado.main.Quadruplex):
+def convert_tracts(quadruplex: quadruplex.analysis.Quadruplex):
     return [[nt.full_name for nt in tract.nucleotides] for tract in quadruplex.tracts]
 
 
-def convert_loops(quadruplex: eltetrado.main.Quadruplex):
+def convert_loops(quadruplex: quadruplex.analysis.Quadruplex):
     return [Loop(LoopType(loop.loop_type), [nt.full_name for nt in loop.nucleotides]) for loop in quadruplex.loops]
 
 
-def convert_quadruplexes(helix: eltetrado.main.Helix):
+def convert_quadruplexes(helix: quadruplex.analysis.Helix):
     return [
         Quadruplex(convert_tetrads(q), ONZM(f'{q.onzm_classification()}{q.direction()}{q.sign()}'),
                    LoopClassification(q.loop_classification), GbaQuadruplexClassification(q.gba_classification),
@@ -317,18 +316,18 @@ def convert_quadruplexes(helix: eltetrado.main.Helix):
     ]
 
 
-def convert_tetrad_pairs(helix: eltetrado.main.Helix):
+def convert_tetrad_pairs(helix: quadruplex.analysis.Helix):
     return [
         TetradPair(repr(tp.tetrad1), repr(tp.tetrad2), Direction(tp.direction), float(tp.rise), float(tp.twist))
         for tp in helix.tetrad_pairs
     ]
 
 
-def convert_helices(analysis: Analysis):
+def convert_helices(analysis: quadruplex.analysis.Analysis):
     return [Helix(convert_quadruplexes(h), convert_tetrad_pairs(h)) for h in analysis.helices]
 
 
-def generate_dto(analysis: Analysis):
+def generate_dto(analysis: quadruplex.analysis.Analysis):
     metals = convert_metals(analysis)
     nucleotides = convert_nucleotides(analysis)
     base_pairs = convert_base_pairs(analysis)
