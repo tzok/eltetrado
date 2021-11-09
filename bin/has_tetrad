@@ -1,0 +1,4 @@
+#! /usr/bin/env python
+import quadruplex.analysis
+
+quadruplex.analysis.has_tetrad()

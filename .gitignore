@@ -4,4 +4,5 @@ README.html
 __pycache__
 assets
 dist
+src/eltetrado.egg-info
 x3dna-dssr
