@@ -21,8 +21,6 @@ from Bio.PDB import PDBParser, MMCIFParser, Structure, Residue, Atom
 from Bio.PDB.Atom import DisorderedAtom
 from Bio.PDB.StructureBuilder import StructureBuilder
 
-__version__ = '1.3.0.dev1'
-
 logging.basicConfig(level=os.environ.get("LOGLEVEL", "INFO"))
 log = logging.getLogger('quadruplex')
 
@@ -1108,6 +1106,9 @@ def center_of_mass(atoms):
 
 
 def parse_arguments():
+    with open(os.path.join(os.path.dirname(__file__), 'VERSION')) as f:
+        version = f.read().strip()
+
     parser = argparse.ArgumentParser()
     parser.add_argument('--pdb', help='path to input PDB or PDBx/mmCIF file')
     parser.add_argument('--dssr-json', help='path to input JSON file generated with `x3dna-dssr --json`')
@@ -1128,7 +1129,7 @@ def parse_arguments():
                              'the quadruplex')
     parser.add_argument('--no-image', action='store_true',
                         help='when set, the visualization will not be created at all')
-    parser.add_argument('--version', action='version', version='%(prog)s {}'.format(__version__))
+    parser.add_argument('--version', action='version', version='%(prog)s {}'.format(version))
 
     args = parser.parse_args()
     if not args.pdb and not args.dssr_json:
@@ -1275,10 +1276,13 @@ def eltetrado():
 
 
 def has_tetrad():
+    with open(os.path.join(os.path.dirname(__file__), 'VERSION')) as f:
+        version = f.read().strip()
+
     parser = argparse.ArgumentParser()
     parser.add_argument('--pdb', help='path to input PDB or PDBx/mmCIF file')
     parser.add_argument('--dssr-json', help='path to input JSON file generated with `x3dna-dssr --json`')
-    parser.add_argument('--version', action='version', version='%(prog)s {}'.format(__version__))
+    parser.add_argument('--version', action='version', version='%(prog)s {}'.format(version))
     args = parser.parse_args()
 
     if not args.pdb and not args.dssr_json:
