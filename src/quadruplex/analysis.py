@@ -141,6 +141,10 @@ class Nucleotide:
 
 
 class Pair:
+    @staticmethod
+    def is_valid(lw: str):
+        return len(lw) == 3 and lw[0] in 'ct' and lw[1] in 'WHS' and lw[2] in 'WHS'
+
     def __init__(self, nt1: Nucleotide, nt2: Nucleotide, lw: str, saenger: str):
         self.pair: Tuple[Nucleotide, Nucleotide] = (nt1, nt2)
         self.lw: str = lw
@@ -916,12 +920,11 @@ class Analysis:
         pairs = dict()
         for pair in data['pairs']:
             nt1, nt2, lw, saenger = pair['nt1'], pair['nt2'], pair['LW'], pair['Saenger']
-            if len(lw) != 3 or lw[0] not in 'ct' or lw[1] not in 'WHS' or lw[2] not in 'WHS':
-                continue
-            nt1, nt2 = self.nucleotides[nt1], self.nucleotides[nt2]
-            pair = Pair(nt1, nt2, lw, saenger)
-            pairs[(nt1, nt2)] = pair
-            pairs[(nt2, nt1)] = pair.reverse()
+            if Pair.is_valid(lw):
+                nt1, nt2 = self.nucleotides[nt1], self.nucleotides[nt2]
+                pair = Pair(nt1, nt2, lw, saenger)
+                pairs[(nt1, nt2)] = pair
+                pairs[(nt2, nt1)] = pair.reverse()
         return pairs
 
     def __format_metal_ions(self):
@@ -1082,10 +1085,11 @@ class StructureSimplified:
     def _read_pairs(self, data: dict):
         pairs = dict()
         for pair in data['pairs']:
-            nt1, nt2 = pair['nt1'], pair['nt2']
-            pair = Pair(nt1, nt2, pair['LW'], 'n/a')
-            pairs[(nt1, nt2)] = pair
-            pairs[(nt2, nt1)] = pair.reverse()
+            nt1, nt2, lw, saenger = pair['nt1'], pair['nt2'], pair['LW'], pair['Saenger']
+            if Pair.is_valid(lw):
+                pair = Pair(nt1, nt2, lw, saenger)
+                pairs[(nt1, nt2)] = pair
+                pairs[(nt2, nt1)] = pair.reverse()
         return pairs
 
 
