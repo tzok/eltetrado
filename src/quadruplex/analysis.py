@@ -1,7 +1,6 @@
 import argparse
 import gzip
 import itertools
-import json
 import logging
 import math
 import os
@@ -12,14 +11,14 @@ import sys
 import tempfile
 
 from collections import defaultdict, Counter
-from typing import Dict, Iterable, List, Tuple, FrozenSet, Set
+from typing import Dict, Iterable, List, Tuple, FrozenSet, Set, Optional
 
 import numpy
 import orjson
 
-from Bio.PDB import PDBParser, MMCIFParser, Structure, Residue, Atom
-from Bio.PDB.Atom import DisorderedAtom
-from Bio.PDB.StructureBuilder import StructureBuilder
+from pdbx.reader import PdbxReader
+
+from quadruplex.model import Atom3D, Structure3D, Residue3D
 
 logging.basicConfig(level=os.environ.get("LOGLEVEL", "INFO"))
 log = logging.getLogger('quadruplex')
@@ -60,7 +59,7 @@ class Nucleotide:
             return '...'
         return 'syn' if -90 < chi < 90 else 'anti'
 
-    def __init__(self, nt: dict, structure3d: Structure):
+    def __init__(self, nt: dict, structure3d: Structure3D):
         self.model: int = 1 if nt['nt_id'].find(':') == -1 else int(nt['nt_id'].split(':')[0])
         self.chain: str = nt['chain_name']
         self.number: int = nt['nt_resnum']
@@ -72,26 +71,17 @@ class Nucleotide:
         self.glycosidic_bond: str = self.syn_anti(self.chi)
         self.index: int = nt['index']
         self.model_chain: str = self.chain if nt['nt_id'].find(':') == -1 else f'{self.model}:{self.chain}'
-        self.residue3d: Residue = None
+        self.residue3d: Optional[Residue3D] = None
 
         if structure3d:
-            if len(structure3d) == 1:
-                model3d = next(iter(structure3d))
+            for residue in structure3d.residues:
+                if residue.chain_identifier == self.chain \
+                        and residue.residue_number == self.number \
+                        and residue.insertion_code == self.icode:
+                    self.residue3d = residue
+                    break
             else:
-                model3d = structure3d[self.model]
-            hetflag = f'H_{nt["nt_name"]}' if 'is_modified' in nt and nt['is_modified'] is True else ' '
-            key = (hetflag, self.number, self.icode)
-            chain3d = model3d[self.chain]
-            if key in chain3d:
-                self.residue3d = chain3d[key]
-            else:
-                for residue3d in chain3d:
-                    hetflag, resseq, icode = residue3d.id
-                    if resseq == self.number and icode == self.icode:
-                        self.residue3d = residue3d
-                        break
-                else:
-                    log.error(f'Failed to find data in PDB or mmCIF file for residue {self.full_name}')
+                log.error(f'Failed to find data in PDB or mmCIF file for residue {self.full_name}')
 
     def __eq__(self, other):
         return self.full_name == other.full_name
@@ -108,7 +98,7 @@ class Nucleotide:
     def __str__(self):
         return self.full_name
 
-    def outermost_atom(self) -> Atom:
+    def outermost_atom(self) -> Atom3D:
         upper = self.short_name.upper()
         if upper in self.outermost_atoms:
             return self.find_atom(self.outermost_atoms[upper])
@@ -120,7 +110,7 @@ class Nucleotide:
         # pyrimidines
         return self.find_atom('N1')
 
-    def innermost_atom(self) -> Atom:
+    def innermost_atom(self) -> Atom3D:
         upper = self.short_name.upper()
         if upper in self.innermost_atoms:
             return self.find_atom(self.innermost_atoms[upper])
@@ -130,12 +120,10 @@ class Nucleotide:
         # pyrimidines
         return self.find_atom('C4')
 
-    def find_atom(self, expected_atom: str) -> Atom:
+    def find_atom(self, expected_atom: str) -> Optional[Atom3D]:
         if self.residue3d:
-            for atom in self.residue3d.get_atoms():
-                if atom.name == expected_atom:
-                    if isinstance(atom, DisorderedAtom):
-                        return atom.selected_child
+            for atom in self.residue3d.atoms:
+                if atom.atom_name == expected_atom:
                     return atom
         return None
 
@@ -192,7 +180,7 @@ class Tetrad:
         self.no_reorder = no_reorder
         self.chains: Set[str] = self.__chains()
         self.center: numpy.ndarray = self.__calculate_center_point()
-        self.ions_channel: List[Atom] = []
+        self.ions_channel: List[Atom3D] = []
         self.ions_outside: Dict[Nucleotide, List] = {}
         self.__score = sum(x.score() for x in self.pairs)
         self.__hash = hash(self.set)
@@ -214,8 +202,8 @@ class Tetrad:
                                           self.nucleotides[3], self.pairs[0].lw, self.pairs[1].lw, self.pairs[2].lw,
                                           self.pairs[3].lw, self.get_classification(), self.gba_classification(),
                                           round(self.planarity_deviation, 2),
-                                          ','.join([atom.name for atom in self.ions_channel]),
-                                          {k: ','.join(map(lambda atom: atom.name, v)) for k, v in
+                                          ','.join([atom.atom_name for atom in self.ions_channel]),
+                                          {k: ','.join(map(lambda atom: atom.atom_name, v)) for k, v in
                                            self.ions_outside.items()})
 
     def stems_with(self, other) -> bool:
@@ -357,7 +345,8 @@ class Tetrad:
         return float('nan')
 
     def __calculate_center_point(self):
-        return sum(atom.coord for atom in map(lambda nt: nt.innermost_atom(), self.nucleotides)) / len(self.nucleotides)
+        return sum(atom.coordinates() for atom in map(lambda nt: nt.innermost_atom(), self.nucleotides)) / len(
+            self.nucleotides)
 
 
 class TetradPair:
@@ -401,9 +390,9 @@ class TetradPair:
         nt1_other = self.stacked[nt1_self]
         nt2_other = self.stacked[nt2_self]
 
-        v1 = nt1_self.find_atom("C1'").coord - nt2_self.find_atom("C1'").coord
+        v1 = nt1_self.find_atom("C1'").coordinates() - nt2_self.find_atom("C1'").coordinates()
         v1 = v1 / numpy.linalg.norm(v1)
-        v2 = nt1_other.find_atom("C1'").coord - nt2_other.find_atom("C1'").coord
+        v2 = nt1_other.find_atom("C1'").coordinates() - nt2_other.find_atom("C1'").coordinates()
         v2 = v2 / numpy.linalg.norm(v2)
         return math.degrees(numpy.arccos(numpy.clip(numpy.dot(v1, v2), -1.0, 1.0)))
 
@@ -450,14 +439,14 @@ class Quadruplex:
             builder += str(self.tetrads[0])
         else:
             if any(t.get_classification() == 'n/a' for t in self.tetrads):
-                builder += '  R {} {} quadruplex with {} tetrads\n'.format(self.gba_classification,
+                builder += '  R {} {} quadruplex with {} tetrads\n'.format(','.join(self.gba_classification),
                                                                            self.loop_classification,
                                                                            len(self.tetrads))
             else:
                 builder += '  {}{}{} {} {} quadruplex with {} tetrads\n'.format(self.onzm_classification(),
                                                                                 self.direction(),
                                                                                 self.sign(),
-                                                                                self.gba_classification,
+                                                                                ','.join(self.gba_classification),
                                                                                 self.loop_classification,
                                                                                 len(self.tetrads))
             builder += str(self.tetrad_pairs[0].tetrad1)
@@ -503,13 +492,12 @@ class Quadruplex:
             return signs.pop()
         return '*'
 
-    def __gba_classification(self) -> str:
+    def __gba_classification(self) -> List[str]:
         roman_numerals = {'I': 1, 'II': 2, 'III': 3, 'IV': 4, 'V': 5, 'VI': 6, 'VII': 7, 'VIII': 8}
         gbas = map(lambda tetrad: tetrad.gba_classification(), self.tetrads)
         gbas = filter(lambda gba: gba != 'n/a', gbas)
         gbas = map(lambda gba: gba[:-1], gbas)
-        gbas = sorted(set(gbas), key=lambda gba: roman_numerals.get(gba, 100))
-        return ','.join(gbas)
+        return sorted(set(gbas), key=lambda gba: roman_numerals.get(gba, 100))
 
     def __loop_classification(self) -> str:
         if not self.loops or len(self.loops) != 3 or any([loop.loop_type == 'n/a' for loop in self.loops]):
@@ -636,7 +624,7 @@ class Helix:
 
 
 class Analysis:
-    def __init__(self, data: dict, structure3d: Structure):
+    def __init__(self, data: dict, structure3d: Structure3D):
         self.nucleotides: Dict[str, Nucleotide] = {nt['nt_id']: Nucleotide(nt, structure3d) for nt in data['nts']}
         self.stacking: Set[Tuple[Nucleotide]] = self.__read_stacking(data)
         self.pairs: Dict[Tuple[Nucleotide, Nucleotide], Pair] = self.__read_pairs(data)
@@ -827,7 +815,7 @@ class Analysis:
             channel = None
 
             for tetrad in self.tetrads:
-                distance = numpy.linalg.norm(ion.coord - tetrad.center)
+                distance = numpy.linalg.norm(ion.coordinates() - tetrad.center)
                 if distance < min_distance:
                     min_distance = distance
                     min_tetrad = tetrad
@@ -835,7 +823,7 @@ class Analysis:
                     channel = True
 
                 for nt in tetrad.nucleotides:
-                    distance = numpy.linalg.norm(ion.coord - nt.outermost_atom().coord)
+                    distance = numpy.linalg.norm(ion.coordinates() - nt.outermost_atom().coordinates())
                     if distance < min_distance:
                         min_distance = distance
                         min_tetrad = tetrad
@@ -851,15 +839,16 @@ class Analysis:
                         min_tetrad.ions_outside[min_nt] = []
                     min_tetrad.ions_outside[min_nt].append(ion)
             else:
-                logging.info(f'Skipping an ion, because it is too far from any tetrad (distance={min_distance})')
+                logging.debug(f'Skipping an ion, because it is too far from any tetrad (distance={min_distance})')
 
-    def __find_metal_ions(self, structure3d: Structure):
+    def __find_metal_ions(self, structure3d: Structure3D):
         atoms = []
         used = set()
-        for atom in structure3d.get_atoms():
-            if atom.name.casefold() in METALS and tuple(atom.coord) not in used:
-                atoms.append(atom)
-                used.add(tuple(atom.coord))
+        for residue in structure3d.residues:
+            for atom in residue.atoms:
+                if atom.atom_name.casefold() in METALS and tuple(atom.coordinates()) not in used:
+                    atoms.append(atom)
+                    used.add(tuple(atom.coordinates()))
         return atoms
 
     def __reorder_chains(self, chain_order: Iterable[str]):
@@ -928,7 +917,7 @@ class Analysis:
         return pairs
 
     def __format_metal_ions(self):
-        counter = Counter(map(lambda atom: atom.name.title(), self.metal_ions))
+        counter = Counter(map(lambda atom: atom.atom_name.title(), self.metal_ions))
         return ','.join(f'{k}={v}' for k, v in sorted(counter.items()))
 
 
@@ -1102,7 +1091,7 @@ def filter_tetrad_pairs(tetrad_pairs: List[TetradPair], tetrads: Iterable[Tetrad
 
 
 def center_of_mass(atoms):
-    coords = [atom.coord for atom in atoms]
+    coords = [atom.coordinates() for atom in atoms]
     xs = (coord[0] for coord in coords)
     ys = (coord[1] for coord in coords)
     zs = (coord[2] for coord in coords)
@@ -1142,11 +1131,11 @@ def parse_arguments():
     return args
 
 
-def load_dssr_results(args):
-    if args.dssr_json:
-        with open(args.dssr_json) as jsonfile:
+def load_dssr_results(json_path=None, pdb_path=None):
+    if json_path:
+        with open(json_path) as jsonfile:
             dssr = jsonfile.read()
-    else:
+    elif pdb_path:
         app = shutil.which('x3dna-dssr')
         if app is None:
             log.error('Missing x3dna-dssr on $PATH, please install the application')
@@ -1154,44 +1143,100 @@ def load_dssr_results(args):
         tempdir = tempfile.mkdtemp()
         shutil.copy(app, tempdir)
         dssr = subprocess.Popen(
-            ['./x3dna-dssr', '-i={}'.format(os.path.abspath(args.pdb)), '--json'],
+            ['./x3dna-dssr', '-i={}'.format(os.path.abspath(pdb_path)), '--json'],
             stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=tempdir)
         dssr, _ = dssr.communicate()
-
         shutil.rmtree(tempdir)
+    else:
+        log.error('Neither DSSR JSON or PDB / mmCIF path supplied, cannot continue')
+        sys.exit(1)
 
     try:
-        return json.loads(dssr)
-    except json.JSONDecodeError as e:
+        return orjson.loads(dssr)
+    except orjson.JSONDecodeError as e:
         log.error('Invalid JSON', e)
         sys.exit(1)
 
 
-def read_3d_structure(inputfile: str) -> Structure:
-    root, extension = os.path.splitext(inputfile)
-    parser = PDBParser(QUIET=True) if extension == '.pdb' else MMCIFParser(QUIET=True)
-    structure = parser.get_structure(os.path.basename(root), inputfile)
-    serial_nums = defaultdict(list)
-    for model in structure:
-        serial_nums[model.serial_num].append(model)
+def group_atoms(atoms: List[Atom3D]) -> Structure3D:
+    if not atoms:
+        return Structure3D([])
 
-    if len(serial_nums) == len(structure):
-        return structure
+    key_previous = (atoms[0].chain_identifier, atoms[0].residue_number, atoms[0].insertion_code)
+    residue_atoms = [atoms[0]]
+    residues = []
 
-    builder = StructureBuilder()
-    builder.init_structure(structure.id)
-    for serial_num, models in serial_nums.items():
-        builder.init_model(serial_num)
-        builder.init_seg(' ')
-        for model in models:
-            for chain in model:
-                builder.init_chain(chain.id)
-                for residue in chain:
-                    builder.init_residue(residue.resname, *residue.id)
-                    for atom in residue:
-                        builder.init_atom(atom.name, atom.coord, atom.bfactor, atom.occupancy, atom.altloc,
-                                          atom.fullname, element=atom.element)
-    return builder.get_structure()
+    for atom in atoms[1:]:
+        key = (atom.chain_identifier, atom.residue_number, atom.insertion_code)
+        if key == key_previous:
+            residue_atoms.append(atom)
+        else:
+            residues.append(Residue3D(residue_atoms, residue_atoms[0].residue_name, residue_atoms[0].chain_identifier,
+                                      residue_atoms[0].residue_number, residue_atoms[0].insertion_code))
+            key_previous = key
+            residue_atoms = [atom]
+
+    residues.append(Residue3D(residue_atoms, residue_atoms[0].residue_name, residue_atoms[0].chain_identifier,
+                              residue_atoms[0].residue_number, residue_atoms[0].insertion_code))
+    return Structure3D(residues)
+
+
+def parse_pdb(inputfile: str) -> Structure3D:
+    atoms = []
+
+    with open(inputfile) as f:
+        for line in f:
+            if line.startswith('ATOM') or line.startswith('HETATM'):
+                alternate_location = line[16]
+                if alternate_location != ' ':
+                    continue
+                atom_name = line[12:16].strip()
+                residue_name = line[18:20].strip()
+                chain_identifier = line[21]
+                residue_number = int(line[22:26].strip())
+                insertion_code = line[26]
+                x = float(line[30:38].strip())
+                y = float(line[38:46].strip())
+                z = float(line[46:54].strip())
+                atoms.append(Atom3D(atom_name, residue_name, chain_identifier, residue_number, insertion_code, x, y, z))
+
+    return group_atoms(atoms)
+
+
+def parse_cif(inputfile: str) -> Structure3D:
+    with open(inputfile) as f:
+        data = []
+        reader = PdbxReader(f)
+        reader.read(data)
+
+    atoms = []
+    atom_site = data[0].get_object('atom_site')
+
+    for row in atom_site.row_list:
+        row_dict = dict(zip(atom_site.attribute_list, row))
+        atom_name = row_dict['auth_atom_id']
+        residue_name = row_dict['auth_comp_id']
+        chain_identifier = row_dict['auth_asym_id']
+        residue_number = int(row_dict['auth_seq_id'])
+        insertion_code = row_dict['pdbx_PDB_ins_code'] if row_dict['pdbx_PDB_ins_code'] else ' '
+        x = float(row_dict['Cartn_x'])
+        y = float(row_dict['Cartn_y'])
+        z = float(row_dict['Cartn_z'])
+        atoms.append(Atom3D(atom_name, residue_name, chain_identifier, residue_number, insertion_code, x, y, z))
+
+    return group_atoms(atoms)
+
+
+def read_3d_structure(inputfile: str) -> Structure3D:
+    root, ext = os.path.splitext(inputfile)
+
+    if ext == '.pdb':
+        return parse_pdb(inputfile)
+    elif ext == '.cif':
+        return parse_cif(inputfile)
+    else:
+        logging.error(f'Unknown file type: {inputfile}')
+        sys.exit(1)
 
 
 def return_empty_output_and_exit(args):
@@ -1204,16 +1249,12 @@ def return_empty_output_and_exit(args):
 
 def eltetrado():
     args = parse_arguments()
-    dssr = load_dssr_results(args)
-
-    if 'pairs' not in dssr:
-        return_empty_output_and_exit(args)
 
     if args.pdb:
         root, ext = os.path.splitext(args.pdb)
 
         if ext == '.gz':
-            fd, ungzipped = tempfile.mkstemp(os.path.basename(root))
+            fd, ungzipped = tempfile.mkstemp(suffix=os.path.splitext(root)[1])
             os.close(fd)
 
             try:
@@ -1221,12 +1262,18 @@ def eltetrado():
                     with open(ungzipped, 'wb') as outfile:
                         outfile.write(infile.read())
                 structure3d = read_3d_structure(ungzipped)
+                dssr = load_dssr_results(json_path=args.dssr_json, pdb_path=ungzipped)
             finally:
                 os.remove(ungzipped)
         else:
             structure3d = read_3d_structure(args.pdb)
+            dssr = load_dssr_results(json_path=args.dssr_json, pdb_path=args.pdb)
     else:
         structure3d = None
+        dssr = load_dssr_results(json_path=args.dssr_json)
+
+    if 'pairs' not in dssr:
+        return_empty_output_and_exit(args)
 
     structure = Analysis(dssr, structure3d)
     structure.build_graph(args.strict)
@@ -1293,7 +1340,7 @@ def has_tetrad():
         print(parser.print_help())
         sys.exit()
 
-    dssr = load_dssr_results(args)
+    dssr = load_dssr_results(args.dssr_json, args.pdb)
 
     if 'pairs' not in dssr:
         sys.exit(1)
