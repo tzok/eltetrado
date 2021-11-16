@@ -98,34 +98,76 @@ class Nucleotide:
     def __str__(self):
         return self.full_name
 
-    def outermost_atom(self) -> Atom3D:
-        upper = self.short_name.upper()
-        if upper in self.outermost_atoms:
-            return self.find_atom(self.outermost_atoms[upper])
-
-        # purines
-        atom = self.find_atom('N9')
-        if atom:
-            return atom
-        # pyrimidines
-        return self.find_atom('N1')
-
-    def innermost_atom(self) -> Atom3D:
-        upper = self.short_name.upper()
-        if upper in self.innermost_atoms:
-            return self.find_atom(self.innermost_atoms[upper])
-        # purines
-        if self.find_atom('N9'):
-            return self.find_atom('C6')
-        # pyrimidines
-        return self.find_atom('C4')
-
     def find_atom(self, expected_atom: str) -> Optional[Atom3D]:
         if self.residue3d:
             for atom in self.residue3d.atoms:
                 if atom.atom_name == expected_atom:
                     return atom
         return None
+
+    def is_purine(self):
+        return self.find_atom('N9') is not None
+
+    def __outer_generator(self):
+        # try to find expected atom name
+        upper = self.short_name.upper()
+        if upper in self.outermost_atoms:
+            yield self.find_atom(self.outermost_atoms[upper])
+
+        # try to get generic name for purine/pyrimidine
+        if self.is_purine():
+            yield self.find_atom('N9')
+        else:
+            yield self.find_atom('N1')
+
+        # try to find at least C1' next to nucleobase
+        yield self.find_atom("C1'")
+
+        # get any atom
+        if self.residue3d.atoms:
+            yield self.residue3d.atoms[0]
+
+        # last resort, create pseudoatom at (0, 0, 0)
+        logging.error(
+            f'Failed to determine the outermost atom for nucleotide {self}, so an arbitrary atom will be used')
+        yield Atom3D('', '', '', 1, ' ', 0.0, 0.0, 0.0)
+
+    def __inner_generator(self):
+        # try to find expected atom name
+        upper = self.short_name.upper()
+        if upper in self.innermost_atoms:
+            yield self.find_atom(self.innermost_atoms[upper])
+
+        # try to get generic name for purine/pyrimidine
+        if self.is_purine():
+            yield self.find_atom('C6')
+        else:
+            yield self.find_atom('C4')
+
+        # try to find any atom at position 4 or 6 for purine/pyrimidine respectively
+        if self.is_purine():
+            yield self.find_atom('O6')
+            yield self.find_atom('N6')
+            yield self.find_atom('S6')
+        else:
+            yield self.find_atom('O4')
+            yield self.find_atom('N4')
+            yield self.find_atom('S4')
+
+        # get any atom
+        if self.residue3d.atoms:
+            yield self.residue3d.atoms[0]
+
+        # last resort, create pseudoatom at (0, 0, 0)
+        logging.error(
+            f'Failed to determine the innermost atom for nucleotide {self}, so an arbitrary atom will be used')
+        yield Atom3D('', '', '', 1, ' ', 0.0, 0.0, 0.0)
+
+    def outermost_atom(self) -> Atom3D:
+        return next(filter(None, self.__outer_generator()))
+
+    def innermost_atom(self) -> Atom3D:
+        return next(filter(None, self.__inner_generator()))
 
 
 class Pair:
@@ -345,8 +387,8 @@ class Tetrad:
         return float('nan')
 
     def __calculate_center_point(self):
-        return sum(atom.coordinates() for atom in map(lambda nt: nt.innermost_atom(), self.nucleotides)) / len(
-            self.nucleotides)
+        return sum(atom.coordinates() for atom in
+                   map(lambda nt: nt.innermost_atom(), self.nucleotides)) / len(self.nucleotides)
 
 
 class TetradPair:
