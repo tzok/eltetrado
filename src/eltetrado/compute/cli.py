@@ -57,7 +57,11 @@ def eltetrado_cli():
 
     if not args.no_image:
         inputname = args.pdb if args.pdb else args.dssr_json
-        prefix = os.path.splitext(os.path.basename(inputname))[0]
+        basename = os.path.basename(inputname)
+        root, ext = os.path.splitext(basename)
+        if ext == '.gz':
+            root, ext = os.path.splitext(root)
+        prefix = root
         suffix = 'str'
         visualizer.visualize(prefix, suffix)
 
