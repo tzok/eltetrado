@@ -312,16 +312,10 @@ class Tetrad:
             self.nucleotides = self.nucleotides[3:4] + self.nucleotides[0:3]
             self.pairs = self.pairs[3:4] + self.pairs[0:3]
 
-        if self.pairs[0].score() < self.pairs[3].reverse().score():
-            pass
-        else:
+        # flip order if necessary
+        if self.pairs[0].score() > self.pairs[3].reverse().score():
             self.nucleotides = self.nucleotides[0:1] + tuple(reversed(self.nucleotides[1:]))
             self.pairs = tuple(self.pairs[i].reverse() for i in (3, 2, 1, 0))
-
-        ni, nj, nk, nl = (nt.index for nt in self.nucleotides)
-        assert ni == min(ni, nj, nk, nl)
-        pi, pj, pk, pl = self.pairs
-        assert pi.score() <= pl.reverse().score(), 'Conflicting multiplet {} and {}'.format(pi, pl.reverse())
 
     def get_classification(self) -> str:
         if self.no_reorder and len(set((nt.chain for nt in self.nucleotides))) > 1:

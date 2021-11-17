@@ -36,7 +36,7 @@ def run_dssr(pdb_path: str) -> Dict:
         shutil.rmtree(tempdir)
 
 
-def load_dssr_results(json_path: str = None, pdb_path: str = None) -> Dict:
+def load_dssr_results(json_path: Optional[str] = None, pdb_path: Optional[str] = None) -> Dict:
     # load provided JSON file
     if json_path:
         with open(json_path) as jsonfile:
