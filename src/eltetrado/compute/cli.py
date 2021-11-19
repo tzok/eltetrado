@@ -48,12 +48,10 @@ def eltetrado_cli():
     dssr = load_dssr_results(args.dssr_json, args.pdb)
     structure3d = read_3d_structure(args.pdb)
     structure = eltetrado(dssr, structure3d, args.strict, args.no_reorder, args.stacking_mismatch)
-
-    visualizer = Visualizer(structure.tetrads, structure.nucleotides.values(),
-                            structure.canonical if args.complete_2d else tuple())
-
     print(structure)
-    print(visualizer)
+
+    visualizer = Visualizer(structure.tetrads, structure.sequence, structure.shifts, structure.nucleotides.values(),
+                            structure.canonical if args.complete_2d else tuple())
 
     if not args.no_image:
         inputname = args.pdb if args.pdb else args.dssr_json
@@ -66,16 +64,16 @@ def eltetrado_cli():
         visualizer.visualize(prefix, suffix)
 
         for i, helix in enumerate(structure.helices):
-            hv = Visualizer(helix.tetrads)
+            hv = Visualizer(helix.tetrads, structure.sequence, structure.shifts)
             suffix = 'h{}'.format(i + 1)
             hv.visualize(prefix, suffix)
 
             for j, quadruplex in enumerate(helix.quadruplexes):
-                qv = Visualizer(quadruplex.tetrads)
+                qv = Visualizer(quadruplex.tetrads, structure.sequence, structure.shifts)
                 qv.visualize(prefix, '{}-q{}'.format(suffix, j + 1))
 
                 for k, tetrad in enumerate(quadruplex.tetrads):
-                    tv = Visualizer([tetrad])
+                    tv = Visualizer([tetrad], structure.sequence, structure.shifts)
                     tv.visualize(prefix, '{}-q{}-t{}'.format(suffix, j + 1, k + 1))
 
     if args.output:

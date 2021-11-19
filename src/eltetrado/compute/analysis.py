@@ -422,7 +422,7 @@ class TetradPair:
         self.twist: float = self.__calculate_twist()
 
     def __str__(self):
-        return '      direction={} rise={} twist={}\n'.format(self.direction, round(self.rise, 2), round(self.twist, 2))
+        return f'      direction={self.direction} rise={round(self.rise, 2)} twist={round(self.twist, 2)}\n'
 
     def __determine_direction(self):
         # count directions 5' -> 3' as +1 or -1
@@ -662,7 +662,7 @@ class Helix:
     def __str__(self):
         builder = ''
         if len(self.tetrads) > 1:
-            builder += 'n4-helix with {} tetrads\n'.format(len(self.tetrads))
+            builder += f'n4-helix with {len(self.tetrads)} tetrads\n'
             for quadruplex in self.quadruplexes:
                 builder += str(quadruplex)
         elif len(self.tetrads) == 1:
@@ -717,11 +717,16 @@ class Analysis:
         self.stems: Dict[Tetrad, List[Tetrad]] = dict()
         self.stacks: Dict[Tetrad, List[Tetrad]] = dict()
         self.helices: List[Helix] = list()
+        self.sequence: str
+        self.line1: str
+        self.line2: str
+        self.shifts: Dict[Nucleotide, int]
 
     def __str__(self):
-        builder = 'Chain order: {}\n'.format(', '.join(self.chain_order()))
+        builder = f'Chain order: {", ".join(self.chain_order())}\n'
         for helix in self.helices:
             builder += str(helix)
+        builder += f'{self.sequence}\n{self.line1}\n{self.line2}'
         return builder
 
     def build_graph(self, strict: bool):
@@ -919,6 +924,14 @@ class Analysis:
             else:
                 logging.debug(f'Skipping an ion, because it is too far from any tetrad (distance={min_distance})')
 
+    def compute_twoline_dotbracket(self):
+        layer1, layer2 = [], []
+        for tetrad in self.tetrads:
+            layer1.extend((tetrad.pairs[0], tetrad.pairs[2]))
+            layer2.extend((tetrad.pairs[1], tetrad.pairs[3]))
+        self.sequence, self.line1, self.shifts = self.__elimination_conflicts(layer1)
+        self.line2 = self.__elimination_conflicts(layer2)[1]
+
     def __reorder_chains(self, chain_order: Iterable[str]):
         i = 1
         for chain in chain_order:
@@ -988,84 +1001,6 @@ class Analysis:
         counter = Counter(map(lambda atom: atom.atom_name.title(), self.metal_ions))
         return ','.join(f'{k}={v}' for k, v in sorted(counter.items()))
 
-
-class Visualizer:
-
-    def __init__(self,
-                 tetrads: Iterable[Tetrad],
-                 nucleotides: Iterable[Nucleotide] = tuple(),
-                 canonical: Iterable[Pair] = tuple()):
-        self.tetrads = tetrads
-        self.nucleotides = nucleotides if nucleotides else self.__extract_nucleotides()
-        self.canonical = canonical
-        self.sequence, self.dotbracket, self.shifts = self.__compute_twoline_dotbracket()
-        self.onz = {pair: tetrad.get_classification() for tetrad in tetrads for pair in tetrad.pairs}
-
-    def __str__(self):
-        return '{}\n{}\n{}'.format(self.sequence, *self.dotbracket)
-
-    def visualize(self, prefix: str, suffix: str):
-        tempdir = os.path.join(tempfile.gettempdir(), '.tetrads')
-        os.makedirs(tempdir, exist_ok=True)
-
-        fd, fasta = tempfile.mkstemp('.fasta', dir=tempdir)
-        os.close(fd)
-        with open(fasta, 'w') as fastafile:
-            fastafile.write('>{}-{}\n'.format(prefix, suffix))
-            fastafile.write(''.join(self.sequence))
-
-        layer1, layer2 = [], []
-        for tetrad in self.tetrads:
-            layer1.extend((tetrad.pairs[0], tetrad.pairs[2]))
-            layer2.extend((tetrad.pairs[1], tetrad.pairs[3]))
-        helix1 = self.__to_helix(layer1, tempdir, self.canonical)
-        helix2 = self.__to_helix(layer2, tempdir)
-
-        currdir = os.path.dirname(os.path.realpath(__file__))
-        output_pdf = '{}-{}.pdf'.format(prefix, suffix)
-        run = subprocess.run([os.path.join(currdir, 'quadraw.R'), fasta, helix1, helix2, output_pdf],
-                             stdout=subprocess.PIPE,
-                             stderr=subprocess.PIPE)
-        if run.returncode == 0:
-            print('\nPlot:', output_pdf)
-        else:
-            log.error(f'Failed to prepare visualization, reason:\n  {run.stderr.decode()}')
-
-    def __extract_nucleotides(self):
-        nucleotides = list()
-        for tetrad in self.tetrads:
-            nucleotides.extend(tetrad.nucleotides)
-        return nucleotides
-
-    def __compute_twoline_dotbracket(self):
-        layer1, layer2 = [], []
-        for tetrad in self.tetrads:
-            layer1.extend((tetrad.pairs[0], tetrad.pairs[2]))
-            layer2.extend((tetrad.pairs[1], tetrad.pairs[3]))
-        sequence, dotbracket, shifts = self.__elimination_conflicts(layer1)
-        dotbracket = (dotbracket, self.__elimination_conflicts(layer2)[1])
-        return sequence, dotbracket, shifts
-
-    def __to_helix(self, layer: List[Pair], tempdir: str, canonical: Iterable[Pair] = tuple()) -> str:
-        fd, name = tempfile.mkstemp('.helix', dir=tempdir)
-        os.close(fd)
-        onz_value = {'O+': 1, 'O-': 2, 'N+': 3, 'N-': 4, 'Z+': 5, 'Z-': 6, 'n/a': 7}
-        nucleotides = sorted(self.nucleotides)
-
-        with open(name, 'w') as helixfile:
-            helixfile.write('#{}\n'.format(len(self.sequence) + 1))
-            helixfile.write('i\tj\tlength\tvalue\n')
-            for pair in layer:
-                x, y = pair.pair
-                x, y = nucleotides.index(x) + 1 + self.shifts[x], nucleotides.index(y) + 1 + self.shifts[y]
-                onz = self.onz[pair]
-                helixfile.write('{}\t{}\t1\t{}\n'.format(x, y, onz_value[onz]))
-            for pair in canonical:
-                x, y = pair.pair
-                x, y = nucleotides.index(x) + 1 + self.shifts[x], nucleotides.index(y) + 1 + self.shifts[y]
-                helixfile.write('{}\t{}\t1\t8\n'.format(x, y))
-        return name
-
     def __elimination_conflicts(self, pairs):
         orders = dict()
         order = 0
@@ -1100,7 +1035,7 @@ class Visualizer:
         shifts = dict()
         shift_value = 0
         chain = None
-        for nt in sorted(self.nucleotides):
+        for nt in sorted(self.nucleotides.values()):
             if chain and chain != nt.model_chain:
                 sequence += '-'
                 structure += '-'
@@ -1110,6 +1045,75 @@ class Visualizer:
             shifts[nt] = shift_value
             chain = nt.model_chain
         return sequence, structure, shifts
+
+
+class Visualizer:
+
+    def __init__(self,
+                 tetrads: Iterable[Tetrad],
+                 sequence: str,
+                 shifts: Dict[Nucleotide, int],
+                 nucleotides: Iterable[Nucleotide] = tuple(),
+                 canonical: Iterable[Pair] = tuple()):
+        self.tetrads = tetrads
+        self.sequence = sequence
+        self.shifts = shifts
+        self.nucleotides = nucleotides if nucleotides else self.__extract_nucleotides()
+        self.canonical = canonical
+        self.onz = {pair: tetrad.get_classification() for tetrad in tetrads for pair in tetrad.pairs}
+
+    def visualize(self, prefix: str, suffix: str):
+        tempdir = os.path.join(tempfile.gettempdir(), '.tetrads')
+        os.makedirs(tempdir, exist_ok=True)
+
+        fd, fasta = tempfile.mkstemp('.fasta', dir=tempdir)
+        os.close(fd)
+        with open(fasta, 'w') as fastafile:
+            fastafile.write(f'>{prefix}-{suffix}\n')
+            fastafile.write(''.join(self.sequence))
+
+        layer1, layer2 = [], []
+        for tetrad in self.tetrads:
+            layer1.extend((tetrad.pairs[0], tetrad.pairs[2]))
+            layer2.extend((tetrad.pairs[1], tetrad.pairs[3]))
+        helix1 = self.__to_helix(layer1, tempdir, self.canonical)
+        helix2 = self.__to_helix(layer2, tempdir)
+
+        currdir = os.path.dirname(os.path.realpath(__file__))
+        output_pdf = f'{prefix}-{suffix}.pdf'
+        run = subprocess.run([os.path.join(currdir, 'quadraw.R'), fasta, helix1, helix2, output_pdf],
+                             stdout=subprocess.PIPE,
+                             stderr=subprocess.PIPE)
+        if run.returncode == 0:
+            print('\nPlot:', output_pdf)
+        else:
+            log.error(f'Failed to prepare visualization, reason:\n  {run.stderr.decode()}')
+
+    def __extract_nucleotides(self):
+        nucleotides = list()
+        for tetrad in self.tetrads:
+            nucleotides.extend(tetrad.nucleotides)
+        return nucleotides
+
+    def __to_helix(self, layer: List[Pair], tempdir: str, canonical: Iterable[Pair] = tuple()) -> str:
+        fd, name = tempfile.mkstemp('.helix', dir=tempdir)
+        os.close(fd)
+        onz_value = {'O+': 1, 'O-': 2, 'N+': 3, 'N-': 4, 'Z+': 5, 'Z-': 6, 'n/a': 7}
+        nucleotides = sorted(self.nucleotides)
+
+        with open(name, 'w') as helixfile:
+            helixfile.write(f'#{len(self.sequence) + 1}\n')
+            helixfile.write('i\tj\tlength\tvalue\n')
+            for pair in layer:
+                x, y = pair.pair
+                x, y = nucleotides.index(x) + 1 + self.shifts[x], nucleotides.index(y) + 1 + self.shifts[y]
+                onz = self.onz[pair]
+                helixfile.write(f'{x}\t{y}\t1\t{onz_value[onz]}\n')
+            for pair in canonical:
+                x, y = pair.pair
+                x, y = nucleotides.index(x) + 1 + self.shifts[x], nucleotides.index(y) + 1 + self.shifts[y]
+                helixfile.write(f'{x}\t{y}\t1\t8\n')
+        return name
 
 
 def _read_pairs(data: dict):
@@ -1191,6 +1195,8 @@ def eltetrado(dssr: Dict, structure3d: Structure3D, strict: bool, no_reorder: bo
 
     if not no_reorder:
         structure.find_best_chain_reorder()
+
+    structure.compute_twoline_dotbracket()
 
     return structure
 
