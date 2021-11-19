@@ -68,6 +68,34 @@ file, you can easily change them without knowledge of R language. If you
 want ElTetrado to not visualize anything, pass `--no-image` switch to
 it.
 
+    usage: eltetrado [-h] [--pdb PDB] [--dssr-json DSSR_JSON] [--output OUTPUT]
+                     [--stacking-mismatch STACKING_MISMATCH] [--strict]
+                     [--no-reorder] [--complete-2d] [--no-image] [--version]
+
+    optional arguments:
+      -h, --help            show this help message and exit
+      --pdb PDB             path to input PDB or PDBx/mmCIF file
+      --dssr-json DSSR_JSON
+                            path to input JSON file generated with `x3dna-dssr
+                            --json`
+      --output OUTPUT       (optional) path for output JSON file
+      --stacking-mismatch STACKING_MISMATCH
+                            a perfect tetrad stacking covers 4 nucleotides; this
+                            option can be used with value 1 or 2 to allow this
+                            number of nucleotides to be non-stacked with otherwise
+                            well aligned tetrad [default=2]
+      --strict              nucleotides in tetrad are found when linked only by
+                            cWH pairing
+      --no-reorder          chains of bi- and tetramolecular quadruplexes are
+                            reordered to be able to have them classified; when
+                            this is set, chains will be processed in original
+                            order and bi-/tetramolecular quadruplexes will not be
+                            classified
+      --complete-2d         when set, the visualization will also show canonical
+                            base pairs to provide context for the quadruplex
+      --no-image            when set, the visualization will not be created at all
+      --version             show program's version number and exit
+
 # Chains reorder
 
 ElTetrado keeps a global and unique 5’-3’ index for every nucleotide
@@ -110,14 +138,14 @@ induced by 5’-3’ indexing. We select permutation with the minimum value.
     n4-helix with 4 tetrads
       Op+ VIII 1a quadruplex with 2 tetrads
         B.G16 B.G19 B.G25 B.G28 cWH-cWH-cWH-cWH O+ VIIIa planarity=0.31 ions_channel= ions_outside={}
-          direction=parallel rise=4.21 twist=33.45
+          direction=parallel rise=4.21 twist=31.9
         B.G15 B.G18 B.G24 B.G27 cWH-cWH-cWH-cWH O+ VIIIa planarity=0.26 ions_channel= ions_outside={}
 
         Tracts:
-          B.G25, B.G24
           B.G28, B.G27
           B.G16, B.G15
           B.G19, B.G18
+          B.G25, B.G24
 
         Loops:
           propeller- B.A17
@@ -126,14 +154,14 @@ induced by 5’-3’ indexing. We select permutation with the minimum value.
 
       Op+ VIII 1a quadruplex with 2 tetrads
         A.G1 A.G4 A.G10 A.G13 cWH-cWH-cWH-cWH O+ VIIIa planarity=0.63 ions_channel= ions_outside={}
-          direction=parallel rise=4.12 twist=27.15
+          direction=parallel rise=4.12 twist=28.66
         A.G2 A.G5 A.G11 A.G14 cWH-cWH-cWH-cWH O+ VIIIa planarity=0.5 ions_channel= ions_outside={}
 
         Tracts:
-          A.G4, A.G5
           A.G10, A.G11
           A.G13, A.G14
           A.G1, A.G2
+          A.G4, A.G5
 
         Loops:
           propeller- A.A3
@@ -152,346 +180,346 @@ Click to see the output JSON
 
 ``` json
 {
-  "metals": "",
-  "nucleotides": {
-    "A.G1": {
+  "metals": [],
+  "nucleotides": [
+    {
       "index": 1,
       "model": 1,
       "chain": "A",
       "number": 1,
       "icode": " ",
       "molecule": "RNA",
-      "full_name": "A.G1",
-      "short_name": "G",
+      "fullName": "A.G1",
+      "shortName": "G",
       "chi": -114.063,
-      "glycosidic_bond": "anti"
+      "glycosidicBond": "anti"
     },
-    "A.G2": {
+    {
       "index": 2,
       "model": 1,
       "chain": "A",
       "number": 2,
       "icode": " ",
       "molecule": "RNA",
-      "full_name": "A.G2",
-      "short_name": "G",
+      "fullName": "A.G2",
+      "shortName": "G",
       "chi": -136.905,
-      "glycosidic_bond": "anti"
+      "glycosidicBond": "anti"
     },
-    "A.A3": {
+    {
       "index": 3,
       "model": 1,
       "chain": "A",
       "number": 3,
       "icode": " ",
       "molecule": "RNA",
-      "full_name": "A.A3",
-      "short_name": "A",
+      "fullName": "A.A3",
+      "shortName": "A",
       "chi": -53.884,
-      "glycosidic_bond": "syn"
+      "glycosidicBond": "syn"
     },
-    "A.G4": {
+    {
       "index": 4,
       "model": 1,
       "chain": "A",
       "number": 4,
       "icode": " ",
       "molecule": "RNA",
-      "full_name": "A.G4",
-      "short_name": "G",
+      "fullName": "A.G4",
+      "shortName": "G",
       "chi": 167.763,
-      "glycosidic_bond": "anti"
+      "glycosidicBond": "anti"
     },
-    "A.G5": {
+    {
       "index": 5,
       "model": 1,
       "chain": "A",
       "number": 5,
       "icode": " ",
       "molecule": "RNA",
-      "full_name": "A.G5",
-      "short_name": "G",
+      "fullName": "A.G5",
+      "shortName": "G",
       "chi": -98.198,
-      "glycosidic_bond": "anti"
+      "glycosidicBond": "anti"
     },
-    "A.U6": {
+    {
       "index": 6,
       "model": 1,
       "chain": "A",
       "number": 6,
       "icode": " ",
       "molecule": "RNA",
-      "full_name": "A.U6",
-      "short_name": "U",
+      "fullName": "A.U6",
+      "shortName": "U",
       "chi": -150.069,
-      "glycosidic_bond": "anti"
+      "glycosidicBond": "anti"
     },
-    "A.U7": {
+    {
       "index": 7,
       "model": 1,
       "chain": "A",
       "number": 7,
       "icode": " ",
       "molecule": "RNA",
-      "full_name": "A.U7",
-      "short_name": "U",
+      "fullName": "A.U7",
+      "shortName": "U",
       "chi": -130.523,
-      "glycosidic_bond": "anti"
+      "glycosidicBond": "anti"
     },
-    "A.U8": {
+    {
       "index": 8,
       "model": 1,
       "chain": "A",
       "number": 8,
       "icode": " ",
       "molecule": "RNA",
-      "full_name": "A.U8",
-      "short_name": "U",
+      "fullName": "A.U8",
+      "shortName": "U",
       "chi": -158.504,
-      "glycosidic_bond": "anti"
+      "glycosidicBond": "anti"
     },
-    "A.U9": {
+    {
       "index": 9,
       "model": 1,
       "chain": "A",
       "number": 9,
       "icode": " ",
       "molecule": "RNA",
-      "full_name": "A.U9",
-      "short_name": "U",
+      "fullName": "A.U9",
+      "shortName": "U",
       "chi": -149.743,
-      "glycosidic_bond": "anti"
+      "glycosidicBond": "anti"
     },
-    "A.G10": {
+    {
       "index": 10,
       "model": 1,
       "chain": "A",
       "number": 10,
       "icode": " ",
       "molecule": "RNA",
-      "full_name": "A.G10",
-      "short_name": "G",
+      "fullName": "A.G10",
+      "shortName": "G",
       "chi": -113.245,
-      "glycosidic_bond": "anti"
+      "glycosidicBond": "anti"
     },
-    "A.G11": {
+    {
       "index": 11,
       "model": 1,
       "chain": "A",
       "number": 11,
       "icode": " ",
       "molecule": "RNA",
-      "full_name": "A.G11",
-      "short_name": "G",
+      "fullName": "A.G11",
+      "shortName": "G",
       "chi": -138.466,
-      "glycosidic_bond": "anti"
+      "glycosidicBond": "anti"
     },
-    "A.A12": {
+    {
       "index": 12,
       "model": 1,
       "chain": "A",
       "number": 12,
       "icode": " ",
       "molecule": "RNA",
-      "full_name": "A.A12",
-      "short_name": "A",
+      "fullName": "A.A12",
+      "shortName": "A",
       "chi": -70.627,
-      "glycosidic_bond": "syn"
+      "glycosidicBond": "syn"
     },
-    "A.G13": {
+    {
       "index": 13,
       "model": 1,
       "chain": "A",
       "number": 13,
       "icode": " ",
       "molecule": "RNA",
-      "full_name": "A.G13",
-      "short_name": "G",
+      "fullName": "A.G13",
+      "shortName": "G",
       "chi": 150.585,
-      "glycosidic_bond": "anti"
+      "glycosidicBond": "anti"
     },
-    "A.G14": {
+    {
       "index": 14,
       "model": 1,
       "chain": "A",
       "number": 14,
       "icode": " ",
       "molecule": "RNA",
-      "full_name": "A.G14",
-      "short_name": "G",
+      "fullName": "A.G14",
+      "shortName": "G",
       "chi": -158.594,
-      "glycosidic_bond": "anti"
+      "glycosidicBond": "anti"
     },
-    "B.G15": {
+    {
       "index": 15,
       "model": 1,
       "chain": "B",
       "number": 15,
       "icode": " ",
       "molecule": "RNA",
-      "full_name": "B.G15",
-      "short_name": "G",
+      "fullName": "B.G15",
+      "shortName": "G",
       "chi": -114.303,
-      "glycosidic_bond": "anti"
+      "glycosidicBond": "anti"
     },
-    "B.G16": {
+    {
       "index": 16,
       "model": 1,
       "chain": "B",
       "number": 16,
       "icode": " ",
       "molecule": "RNA",
-      "full_name": "B.G16",
-      "short_name": "G",
+      "fullName": "B.G16",
+      "shortName": "G",
       "chi": -134.388,
-      "glycosidic_bond": "anti"
+      "glycosidicBond": "anti"
     },
-    "B.A17": {
+    {
       "index": 17,
       "model": 1,
       "chain": "B",
       "number": 17,
       "icode": " ",
       "molecule": "RNA",
-      "full_name": "B.A17",
-      "short_name": "A",
+      "fullName": "B.A17",
+      "shortName": "A",
       "chi": -52.702,
-      "glycosidic_bond": "syn"
+      "glycosidicBond": "syn"
     },
-    "B.G18": {
+    {
       "index": 18,
       "model": 1,
       "chain": "B",
       "number": 18,
       "icode": " ",
       "molecule": "RNA",
-      "full_name": "B.G18",
-      "short_name": "G",
+      "fullName": "B.G18",
+      "shortName": "G",
       "chi": 156.482,
-      "glycosidic_bond": "anti"
+      "glycosidicBond": "anti"
     },
-    "B.G19": {
+    {
       "index": 19,
       "model": 1,
       "chain": "B",
       "number": 19,
       "icode": " ",
       "molecule": "RNA",
-      "full_name": "B.G19",
-      "short_name": "G",
+      "fullName": "B.G19",
+      "shortName": "G",
       "chi": -100.234,
-      "glycosidic_bond": "anti"
+      "glycosidicBond": "anti"
     },
-    "B.U20": {
+    {
       "index": 20,
       "model": 1,
       "chain": "B",
       "number": 20,
       "icode": " ",
       "molecule": "RNA",
-      "full_name": "B.U20",
-      "short_name": "U",
+      "fullName": "B.U20",
+      "shortName": "U",
       "chi": -146.822,
-      "glycosidic_bond": "anti"
+      "glycosidicBond": "anti"
     },
-    "B.U21": {
+    {
       "index": 21,
       "model": 1,
       "chain": "B",
       "number": 21,
       "icode": " ",
       "molecule": "RNA",
-      "full_name": "B.U21",
-      "short_name": "U",
+      "fullName": "B.U21",
+      "shortName": "U",
       "chi": -144.09,
-      "glycosidic_bond": "anti"
+      "glycosidicBond": "anti"
     },
-    "B.U22": {
+    {
       "index": 22,
       "model": 1,
       "chain": "B",
       "number": 22,
       "icode": " ",
       "molecule": "RNA",
-      "full_name": "B.U22",
-      "short_name": "U",
+      "fullName": "B.U22",
+      "shortName": "U",
       "chi": -160.945,
-      "glycosidic_bond": "anti"
+      "glycosidicBond": "anti"
     },
-    "B.U23": {
+    {
       "index": 23,
       "model": 1,
       "chain": "B",
       "number": 23,
       "icode": " ",
       "molecule": "RNA",
-      "full_name": "B.U23",
-      "short_name": "U",
+      "fullName": "B.U23",
+      "shortName": "U",
       "chi": -144.171,
-      "glycosidic_bond": "anti"
+      "glycosidicBond": "anti"
     },
-    "B.G24": {
+    {
       "index": 24,
       "model": 1,
       "chain": "B",
       "number": 24,
       "icode": " ",
       "molecule": "RNA",
-      "full_name": "B.G24",
-      "short_name": "G",
+      "fullName": "B.G24",
+      "shortName": "G",
       "chi": -121.507,
-      "glycosidic_bond": "anti"
+      "glycosidicBond": "anti"
     },
-    "B.G25": {
+    {
       "index": 25,
       "model": 1,
       "chain": "B",
       "number": 25,
       "icode": " ",
       "molecule": "RNA",
-      "full_name": "B.G25",
-      "short_name": "G",
+      "fullName": "B.G25",
+      "shortName": "G",
       "chi": -132.739,
-      "glycosidic_bond": "anti"
+      "glycosidicBond": "anti"
     },
-    "B.A26": {
+    {
       "index": 26,
       "model": 1,
       "chain": "B",
       "number": 26,
       "icode": " ",
       "molecule": "RNA",
-      "full_name": "B.A26",
-      "short_name": "A",
+      "fullName": "B.A26",
+      "shortName": "A",
       "chi": -72.432,
-      "glycosidic_bond": "syn"
+      "glycosidicBond": "syn"
     },
-    "B.G27": {
+    {
       "index": 27,
       "model": 1,
       "chain": "B",
       "number": 27,
       "icode": " ",
       "molecule": "RNA",
-      "full_name": "B.G27",
-      "short_name": "G",
+      "fullName": "B.G27",
+      "shortName": "G",
       "chi": -178.717,
-      "glycosidic_bond": "anti"
+      "glycosidicBond": "anti"
     },
-    "B.G28": {
+    {
       "index": 28,
       "model": 1,
       "chain": "B",
       "number": 28,
       "icode": " ",
       "molecule": "RNA",
-      "full_name": "B.G28",
-      "short_name": "G",
+      "fullName": "B.G28",
+      "shortName": "G",
       "chi": -130.902,
-      "glycosidic_bond": "anti"
+      "glycosidicBond": "anti"
     }
-  },
-  "base_pairs": [
+  ],
+  "basePairs": [
     {
       "nt1": "A.G1",
       "nt2": "A.A3",
@@ -819,38 +847,38 @@ Click to see the output JSON
     {
       "quadruplexes": [
         {
-          "tetrads": {
-            "B.G16-B.G19-B.G25-B.G28": {
+          "tetrads": [
+            {
+              "id": "B.G16-B.G19-B.G25-B.G28",
               "nt1": "B.G16",
               "nt2": "B.G19",
               "nt3": "B.G25",
               "nt4": "B.G28",
               "onz": "O+",
-              "gba_classification": "VIIIa",
-              "planarity_deviation": 0.31002684978384765,
-              "ions_channel": [],
-              "ions_outside": {}
+              "gbaClassification": "VIIIa",
+              "planarityDeviation": 0.3100267125587727,
+              "ionsChannel": [],
+              "ionsOutside": []
             },
-            "B.G15-B.G18-B.G24-B.G27": {
+            {
+              "id": "B.G15-B.G18-B.G24-B.G27",
               "nt1": "B.G15",
               "nt2": "B.G18",
               "nt3": "B.G24",
               "nt4": "B.G27",
               "onz": "O+",
-              "gba_classification": "VIIIa",
-              "planarity_deviation": 0.2616979115189099,
-              "ions_channel": [],
-              "ions_outside": {}
+              "gbaClassification": "VIIIa",
+              "planarityDeviation": 0.26169770251188723,
+              "ionsChannel": [],
+              "ionsOutside": []
             }
-          },
+          ],
           "onzm": "Op+",
-          "loop_classification": "1a",
-          "gba_classification": "VIII",
+          "loopClassification": "1a",
+          "gbaClassification": [
+            "VIII"
+          ],
           "tracts": [
-            [
-              "B.G25",
-              "B.G24"
-            ],
             [
               "B.G28",
               "B.G27"
@@ -862,17 +890,21 @@ Click to see the output JSON
             [
               "B.G19",
               "B.G18"
+            ],
+            [
+              "B.G25",
+              "B.G24"
             ]
           ],
           "loops": [
             {
-              "loop_type": "propeller-",
+              "type": "propeller-",
               "nucleotides": [
                 "B.A17"
               ]
             },
             {
-              "loop_type": "propeller-",
+              "type": "propeller-",
               "nucleotides": [
                 "B.U20",
                 "B.U21",
@@ -881,7 +913,7 @@ Click to see the output JSON
               ]
             },
             {
-              "loop_type": "propeller-",
+              "type": "propeller-",
               "nucleotides": [
                 "B.A26"
               ]
@@ -889,38 +921,38 @@ Click to see the output JSON
           ]
         },
         {
-          "tetrads": {
-            "A.G1-A.G4-A.G10-A.G13": {
+          "tetrads": [
+            {
+              "id": "A.G1-A.G4-A.G10-A.G13",
               "nt1": "A.G1",
               "nt2": "A.G4",
               "nt3": "A.G10",
               "nt4": "A.G13",
               "onz": "O+",
-              "gba_classification": "VIIIa",
-              "planarity_deviation": 0.6331163330540677,
-              "ions_channel": [],
-              "ions_outside": {}
+              "gbaClassification": "VIIIa",
+              "planarityDeviation": 0.6331162511735108,
+              "ionsChannel": [],
+              "ionsOutside": []
             },
-            "A.G2-A.G5-A.G11-A.G14": {
+            {
+              "id": "A.G2-A.G5-A.G11-A.G14",
               "nt1": "A.G2",
               "nt2": "A.G5",
               "nt3": "A.G11",
               "nt4": "A.G14",
               "onz": "O+",
-              "gba_classification": "VIIIa",
-              "planarity_deviation": 0.49745503003636027,
-              "ions_channel": [],
-              "ions_outside": {}
+              "gbaClassification": "VIIIa",
+              "planarityDeviation": 0.49745508591228504,
+              "ionsChannel": [],
+              "ionsOutside": []
             }
-          },
+          ],
           "onzm": "Op+",
-          "loop_classification": "1a",
-          "gba_classification": "VIII",
+          "loopClassification": "1a",
+          "gbaClassification": [
+            "VIII"
+          ],
           "tracts": [
-            [
-              "A.G4",
-              "A.G5"
-            ],
             [
               "A.G10",
               "A.G11"
@@ -932,17 +964,21 @@ Click to see the output JSON
             [
               "A.G1",
               "A.G2"
+            ],
+            [
+              "A.G4",
+              "A.G5"
             ]
           ],
           "loops": [
             {
-              "loop_type": "propeller-",
+              "type": "propeller-",
               "nucleotides": [
                 "A.A3"
               ]
             },
             {
-              "loop_type": "propeller-",
+              "type": "propeller-",
               "nucleotides": [
                 "A.U6",
                 "A.U7",
@@ -951,7 +987,7 @@ Click to see the output JSON
               ]
             },
             {
-              "loop_type": "propeller-",
+              "type": "propeller-",
               "nucleotides": [
                 "A.A12"
               ]
@@ -959,27 +995,27 @@ Click to see the output JSON
           ]
         }
       ],
-      "tetrad_pairs": [
+      "tetradPairs": [
         {
           "tetrad1": "B.G16-B.G19-B.G25-B.G28",
           "tetrad2": "B.G15-B.G18-B.G24-B.G27",
           "direction": "parallel",
-          "rise": 4.211160689840694,
-          "twist": 33.447063602481144
+          "rise": 4.211160606798324,
+          "twist": 31.899119622994604
         },
         {
           "tetrad1": "B.G15-B.G18-B.G24-B.G27",
           "tetrad2": "A.G1-A.G4-A.G10-A.G13",
           "direction": "parallel",
-          "rise": 3.184510351147094,
-          "twist": 12.118860788156299
+          "rise": 3.184510372490565,
+          "twist": 2.4777335989443316
         },
         {
           "tetrad1": "A.G1-A.G4-A.G10-A.G13",
           "tetrad2": "A.G2-A.G5-A.G11-A.G14",
           "direction": "parallel",
-          "rise": 4.121721871766505,
-          "twist": 27.15182036694497
+          "rise": 4.121721951290504,
+          "twist": 28.658880739870085
         }
       ]
     }
@@ -999,38 +1035,38 @@ Click to see the output JSON
     Chain order: A, AB, AA, AC, B, BC, BA, BB
     n4-helix with 10 tetrads
       Op* VIII n/a quadruplex with 5 tetrads
-        A.U1006 AC.U1006 AA.U1006 AB.U1006 cWH-cWH-cWH-cWH O- VIIIa planarity=1.06 ions_channel= ions_outside={A.U1006: 'SR', AA.U1006: 'SR', AB.U1006: 'SR', AC.U1006: 'SR'}
-          direction=parallel rise=3.37 twist=39.96
-        A.G1005 AB.G1005 AA.G1005 AC.G1005 cWH-cWH-cWH-cWH O+ VIIIa planarity=0.8 ions_channel=SR ions_outside={}
-          direction=parallel rise=3.31 twist=25.9
-        A.G1004 AB.G1004 AA.G1004 AC.G1004 cWH-cWH-cWH-cWH O+ VIIIa planarity=0.41 ions_channel= ions_outside={}
-          direction=parallel rise=3.34 twist=35.81
-        A.G1003 AB.G1003 AA.G1003 AC.G1003 cWH-cWH-cWH-cWH O+ VIIIa planarity=0.56 ions_channel=SR ions_outside={}
-          direction=parallel rise=3.29 twist=27.12
-        A.G1002 AB.G1002 AA.G1002 AC.G1002 cWH-cWH-cWH-cWH O+ VIIIa planarity=0.54 ions_channel= ions_outside={}
+        B.U2006 BB.U2006 BA.U2006 BC.U2006 cWH-cWH-cWH-cWH O- VIIIa planarity=1.58 ions_channel=NA,NA ions_outside={}
+          direction=parallel rise=7.14 twist=43.41
+        B.G2005 BC.G2005 BA.G2005 BB.G2005 cWH-cWH-cWH-cWH O+ VIIIa planarity=0.78 ions_channel=NA ions_outside={}
+          direction=parallel rise=3.27 twist=25.15
+        B.G2004 BC.G2004 BA.G2004 BB.G2004 cWH-cWH-cWH-cWH O+ VIIIa planarity=0.23 ions_channel=SR ions_outside={}
+          direction=parallel rise=3.32 twist=35.04
+        B.G2003 BC.G2003 BA.G2003 BB.G2003 cWH-cWH-cWH-cWH O+ VIIIa planarity=0.58 ions_channel=SR ions_outside={}
+          direction=parallel rise=3.37 twist=27.41
+        B.G2002 BC.G2002 BA.G2002 BB.G2002 cWH-cWH-cWH-cWH O+ VIIIa planarity=0.67 ions_channel= ions_outside={}
 
         Tracts:
-          AA.U1006, AA.G1005, AA.G1004, AA.G1003, AA.G1002
-          AB.U1006, AB.G1005, AB.G1004, AB.G1003, AB.G1002
-          A.U1006, A.G1005, A.G1004, A.G1003, A.G1002
-          AC.U1006, AC.G1005, AC.G1004, AC.G1003, AC.G1002
+          BA.U2006, BA.G2005, BA.G2004, BA.G2003, BA.G2002
+          BC.U2006, BC.G2005, BC.G2004, BC.G2003, BC.G2002
+          B.U2006, B.G2005, B.G2004, B.G2003, B.G2002
+          BB.U2006, BB.G2005, BB.G2004, BB.G2003, BB.G2002
 
       Op* VIII n/a quadruplex with 5 tetrads
-        B.G2002 BC.G2002 BA.G2002 BB.G2002 cWH-cWH-cWH-cWH O+ VIIIa planarity=0.67 ions_channel= ions_outside={}
-          direction=parallel rise=3.37 twist=27.41
-        B.G2003 BC.G2003 BA.G2003 BB.G2003 cWH-cWH-cWH-cWH O+ VIIIa planarity=0.58 ions_channel=SR ions_outside={}
-          direction=parallel rise=3.32 twist=35.04
-        B.G2004 BC.G2004 BA.G2004 BB.G2004 cWH-cWH-cWH-cWH O+ VIIIa planarity=0.23 ions_channel=SR ions_outside={}
-          direction=parallel rise=3.27 twist=25.15
-        B.G2005 BC.G2005 BA.G2005 BB.G2005 cWH-cWH-cWH-cWH O+ VIIIa planarity=0.78 ions_channel= ions_outside={}
-          direction=parallel rise=7.14 twist=43.41
-        B.U2006 BB.U2006 BA.U2006 BC.U2006 cWH-cWH-cWH-cWH O- VIIIa planarity=1.58 ions_channel=NA,NA ions_outside={}
+        A.G1002 AB.G1002 AA.G1002 AC.G1002 cWH-cWH-cWH-cWH O+ VIIIa planarity=0.54 ions_channel= ions_outside={}
+          direction=parallel rise=3.29 twist=27.12
+        A.G1003 AB.G1003 AA.G1003 AC.G1003 cWH-cWH-cWH-cWH O+ VIIIa planarity=0.55 ions_channel=SR ions_outside={}
+          direction=parallel rise=3.34 twist=35.81
+        A.G1004 AB.G1004 AA.G1004 AC.G1004 cWH-cWH-cWH-cWH O+ VIIIa planarity=0.41 ions_channel= ions_outside={}
+          direction=parallel rise=3.31 twist=25.9
+        A.G1005 AB.G1005 AA.G1005 AC.G1005 cWH-cWH-cWH-cWH O+ VIIIa planarity=0.8 ions_channel=SR ions_outside={}
+          direction=parallel rise=3.37 twist=39.96
+        A.U1006 AC.U1006 AA.U1006 AB.U1006 cWH-cWH-cWH-cWH O- VIIIa planarity=1.06 ions_channel=NA ions_outside={A.U1006: 'SR', AA.U1006: 'SR', AB.U1006: 'SR', AC.U1006: 'SR'}
 
         Tracts:
-          BC.G2002, BC.G2003, BC.G2004, BC.G2005, BC.U2006
-          BA.G2002, BA.G2003, BA.G2004, BA.G2005, BA.U2006
-          BB.G2002, BB.G2003, BB.G2004, BB.G2005, BB.U2006
-          B.G2002, B.G2003, B.G2004, B.G2005, B.U2006
+          AA.G1002, AA.G1003, AA.G1004, AA.G1005, AA.U1006
+          AC.G1002, AC.G1003, AC.G1004, AC.G1005, AC.U1006
+          A.G1002, A.G1003, A.G1004, A.G1005, A.U1006
+          AB.G1002, AB.G1003, AB.G1004, AB.G1005, AB.U1006
 
 
     UGGGGU-UGGGGU-UGGGGU-UGGGGU-UGGGGU-UGGGGU-UGGGGU-UGGGGU
@@ -1044,586 +1080,599 @@ Click to see the output JSON
 
 ``` json
 {
-  "metals": "Ca=12,Na=2,Sr=8",
-  "nucleotides": {
-    "A.U1001": {
+  "metals": [
+    {
+      "symbol": "Sr",
+      "count": 8
+    },
+    {
+      "symbol": "Na",
+      "count": 4
+    },
+    {
+      "symbol": "Ca",
+      "count": 12
+    }
+  ],
+  "nucleotides": [
+    {
       "index": 1,
       "model": 1,
       "chain": "A",
       "number": 1001,
       "icode": " ",
       "molecule": "RNA",
-      "full_name": "A.U1001",
-      "short_name": "U",
+      "fullName": "A.U1001",
+      "shortName": "U",
       "chi": -141.927,
-      "glycosidic_bond": "anti"
+      "glycosidicBond": "anti"
     },
-    "A.G1002": {
+    {
       "index": 2,
       "model": 1,
       "chain": "A",
       "number": 1002,
       "icode": " ",
       "molecule": "RNA",
-      "full_name": "A.G1002",
-      "short_name": "G",
+      "fullName": "A.G1002",
+      "shortName": "G",
       "chi": -165.93,
-      "glycosidic_bond": "anti"
+      "glycosidicBond": "anti"
     },
-    "A.G1003": {
+    {
       "index": 3,
       "model": 1,
       "chain": "A",
       "number": 1003,
       "icode": " ",
       "molecule": "RNA",
-      "full_name": "A.G1003",
-      "short_name": "G",
+      "fullName": "A.G1003",
+      "shortName": "G",
       "chi": -121.565,
-      "glycosidic_bond": "anti"
+      "glycosidicBond": "anti"
     },
-    "A.G1004": {
+    {
       "index": 4,
       "model": 1,
       "chain": "A",
       "number": 1004,
       "icode": " ",
       "molecule": "RNA",
-      "full_name": "A.G1004",
-      "short_name": "G",
+      "fullName": "A.G1004",
+      "shortName": "G",
       "chi": -156.01,
-      "glycosidic_bond": "anti"
+      "glycosidicBond": "anti"
     },
-    "A.G1005": {
+    {
       "index": 5,
       "model": 1,
       "chain": "A",
       "number": 1005,
       "icode": " ",
       "molecule": "RNA",
-      "full_name": "A.G1005",
-      "short_name": "G",
+      "fullName": "A.G1005",
+      "shortName": "G",
       "chi": -148.101,
-      "glycosidic_bond": "anti"
+      "glycosidicBond": "anti"
     },
-    "A.U1006": {
+    {
       "index": 6,
       "model": 1,
       "chain": "A",
       "number": 1006,
       "icode": " ",
       "molecule": "RNA",
-      "full_name": "A.U1006",
-      "short_name": "U",
+      "fullName": "A.U1006",
+      "shortName": "U",
       "chi": -137.28,
-      "glycosidic_bond": "anti"
+      "glycosidicBond": "anti"
     },
-    "AA.U1001": {
+    {
       "index": 13,
       "model": 1,
       "chain": "AA",
       "number": 1001,
       "icode": " ",
       "molecule": "RNA",
-      "full_name": "AA.U1001",
-      "short_name": "U",
+      "fullName": "AA.U1001",
+      "shortName": "U",
       "chi": -141.927,
-      "glycosidic_bond": "anti"
+      "glycosidicBond": "anti"
     },
-    "AA.G1002": {
+    {
       "index": 14,
       "model": 1,
       "chain": "AA",
       "number": 1002,
       "icode": " ",
       "molecule": "RNA",
-      "full_name": "AA.G1002",
-      "short_name": "G",
+      "fullName": "AA.G1002",
+      "shortName": "G",
       "chi": -165.93,
-      "glycosidic_bond": "anti"
+      "glycosidicBond": "anti"
     },
-    "AA.G1003": {
+    {
       "index": 15,
       "model": 1,
       "chain": "AA",
       "number": 1003,
       "icode": " ",
       "molecule": "RNA",
-      "full_name": "AA.G1003",
-      "short_name": "G",
+      "fullName": "AA.G1003",
+      "shortName": "G",
       "chi": -121.565,
-      "glycosidic_bond": "anti"
+      "glycosidicBond": "anti"
     },
-    "AA.G1004": {
+    {
       "index": 16,
       "model": 1,
       "chain": "AA",
       "number": 1004,
       "icode": " ",
       "molecule": "RNA",
-      "full_name": "AA.G1004",
-      "short_name": "G",
+      "fullName": "AA.G1004",
+      "shortName": "G",
       "chi": -156.01,
-      "glycosidic_bond": "anti"
+      "glycosidicBond": "anti"
     },
-    "AA.G1005": {
+    {
       "index": 17,
       "model": 1,
       "chain": "AA",
       "number": 1005,
       "icode": " ",
       "molecule": "RNA",
-      "full_name": "AA.G1005",
-      "short_name": "G",
+      "fullName": "AA.G1005",
+      "shortName": "G",
       "chi": -148.101,
-      "glycosidic_bond": "anti"
+      "glycosidicBond": "anti"
     },
-    "AA.U1006": {
+    {
       "index": 18,
       "model": 1,
       "chain": "AA",
       "number": 1006,
       "icode": " ",
       "molecule": "RNA",
-      "full_name": "AA.U1006",
-      "short_name": "U",
+      "fullName": "AA.U1006",
+      "shortName": "U",
       "chi": -137.28,
-      "glycosidic_bond": "anti"
+      "glycosidicBond": "anti"
     },
-    "AB.U1001": {
+    {
       "index": 7,
       "model": 1,
       "chain": "AB",
       "number": 1001,
       "icode": " ",
       "molecule": "RNA",
-      "full_name": "AB.U1001",
-      "short_name": "U",
+      "fullName": "AB.U1001",
+      "shortName": "U",
       "chi": -141.927,
-      "glycosidic_bond": "anti"
+      "glycosidicBond": "anti"
     },
-    "AB.G1002": {
+    {
       "index": 8,
       "model": 1,
       "chain": "AB",
       "number": 1002,
       "icode": " ",
       "molecule": "RNA",
-      "full_name": "AB.G1002",
-      "short_name": "G",
+      "fullName": "AB.G1002",
+      "shortName": "G",
       "chi": -165.93,
-      "glycosidic_bond": "anti"
+      "glycosidicBond": "anti"
     },
-    "AB.G1003": {
+    {
       "index": 9,
       "model": 1,
       "chain": "AB",
       "number": 1003,
       "icode": " ",
       "molecule": "RNA",
-      "full_name": "AB.G1003",
-      "short_name": "G",
+      "fullName": "AB.G1003",
+      "shortName": "G",
       "chi": -121.565,
-      "glycosidic_bond": "anti"
+      "glycosidicBond": "anti"
     },
-    "AB.G1004": {
+    {
       "index": 10,
       "model": 1,
       "chain": "AB",
       "number": 1004,
       "icode": " ",
       "molecule": "RNA",
-      "full_name": "AB.G1004",
-      "short_name": "G",
+      "fullName": "AB.G1004",
+      "shortName": "G",
       "chi": -156.01,
-      "glycosidic_bond": "anti"
+      "glycosidicBond": "anti"
     },
-    "AB.G1005": {
+    {
       "index": 11,
       "model": 1,
       "chain": "AB",
       "number": 1005,
       "icode": " ",
       "molecule": "RNA",
-      "full_name": "AB.G1005",
-      "short_name": "G",
+      "fullName": "AB.G1005",
+      "shortName": "G",
       "chi": -148.101,
-      "glycosidic_bond": "anti"
+      "glycosidicBond": "anti"
     },
-    "AB.U1006": {
+    {
       "index": 12,
       "model": 1,
       "chain": "AB",
       "number": 1006,
       "icode": " ",
       "molecule": "RNA",
-      "full_name": "AB.U1006",
-      "short_name": "U",
+      "fullName": "AB.U1006",
+      "shortName": "U",
       "chi": -137.28,
-      "glycosidic_bond": "anti"
+      "glycosidicBond": "anti"
     },
-    "AC.U1001": {
+    {
       "index": 19,
       "model": 1,
       "chain": "AC",
       "number": 1001,
       "icode": " ",
       "molecule": "RNA",
-      "full_name": "AC.U1001",
-      "short_name": "U",
+      "fullName": "AC.U1001",
+      "shortName": "U",
       "chi": -141.927,
-      "glycosidic_bond": "anti"
+      "glycosidicBond": "anti"
     },
-    "AC.G1002": {
+    {
       "index": 20,
       "model": 1,
       "chain": "AC",
       "number": 1002,
       "icode": " ",
       "molecule": "RNA",
-      "full_name": "AC.G1002",
-      "short_name": "G",
+      "fullName": "AC.G1002",
+      "shortName": "G",
       "chi": -165.93,
-      "glycosidic_bond": "anti"
+      "glycosidicBond": "anti"
     },
-    "AC.G1003": {
+    {
       "index": 21,
       "model": 1,
       "chain": "AC",
       "number": 1003,
       "icode": " ",
       "molecule": "RNA",
-      "full_name": "AC.G1003",
-      "short_name": "G",
+      "fullName": "AC.G1003",
+      "shortName": "G",
       "chi": -121.565,
-      "glycosidic_bond": "anti"
+      "glycosidicBond": "anti"
     },
-    "AC.G1004": {
+    {
       "index": 22,
       "model": 1,
       "chain": "AC",
       "number": 1004,
       "icode": " ",
       "molecule": "RNA",
-      "full_name": "AC.G1004",
-      "short_name": "G",
+      "fullName": "AC.G1004",
+      "shortName": "G",
       "chi": -156.01,
-      "glycosidic_bond": "anti"
+      "glycosidicBond": "anti"
     },
-    "AC.G1005": {
+    {
       "index": 23,
       "model": 1,
       "chain": "AC",
       "number": 1005,
       "icode": " ",
       "molecule": "RNA",
-      "full_name": "AC.G1005",
-      "short_name": "G",
+      "fullName": "AC.G1005",
+      "shortName": "G",
       "chi": -148.101,
-      "glycosidic_bond": "anti"
+      "glycosidicBond": "anti"
     },
-    "AC.U1006": {
+    {
       "index": 24,
       "model": 1,
       "chain": "AC",
       "number": 1006,
       "icode": " ",
       "molecule": "RNA",
-      "full_name": "AC.U1006",
-      "short_name": "U",
+      "fullName": "AC.U1006",
+      "shortName": "U",
       "chi": -137.28,
-      "glycosidic_bond": "anti"
+      "glycosidicBond": "anti"
     },
-    "B.U2001": {
+    {
       "index": 25,
       "model": 1,
       "chain": "B",
       "number": 2001,
       "icode": " ",
       "molecule": "RNA",
-      "full_name": "B.U2001",
-      "short_name": "U",
+      "fullName": "B.U2001",
+      "shortName": "U",
       "chi": -146.462,
-      "glycosidic_bond": "anti"
+      "glycosidicBond": "anti"
     },
-    "B.G2002": {
+    {
       "index": 26,
       "model": 1,
       "chain": "B",
       "number": 2002,
       "icode": " ",
       "molecule": "RNA",
-      "full_name": "B.G2002",
-      "short_name": "G",
+      "fullName": "B.G2002",
+      "shortName": "G",
       "chi": -170.797,
-      "glycosidic_bond": "anti"
+      "glycosidicBond": "anti"
     },
-    "B.G2003": {
+    {
       "index": 27,
       "model": 1,
       "chain": "B",
       "number": 2003,
       "icode": " ",
       "molecule": "RNA",
-      "full_name": "B.G2003",
-      "short_name": "G",
+      "fullName": "B.G2003",
+      "shortName": "G",
       "chi": -117.687,
-      "glycosidic_bond": "anti"
+      "glycosidicBond": "anti"
     },
-    "B.G2004": {
+    {
       "index": 28,
       "model": 1,
       "chain": "B",
       "number": 2004,
       "icode": " ",
       "molecule": "RNA",
-      "full_name": "B.G2004",
-      "short_name": "G",
+      "fullName": "B.G2004",
+      "shortName": "G",
       "chi": -153.886,
-      "glycosidic_bond": "anti"
+      "glycosidicBond": "anti"
     },
-    "B.G2005": {
+    {
       "index": 29,
       "model": 1,
       "chain": "B",
       "number": 2005,
       "icode": " ",
       "molecule": "RNA",
-      "full_name": "B.G2005",
-      "short_name": "G",
+      "fullName": "B.G2005",
+      "shortName": "G",
       "chi": -148.852,
-      "glycosidic_bond": "anti"
+      "glycosidicBond": "anti"
     },
-    "B.U2006": {
+    {
       "index": 30,
       "model": 1,
       "chain": "B",
       "number": 2006,
       "icode": " ",
       "molecule": "RNA",
-      "full_name": "B.U2006",
-      "short_name": "U",
+      "fullName": "B.U2006",
+      "shortName": "U",
       "chi": -159.437,
-      "glycosidic_bond": "anti"
+      "glycosidicBond": "anti"
     },
-    "BA.U2001": {
+    {
       "index": 37,
       "model": 1,
       "chain": "BA",
       "number": 2001,
       "icode": " ",
       "molecule": "RNA",
-      "full_name": "BA.U2001",
-      "short_name": "U",
+      "fullName": "BA.U2001",
+      "shortName": "U",
       "chi": -146.462,
-      "glycosidic_bond": "anti"
+      "glycosidicBond": "anti"
     },
-    "BA.G2002": {
+    {
       "index": 38,
       "model": 1,
       "chain": "BA",
       "number": 2002,
       "icode": " ",
       "molecule": "RNA",
-      "full_name": "BA.G2002",
-      "short_name": "G",
+      "fullName": "BA.G2002",
+      "shortName": "G",
       "chi": -170.797,
-      "glycosidic_bond": "anti"
+      "glycosidicBond": "anti"
     },
-    "BA.G2003": {
+    {
       "index": 39,
       "model": 1,
       "chain": "BA",
       "number": 2003,
       "icode": " ",
       "molecule": "RNA",
-      "full_name": "BA.G2003",
-      "short_name": "G",
+      "fullName": "BA.G2003",
+      "shortName": "G",
       "chi": -117.687,
-      "glycosidic_bond": "anti"
+      "glycosidicBond": "anti"
     },
-    "BA.G2004": {
+    {
       "index": 40,
       "model": 1,
       "chain": "BA",
       "number": 2004,
       "icode": " ",
       "molecule": "RNA",
-      "full_name": "BA.G2004",
-      "short_name": "G",
+      "fullName": "BA.G2004",
+      "shortName": "G",
       "chi": -153.886,
-      "glycosidic_bond": "anti"
+      "glycosidicBond": "anti"
     },
-    "BA.G2005": {
+    {
       "index": 41,
       "model": 1,
       "chain": "BA",
       "number": 2005,
       "icode": " ",
       "molecule": "RNA",
-      "full_name": "BA.G2005",
-      "short_name": "G",
+      "fullName": "BA.G2005",
+      "shortName": "G",
       "chi": -148.852,
-      "glycosidic_bond": "anti"
+      "glycosidicBond": "anti"
     },
-    "BA.U2006": {
+    {
       "index": 42,
       "model": 1,
       "chain": "BA",
       "number": 2006,
       "icode": " ",
       "molecule": "RNA",
-      "full_name": "BA.U2006",
-      "short_name": "U",
+      "fullName": "BA.U2006",
+      "shortName": "U",
       "chi": -159.437,
-      "glycosidic_bond": "anti"
+      "glycosidicBond": "anti"
     },
-    "BB.U2001": {
+    {
       "index": 43,
       "model": 1,
       "chain": "BB",
       "number": 2001,
       "icode": " ",
       "molecule": "RNA",
-      "full_name": "BB.U2001",
-      "short_name": "U",
+      "fullName": "BB.U2001",
+      "shortName": "U",
       "chi": -146.462,
-      "glycosidic_bond": "anti"
+      "glycosidicBond": "anti"
     },
-    "BB.G2002": {
+    {
       "index": 44,
       "model": 1,
       "chain": "BB",
       "number": 2002,
       "icode": " ",
       "molecule": "RNA",
-      "full_name": "BB.G2002",
-      "short_name": "G",
+      "fullName": "BB.G2002",
+      "shortName": "G",
       "chi": -170.797,
-      "glycosidic_bond": "anti"
+      "glycosidicBond": "anti"
     },
-    "BB.G2003": {
+    {
       "index": 45,
       "model": 1,
       "chain": "BB",
       "number": 2003,
       "icode": " ",
       "molecule": "RNA",
-      "full_name": "BB.G2003",
-      "short_name": "G",
+      "fullName": "BB.G2003",
+      "shortName": "G",
       "chi": -117.687,
-      "glycosidic_bond": "anti"
+      "glycosidicBond": "anti"
     },
-    "BB.G2004": {
+    {
       "index": 46,
       "model": 1,
       "chain": "BB",
       "number": 2004,
       "icode": " ",
       "molecule": "RNA",
-      "full_name": "BB.G2004",
-      "short_name": "G",
+      "fullName": "BB.G2004",
+      "shortName": "G",
       "chi": -153.886,
-      "glycosidic_bond": "anti"
+      "glycosidicBond": "anti"
     },
-    "BB.G2005": {
+    {
       "index": 47,
       "model": 1,
       "chain": "BB",
       "number": 2005,
       "icode": " ",
       "molecule": "RNA",
-      "full_name": "BB.G2005",
-      "short_name": "G",
+      "fullName": "BB.G2005",
+      "shortName": "G",
       "chi": -148.852,
-      "glycosidic_bond": "anti"
+      "glycosidicBond": "anti"
     },
-    "BB.U2006": {
+    {
       "index": 48,
       "model": 1,
       "chain": "BB",
       "number": 2006,
       "icode": " ",
       "molecule": "RNA",
-      "full_name": "BB.U2006",
-      "short_name": "U",
+      "fullName": "BB.U2006",
+      "shortName": "U",
       "chi": -159.437,
-      "glycosidic_bond": "anti"
+      "glycosidicBond": "anti"
     },
-    "BC.U2001": {
+    {
       "index": 31,
       "model": 1,
       "chain": "BC",
       "number": 2001,
       "icode": " ",
       "molecule": "RNA",
-      "full_name": "BC.U2001",
-      "short_name": "U",
+      "fullName": "BC.U2001",
+      "shortName": "U",
       "chi": -146.462,
-      "glycosidic_bond": "anti"
+      "glycosidicBond": "anti"
     },
-    "BC.G2002": {
+    {
       "index": 32,
       "model": 1,
       "chain": "BC",
       "number": 2002,
       "icode": " ",
       "molecule": "RNA",
-      "full_name": "BC.G2002",
-      "short_name": "G",
+      "fullName": "BC.G2002",
+      "shortName": "G",
       "chi": -170.797,
-      "glycosidic_bond": "anti"
+      "glycosidicBond": "anti"
     },
-    "BC.G2003": {
+    {
       "index": 33,
       "model": 1,
       "chain": "BC",
       "number": 2003,
       "icode": " ",
       "molecule": "RNA",
-      "full_name": "BC.G2003",
-      "short_name": "G",
+      "fullName": "BC.G2003",
+      "shortName": "G",
       "chi": -117.687,
-      "glycosidic_bond": "anti"
+      "glycosidicBond": "anti"
     },
-    "BC.G2004": {
+    {
       "index": 34,
       "model": 1,
       "chain": "BC",
       "number": 2004,
       "icode": " ",
       "molecule": "RNA",
-      "full_name": "BC.G2004",
-      "short_name": "G",
+      "fullName": "BC.G2004",
+      "shortName": "G",
       "chi": -153.886,
-      "glycosidic_bond": "anti"
+      "glycosidicBond": "anti"
     },
-    "BC.G2005": {
+    {
       "index": 35,
       "model": 1,
       "chain": "BC",
       "number": 2005,
       "icode": " ",
       "molecule": "RNA",
-      "full_name": "BC.G2005",
-      "short_name": "G",
+      "fullName": "BC.G2005",
+      "shortName": "G",
       "chi": -148.852,
-      "glycosidic_bond": "anti"
+      "glycosidicBond": "anti"
     },
-    "BC.U2006": {
+    {
       "index": 36,
       "model": 1,
       "chain": "BC",
       "number": 2006,
       "icode": " ",
       "molecule": "RNA",
-      "full_name": "BC.U2006",
-      "short_name": "U",
+      "fullName": "BC.U2006",
+      "shortName": "U",
       "chi": -159.437,
-      "glycosidic_bond": "anti"
+      "glycosidicBond": "anti"
     }
-  },
-  "base_pairs": [
+  ],
+  "basePairs": [
     {
       "nt1": "A.U1001",
       "nt2": "B.G2003",
@@ -2301,279 +2350,301 @@ Click to see the output JSON
     {
       "quadruplexes": [
         {
-          "tetrads": {
-            "A.U1006-AC.U1006-AA.U1006-AB.U1006": {
-              "nt1": "A.U1006",
-              "nt2": "AC.U1006",
-              "nt3": "AA.U1006",
-              "nt4": "AB.U1006",
-              "onz": "O-",
-              "gba_classification": "VIIIa",
-              "planarity_deviation": 1.0610008239746362,
-              "ions_channel": [],
-              "ions_outside": {
-                "A.U1006": [
-                  "Sr"
-                ],
-                "AA.U1006": [
-                  "Sr"
-                ],
-                "AB.U1006": [
-                  "Sr"
-                ],
-                "AC.U1006": [
-                  "Sr"
-                ]
-              }
-            },
-            "A.G1005-AB.G1005-AA.G1005-AC.G1005": {
-              "nt1": "A.G1005",
-              "nt2": "AB.G1005",
-              "nt3": "AA.G1005",
-              "nt4": "AC.G1005",
-              "onz": "O+",
-              "gba_classification": "VIIIa",
-              "planarity_deviation": 0.7999992370605469,
-              "ions_channel": [
-                "Sr"
-              ],
-              "ions_outside": {}
-            },
-            "A.G1004-AB.G1004-AA.G1004-AC.G1004": {
-              "nt1": "A.G1004",
-              "nt2": "AB.G1004",
-              "nt3": "AA.G1004",
-              "nt4": "AC.G1004",
-              "onz": "O+",
-              "gba_classification": "VIIIa",
-              "planarity_deviation": 0.4060020446780144,
-              "ions_channel": [],
-              "ions_outside": {}
-            },
-            "A.G1003-AB.G1003-AA.G1003-AC.G1003": {
-              "nt1": "A.G1003",
-              "nt2": "AB.G1003",
-              "nt3": "AA.G1003",
-              "nt4": "AC.G1003",
-              "onz": "O+",
-              "gba_classification": "VIIIa",
-              "planarity_deviation": 0.5550003051758324,
-              "ions_channel": [
-                "Sr"
-              ],
-              "ions_outside": {}
-            },
-            "A.G1002-AB.G1002-AA.G1002-AC.G1002": {
-              "nt1": "A.G1002",
-              "nt2": "AB.G1002",
-              "nt3": "AA.G1002",
-              "nt4": "AC.G1002",
-              "onz": "O+",
-              "gba_classification": "VIIIa",
-              "planarity_deviation": 0.5419998168945837,
-              "ions_channel": [],
-              "ions_outside": {}
-            }
-          },
-          "onzm": "Op*",
-          "loop_classification": "n/a",
-          "gba_classification": "VIII",
-          "tracts": [
-            [
-              "AA.U1006",
-              "AA.G1005",
-              "AA.G1004",
-              "AA.G1003",
-              "AA.G1002"
-            ],
-            [
-              "AB.U1006",
-              "AB.G1005",
-              "AB.G1004",
-              "AB.G1003",
-              "AB.G1002"
-            ],
-            [
-              "A.U1006",
-              "A.G1005",
-              "A.G1004",
-              "A.G1003",
-              "A.G1002"
-            ],
-            [
-              "AC.U1006",
-              "AC.G1005",
-              "AC.G1004",
-              "AC.G1003",
-              "AC.G1002"
-            ]
-          ],
-          "loops": []
-        },
-        {
-          "tetrads": {
-            "B.G2002-BC.G2002-BA.G2002-BB.G2002": {
-              "nt1": "B.G2002",
-              "nt2": "BC.G2002",
-              "nt3": "BA.G2002",
-              "nt4": "BB.G2002",
-              "onz": "O+",
-              "gba_classification": "VIIIa",
-              "planarity_deviation": 0.6730003356935284,
-              "ions_channel": [],
-              "ions_outside": {}
-            },
-            "B.G2003-BC.G2003-BA.G2003-BB.G2003": {
-              "nt1": "B.G2003",
-              "nt2": "BC.G2003",
-              "nt3": "BA.G2003",
-              "nt4": "BB.G2003",
-              "onz": "O+",
-              "gba_classification": "VIIIa",
-              "planarity_deviation": 0.5770015716552734,
-              "ions_channel": [
-                "Sr"
-              ],
-              "ions_outside": {}
-            },
-            "B.G2004-BC.G2004-BA.G2004-BB.G2004": {
-              "nt1": "B.G2004",
-              "nt2": "BC.G2004",
-              "nt3": "BA.G2004",
-              "nt4": "BB.G2004",
-              "onz": "O+",
-              "gba_classification": "VIIIa",
-              "planarity_deviation": 0.2290000915528585,
-              "ions_channel": [
-                "Sr"
-              ],
-              "ions_outside": {}
-            },
-            "B.G2005-BC.G2005-BA.G2005-BB.G2005": {
-              "nt1": "B.G2005",
-              "nt2": "BC.G2005",
-              "nt3": "BA.G2005",
-              "nt4": "BB.G2005",
-              "onz": "O+",
-              "gba_classification": "VIIIa",
-              "planarity_deviation": 0.7810001373291016,
-              "ions_channel": [],
-              "ions_outside": {}
-            },
-            "B.U2006-BB.U2006-BA.U2006-BC.U2006": {
+          "tetrads": [
+            {
+              "id": "B.U2006-BB.U2006-BA.U2006-BC.U2006",
               "nt1": "B.U2006",
               "nt2": "BB.U2006",
               "nt3": "BA.U2006",
               "nt4": "BC.U2006",
               "onz": "O-",
-              "gba_classification": "VIIIa",
-              "planarity_deviation": 1.5839996337890805,
-              "ions_channel": [
+              "gbaClassification": "VIIIa",
+              "planarityDeviation": 1.5840000000000005,
+              "ionsChannel": [
                 "Na",
                 "Na"
               ],
-              "ions_outside": {}
+              "ionsOutside": []
+            },
+            {
+              "id": "B.G2005-BC.G2005-BA.G2005-BB.G2005",
+              "nt1": "B.G2005",
+              "nt2": "BC.G2005",
+              "nt3": "BA.G2005",
+              "nt4": "BB.G2005",
+              "onz": "O+",
+              "gbaClassification": "VIIIa",
+              "planarityDeviation": 0.7810000000000006,
+              "ionsChannel": [
+                "Na"
+              ],
+              "ionsOutside": []
+            },
+            {
+              "id": "B.G2004-BC.G2004-BA.G2004-BB.G2004",
+              "nt1": "B.G2004",
+              "nt2": "BC.G2004",
+              "nt3": "BA.G2004",
+              "nt4": "BB.G2004",
+              "onz": "O+",
+              "gbaClassification": "VIIIa",
+              "planarityDeviation": 0.2289999999999992,
+              "ionsChannel": [
+                "Sr"
+              ],
+              "ionsOutside": []
+            },
+            {
+              "id": "B.G2003-BC.G2003-BA.G2003-BB.G2003",
+              "nt1": "B.G2003",
+              "nt2": "BC.G2003",
+              "nt3": "BA.G2003",
+              "nt4": "BB.G2003",
+              "onz": "O+",
+              "gbaClassification": "VIIIa",
+              "planarityDeviation": 0.5769999999999982,
+              "ionsChannel": [
+                "Sr"
+              ],
+              "ionsOutside": []
+            },
+            {
+              "id": "B.G2002-BC.G2002-BA.G2002-BB.G2002",
+              "nt1": "B.G2002",
+              "nt2": "BC.G2002",
+              "nt3": "BA.G2002",
+              "nt4": "BB.G2002",
+              "onz": "O+",
+              "gbaClassification": "VIIIa",
+              "planarityDeviation": 0.6730000000000018,
+              "ionsChannel": [],
+              "ionsOutside": []
             }
-          },
+          ],
           "onzm": "Op*",
-          "loop_classification": "n/a",
-          "gba_classification": "VIII",
+          "loopClassification": "n/a",
+          "gbaClassification": [
+            "VIII"
+          ],
           "tracts": [
             [
-              "BC.G2002",
-              "BC.G2003",
-              "BC.G2004",
-              "BC.G2005",
-              "BC.U2006"
-            ],
-            [
-              "BA.G2002",
-              "BA.G2003",
-              "BA.G2004",
+              "BA.U2006",
               "BA.G2005",
-              "BA.U2006"
+              "BA.G2004",
+              "BA.G2003",
+              "BA.G2002"
             ],
             [
-              "BB.G2002",
-              "BB.G2003",
-              "BB.G2004",
-              "BB.G2005",
-              "BB.U2006"
+              "BC.U2006",
+              "BC.G2005",
+              "BC.G2004",
+              "BC.G2003",
+              "BC.G2002"
             ],
             [
-              "B.G2002",
-              "B.G2003",
-              "B.G2004",
+              "B.U2006",
               "B.G2005",
-              "B.U2006"
+              "B.G2004",
+              "B.G2003",
+              "B.G2002"
+            ],
+            [
+              "BB.U2006",
+              "BB.G2005",
+              "BB.G2004",
+              "BB.G2003",
+              "BB.G2002"
+            ]
+          ],
+          "loops": []
+        },
+        {
+          "tetrads": [
+            {
+              "id": "A.G1002-AB.G1002-AA.G1002-AC.G1002",
+              "nt1": "A.G1002",
+              "nt2": "AB.G1002",
+              "nt3": "AA.G1002",
+              "nt4": "AC.G1002",
+              "onz": "O+",
+              "gbaClassification": "VIIIa",
+              "planarityDeviation": 0.541999999999998,
+              "ionsChannel": [],
+              "ionsOutside": []
+            },
+            {
+              "id": "A.G1003-AB.G1003-AA.G1003-AC.G1003",
+              "nt1": "A.G1003",
+              "nt2": "AB.G1003",
+              "nt3": "AA.G1003",
+              "nt4": "AC.G1003",
+              "onz": "O+",
+              "gbaClassification": "VIIIa",
+              "planarityDeviation": 0.5549999999999997,
+              "ionsChannel": [
+                "Sr"
+              ],
+              "ionsOutside": []
+            },
+            {
+              "id": "A.G1004-AB.G1004-AA.G1004-AC.G1004",
+              "nt1": "A.G1004",
+              "nt2": "AB.G1004",
+              "nt3": "AA.G1004",
+              "nt4": "AC.G1004",
+              "onz": "O+",
+              "gbaClassification": "VIIIa",
+              "planarityDeviation": 0.4059999999999988,
+              "ionsChannel": [],
+              "ionsOutside": []
+            },
+            {
+              "id": "A.G1005-AB.G1005-AA.G1005-AC.G1005",
+              "nt1": "A.G1005",
+              "nt2": "AB.G1005",
+              "nt3": "AA.G1005",
+              "nt4": "AC.G1005",
+              "onz": "O+",
+              "gbaClassification": "VIIIa",
+              "planarityDeviation": 0.7999999999999972,
+              "ionsChannel": [
+                "Sr"
+              ],
+              "ionsOutside": []
+            },
+            {
+              "id": "A.U1006-AC.U1006-AA.U1006-AB.U1006",
+              "nt1": "A.U1006",
+              "nt2": "AC.U1006",
+              "nt3": "AA.U1006",
+              "nt4": "AB.U1006",
+              "onz": "O-",
+              "gbaClassification": "VIIIa",
+              "planarityDeviation": 1.061,
+              "ionsChannel": [
+                "Na"
+              ],
+              "ionsOutside": [
+                {
+                  "nt": "A.U1006",
+                  "ion": "Sr"
+                },
+                {
+                  "nt": "AA.U1006",
+                  "ion": "Sr"
+                },
+                {
+                  "nt": "AB.U1006",
+                  "ion": "Sr"
+                },
+                {
+                  "nt": "AC.U1006",
+                  "ion": "Sr"
+                }
+              ]
+            }
+          ],
+          "onzm": "Op*",
+          "loopClassification": "n/a",
+          "gbaClassification": [
+            "VIII"
+          ],
+          "tracts": [
+            [
+              "AA.G1002",
+              "AA.G1003",
+              "AA.G1004",
+              "AA.G1005",
+              "AA.U1006"
+            ],
+            [
+              "AC.G1002",
+              "AC.G1003",
+              "AC.G1004",
+              "AC.G1005",
+              "AC.U1006"
+            ],
+            [
+              "A.G1002",
+              "A.G1003",
+              "A.G1004",
+              "A.G1005",
+              "A.U1006"
+            ],
+            [
+              "AB.G1002",
+              "AB.G1003",
+              "AB.G1004",
+              "AB.G1005",
+              "AB.U1006"
             ]
           ],
           "loops": []
         }
       ],
-      "tetrad_pairs": [
+      "tetradPairs": [
         {
-          "tetrad1": "A.U1006-AC.U1006-AA.U1006-AB.U1006",
-          "tetrad2": "A.G1005-AB.G1005-AA.G1005-AC.G1005",
-          "direction": "parallel",
-          "rise": 3.3665008544921897,
-          "twist": 39.962524289500855
-        },
-        {
-          "tetrad1": "A.G1005-AB.G1005-AA.G1005-AC.G1005",
-          "tetrad2": "A.G1004-AB.G1004-AA.G1004-AC.G1004",
-          "direction": "parallel",
-          "rise": 3.307998657226571,
-          "twist": 25.896146524668296
-        },
-        {
-          "tetrad1": "A.G1004-AB.G1004-AA.G1004-AC.G1004",
-          "tetrad2": "A.G1003-AB.G1003-AA.G1003-AC.G1003",
-          "direction": "parallel",
-          "rise": 3.339500427246096,
-          "twist": 35.811154582473115
-        },
-        {
-          "tetrad1": "A.G1003-AB.G1003-AA.G1003-AC.G1003",
-          "tetrad2": "A.G1002-AB.G1002-AA.G1002-AC.G1002",
-          "direction": "parallel",
-          "rise": 3.2864990234375084,
-          "twist": 27.115165766478476
-        },
-        {
-          "tetrad1": "A.G1002-AB.G1002-AA.G1002-AC.G1002",
-          "tetrad2": "B.G2002-BC.G2002-BA.G2002-BB.G2002",
-          "direction": "parallel",
-          "rise": 3.3695011138916207,
-          "twist": 28.99319277639063
-        },
-        {
-          "tetrad1": "B.G2002-BC.G2002-BA.G2002-BB.G2002",
-          "tetrad2": "B.G2003-BC.G2003-BA.G2003-BB.G2003",
-          "direction": "parallel",
-          "rise": 3.370999336242684,
-          "twist": 27.410094298550373
-        },
-        {
-          "tetrad1": "B.G2003-BC.G2003-BA.G2003-BB.G2003",
-          "tetrad2": "B.G2004-BC.G2004-BA.G2004-BB.G2004",
-          "direction": "parallel",
-          "rise": 3.317999839782717,
-          "twist": 35.04072151642772
-        },
-        {
-          "tetrad1": "B.G2004-BC.G2004-BA.G2004-BB.G2004",
+          "tetrad1": "B.U2006-BB.U2006-BA.U2006-BC.U2006",
           "tetrad2": "B.G2005-BC.G2005-BA.G2005-BB.G2005",
           "direction": "parallel",
-          "rise": 3.269000053405764,
-          "twist": 25.149999240922924
+          "rise": 7.140500000000001,
+          "twist": 43.40609492262334
         },
         {
           "tetrad1": "B.G2005-BC.G2005-BA.G2005-BB.G2005",
-          "tetrad2": "B.U2006-BB.U2006-BA.U2006-BC.U2006",
+          "tetrad2": "B.G2004-BC.G2004-BA.G2004-BB.G2004",
           "direction": "parallel",
-          "rise": 7.140500068664552,
-          "twist": 43.406094327700266
+          "rise": 3.2689999999999984,
+          "twist": 25.149997949938133
+        },
+        {
+          "tetrad1": "B.G2004-BC.G2004-BA.G2004-BB.G2004",
+          "tetrad2": "B.G2003-BC.G2003-BA.G2003-BB.G2003",
+          "direction": "parallel",
+          "rise": 3.3180000000000014,
+          "twist": 35.04072146975962
+        },
+        {
+          "tetrad1": "B.G2003-BC.G2003-BA.G2003-BB.G2003",
+          "tetrad2": "B.G2002-BC.G2002-BA.G2002-BB.G2002",
+          "direction": "parallel",
+          "rise": 3.371000000000002,
+          "twist": 27.410084968596852
+        },
+        {
+          "tetrad1": "B.G2002-BC.G2002-BA.G2002-BB.G2002",
+          "tetrad2": "A.G1002-AB.G1002-AA.G1002-AC.G1002",
+          "direction": "parallel",
+          "rise": 3.3694999999999986,
+          "twist": 28.993180312675563
+        },
+        {
+          "tetrad1": "A.G1002-AB.G1002-AA.G1002-AC.G1002",
+          "tetrad2": "A.G1003-AB.G1003-AA.G1003-AC.G1003",
+          "direction": "parallel",
+          "rise": 3.2865000000000073,
+          "twist": 27.115159719868043
+        },
+        {
+          "tetrad1": "A.G1003-AB.G1003-AA.G1003-AC.G1003",
+          "tetrad2": "A.G1004-AB.G1004-AA.G1004-AC.G1004",
+          "direction": "parallel",
+          "rise": 3.3394999999999904,
+          "twist": 35.81115298630443
+        },
+        {
+          "tetrad1": "A.G1004-AB.G1004-AA.G1004-AC.G1004",
+          "tetrad2": "A.G1005-AB.G1005-AA.G1005-AC.G1005",
+          "direction": "parallel",
+          "rise": 3.308,
+          "twist": 25.89614444631925
+        },
+        {
+          "tetrad1": "A.G1005-AB.G1005-AA.G1005-AC.G1005",
+          "tetrad2": "A.U1006-AC.U1006-AA.U1006-AB.U1006",
+          "direction": "parallel",
+          "rise": 3.366499999999995,
+          "twist": 39.962531742191736
         }
       ]
     }
