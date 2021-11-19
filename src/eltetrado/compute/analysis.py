@@ -552,16 +552,6 @@ class Quadruplex:
             return signs.pop()
         return '*'
 
-    def apply_order(self):
-        self.tetrads = sorted(self.tetrads, key=lambda t: min(nt.index for nt in t.nucleotides))
-        self.tetrad_pairs = sorted([
-            tp if self.tetrads.index(tp.tetrad1) < self.tetrads.index(tp.tetrad2) else tp.reverse()
-            for tp in self.tetrad_pairs
-        ],
-                                   key=lambda tp: self.tetrads.index(tp.tetrad1))
-        self.tracts = self.__tracts()
-        self.loops = self.__loops()
-
     def __gba_classification(self) -> List[str]:
         roman_numerals = {'I': 1, 'II': 2, 'III': 3, 'IV': 4, 'V': 5, 'VI': 6, 'VII': 7, 'VIII': 8}
         gbas = map(lambda tetrad: tetrad.gba_classification(), self.tetrads)
@@ -675,18 +665,6 @@ class Helix:
             builder += 'single tetrad without stacking\n'
             builder += str(self.tetrads[0])
         return builder
-
-    def apply_order(self):
-        self.tetrads = sorted(self.tetrads, key=lambda t: min(nt.index for nt in t.nucleotides))
-        self.tetrad_pairs = sorted([
-            tp if self.tetrads.index(tp.tetrad1) < self.tetrads.index(tp.tetrad2) else tp.reverse()
-            for tp in self.tetrad_pairs
-        ],
-                                   key=lambda tp: self.tetrads.index(tp.tetrad1))
-        self.quadruplexes = sorted(self.quadruplexes, key=lambda q: min(self.tetrads.index(qt) for qt in q.tetrads))
-
-        for quadruplex in self.quadruplexes:
-            quadruplex.apply_order()
 
     def __quadruplexes(self):
         if not self.tetrad_pairs:
@@ -883,7 +861,7 @@ class Analysis:
         self.tetrad_pairs = tetrad_pairs
         self.helices = helices
 
-    def find_best_chain_reorder(self):
+    def find_best_chain_reorder(self, stacking_mismatch: int):
         scores = {'O+': 0, 'O-': 1, 'N+': 2, 'N-': 3, 'Z+': 4, 'Z-': 5}
         chain_groups = self.__group_related_chains()
         final_order = []
@@ -902,6 +880,8 @@ class Analysis:
 
         if final_order:
             self.__reorder_chains(final_order)
+            self.tetrads = sorted(self.tetrads, key=lambda t: min(nt.index for nt in t.nucleotides))
+            self.find_tetrad_pairs_and_helices(stacking_mismatch)
             logging.debug(f'Selected reorder: {" ".join(final_order)} {"".join(list(self.__get_classification()))}')
 
     def chain_order(self) -> Dict[str, int]:
@@ -940,18 +920,6 @@ class Analysis:
                     min_tetrad.ions_outside[min_nt].append(ion)
             else:
                 logging.debug(f'Skipping an ion, because it is too far from any tetrad (distance={min_distance})')
-
-    def apply_order(self):
-        self.tetrads = sorted(self.tetrads, key=lambda t: min(nt.index for nt in t.nucleotides))
-        self.tetrad_pairs = sorted([
-            tp if self.tetrads.index(tp.tetrad1) < self.tetrads.index(tp.tetrad2) else tp.reverse()
-            for tp in self.tetrad_pairs
-        ],
-                                   key=lambda tp: self.tetrads.index(tp.tetrad1))
-        self.helices = sorted(self.helices, key=lambda h: min(self.tetrads.index(ht) for ht in h.tetrads))
-
-        for helix in self.helices:
-            helix.apply_order()
 
     def compute_twoline_dotbracket(self):
         layer1, layer2 = [], []
@@ -1205,9 +1173,8 @@ def eltetrado(dssr: Dict, structure3d: Structure3D, strict: bool, no_reorder: bo
     structure.find_tetrad_pairs_and_helices(stacking_mismatch)
 
     if not no_reorder:
-        structure.find_best_chain_reorder()
+        structure.find_best_chain_reorder(stacking_mismatch)
 
-    structure.apply_order()
     structure.compute_twoline_dotbracket()
 
     return structure
