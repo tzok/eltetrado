@@ -137,36 +137,36 @@ induced by 5’-3’ indexing. We select permutation with the minimum value.
     Chain order: A, B
     n4-helix with 4 tetrads
       Op+ VIII 1a quadruplex with 2 tetrads
-        B.G16 B.G19 B.G25 B.G28 cWH-cWH-cWH-cWH O+ VIIIa planarity=0.31 ions_channel= ions_outside={}
-          direction=parallel rise=4.21 twist=33.45
-        B.G15 B.G18 B.G24 B.G27 cWH-cWH-cWH-cWH O+ VIIIa planarity=0.26 ions_channel= ions_outside={}
-
-        Tracts:
-          B.G25, B.G24
-          B.G28, B.G27
-          B.G16, B.G15
-          B.G19, B.G18
-
-        Loops:
-          propeller- B.A17
-          propeller- B.U20, B.U21, B.U22, B.U23
-          propeller- B.A26
-
-      Op+ VIII 1a quadruplex with 2 tetrads
         A.G1 A.G4 A.G10 A.G13 cWH-cWH-cWH-cWH O+ VIIIa planarity=0.63 ions_channel= ions_outside={}
-          direction=parallel rise=4.12 twist=28.66
+          direction=parallel rise=4.12 twist=31.08
         A.G2 A.G5 A.G11 A.G14 cWH-cWH-cWH-cWH O+ VIIIa planarity=0.5 ions_channel= ions_outside={}
 
         Tracts:
-          A.G10, A.G11
-          A.G13, A.G14
           A.G1, A.G2
           A.G4, A.G5
+          A.G10, A.G11
+          A.G13, A.G14
 
         Loops:
           propeller- A.A3
           propeller- A.U6, A.U7, A.U8, A.U9
           propeller- A.A12
+
+      Op+ VIII 1a quadruplex with 2 tetrads
+        B.G15 B.G18 B.G24 B.G27 cWH-cWH-cWH-cWH O+ VIIIa planarity=0.26 ions_channel= ions_outside={}
+          direction=parallel rise=4.21 twist=33.45
+        B.G16 B.G19 B.G25 B.G28 cWH-cWH-cWH-cWH O+ VIIIa planarity=0.31 ions_channel= ions_outside={}
+
+        Tracts:
+          B.G15, B.G16
+          B.G18, B.G19
+          B.G24, B.G25
+          B.G27, B.G28
+
+        Loops:
+          propeller- B.A17
+          propeller- B.U20, B.U21, B.U22, B.U23
+          propeller- B.A26
 
     GGAGGUUUUGGAGG-GGAGGUUUUGGAGG
     ([.)]....([.)]-([.)]....([.)]
@@ -848,80 +848,6 @@ Click to see the output JSON
         {
           "tetrads": [
             {
-              "id": "B.G16-B.G19-B.G25-B.G28",
-              "nt1": "B.G16",
-              "nt2": "B.G19",
-              "nt3": "B.G25",
-              "nt4": "B.G28",
-              "onz": "O+",
-              "gbaClassification": "VIIIa",
-              "planarityDeviation": 0.3100267125587725,
-              "ionsChannel": [],
-              "ionsOutside": []
-            },
-            {
-              "id": "B.G15-B.G18-B.G24-B.G27",
-              "nt1": "B.G15",
-              "nt2": "B.G18",
-              "nt3": "B.G24",
-              "nt4": "B.G27",
-              "onz": "O+",
-              "gbaClassification": "VIIIa",
-              "planarityDeviation": 0.2616977025118873,
-              "ionsChannel": [],
-              "ionsOutside": []
-            }
-          ],
-          "onzm": "Op+",
-          "loopClassification": "1a",
-          "gbaClassification": [
-            "VIII"
-          ],
-          "tracts": [
-            [
-              "B.G25",
-              "B.G24"
-            ],
-            [
-              "B.G28",
-              "B.G27"
-            ],
-            [
-              "B.G16",
-              "B.G15"
-            ],
-            [
-              "B.G19",
-              "B.G18"
-            ]
-          ],
-          "loops": [
-            {
-              "type": "propeller-",
-              "nucleotides": [
-                "B.A17"
-              ]
-            },
-            {
-              "type": "propeller-",
-              "nucleotides": [
-                "B.U20",
-                "B.U21",
-                "B.U22",
-                "B.U23"
-              ]
-            },
-            {
-              "type": "propeller-",
-              "nucleotides": [
-                "B.A26"
-              ]
-            }
-          ]
-        },
-        {
-          "tetrads": [
-            {
               "id": "A.G1-A.G4-A.G10-A.G13",
               "nt1": "A.G1",
               "nt2": "A.G4",
@@ -929,7 +855,7 @@ Click to see the output JSON
               "nt4": "A.G13",
               "onz": "O+",
               "gbaClassification": "VIIIa",
-              "planarityDeviation": 0.6331162511735108,
+              "planarityDeviation": 0.6331162511735106,
               "ionsChannel": [],
               "ionsOutside": []
             },
@@ -953,20 +879,20 @@ Click to see the output JSON
           ],
           "tracts": [
             [
-              "A.G10",
-              "A.G11"
-            ],
-            [
-              "A.G13",
-              "A.G14"
-            ],
-            [
               "A.G1",
               "A.G2"
             ],
             [
               "A.G4",
               "A.G5"
+            ],
+            [
+              "A.G10",
+              "A.G11"
+            ],
+            [
+              "A.G13",
+              "A.G14"
             ]
           ],
           "loops": [
@@ -992,29 +918,103 @@ Click to see the output JSON
               ]
             }
           ]
+        },
+        {
+          "tetrads": [
+            {
+              "id": "B.G15-B.G18-B.G24-B.G27",
+              "nt1": "B.G15",
+              "nt2": "B.G18",
+              "nt3": "B.G24",
+              "nt4": "B.G27",
+              "onz": "O+",
+              "gbaClassification": "VIIIa",
+              "planarityDeviation": 0.26169770251188723,
+              "ionsChannel": [],
+              "ionsOutside": []
+            },
+            {
+              "id": "B.G16-B.G19-B.G25-B.G28",
+              "nt1": "B.G16",
+              "nt2": "B.G19",
+              "nt3": "B.G25",
+              "nt4": "B.G28",
+              "onz": "O+",
+              "gbaClassification": "VIIIa",
+              "planarityDeviation": 0.3100267125587725,
+              "ionsChannel": [],
+              "ionsOutside": []
+            }
+          ],
+          "onzm": "Op+",
+          "loopClassification": "1a",
+          "gbaClassification": [
+            "VIII"
+          ],
+          "tracts": [
+            [
+              "B.G15",
+              "B.G16"
+            ],
+            [
+              "B.G18",
+              "B.G19"
+            ],
+            [
+              "B.G24",
+              "B.G25"
+            ],
+            [
+              "B.G27",
+              "B.G28"
+            ]
+          ],
+          "loops": [
+            {
+              "type": "propeller-",
+              "nucleotides": [
+                "B.A17"
+              ]
+            },
+            {
+              "type": "propeller-",
+              "nucleotides": [
+                "B.U20",
+                "B.U21",
+                "B.U22",
+                "B.U23"
+              ]
+            },
+            {
+              "type": "propeller-",
+              "nucleotides": [
+                "B.A26"
+              ]
+            }
+          ]
         }
       ],
       "tetradPairs": [
-        {
-          "tetrad1": "B.G16-B.G19-B.G25-B.G28",
-          "tetrad2": "B.G15-B.G18-B.G24-B.G27",
-          "direction": "parallel",
-          "rise": 4.211160606798324,
-          "twist": 33.44704997657572
-        },
-        {
-          "tetrad1": "B.G15-B.G18-B.G24-B.G27",
-          "tetrad2": "A.G1-A.G4-A.G10-A.G13",
-          "direction": "parallel",
-          "rise": 3.184510372490565,
-          "twist": 9.27463267295774
-        },
         {
           "tetrad1": "A.G1-A.G4-A.G10-A.G13",
           "tetrad2": "A.G2-A.G5-A.G11-A.G14",
           "direction": "parallel",
           "rise": 4.121721951290505,
-          "twist": 28.658880739870085
+          "twist": 31.077291799731125
+        },
+        {
+          "tetrad1": "A.G1-A.G4-A.G10-A.G13",
+          "tetrad2": "B.G15-B.G18-B.G24-B.G27",
+          "direction": "parallel",
+          "rise": 3.184510372490565,
+          "twist": 9.27463267295774
+        },
+        {
+          "tetrad1": "B.G15-B.G18-B.G24-B.G27",
+          "tetrad2": "B.G16-B.G19-B.G25-B.G28",
+          "direction": "parallel",
+          "rise": 4.211160606798324,
+          "twist": 33.44704997657572
         }
       ]
     }
@@ -1039,21 +1039,21 @@ Click to see the output JSON
     Chain order: A, AB, AA, AC, B, BC, BA, BB
     n4-helix with 10 tetrads
       Op* VIII n/a quadruplex with 5 tetrads
-        A.U1006 AC.U1006 AA.U1006 AB.U1006 cWH-cWH-cWH-cWH O- VIIIa planarity=1.06 ions_channel=NA ions_outside={A.U1006: 'SR', AA.U1006: 'SR', AB.U1006: 'SR', AC.U1006: 'SR'}
-          direction=parallel rise=3.37 twist=39.96
-        A.G1005 AB.G1005 AA.G1005 AC.G1005 cWH-cWH-cWH-cWH O+ VIIIa planarity=0.8 ions_channel=SR ions_outside={}
-          direction=parallel rise=3.31 twist=25.9
-        A.G1004 AB.G1004 AA.G1004 AC.G1004 cWH-cWH-cWH-cWH O+ VIIIa planarity=0.41 ions_channel= ions_outside={}
-          direction=parallel rise=3.34 twist=35.81
-        A.G1003 AB.G1003 AA.G1003 AC.G1003 cWH-cWH-cWH-cWH O+ VIIIa planarity=0.55 ions_channel=SR ions_outside={}
-          direction=parallel rise=3.29 twist=27.12
         A.G1002 AB.G1002 AA.G1002 AC.G1002 cWH-cWH-cWH-cWH O+ VIIIa planarity=0.54 ions_channel= ions_outside={}
+          direction=parallel rise=3.29 twist=27.12
+        A.G1003 AB.G1003 AA.G1003 AC.G1003 cWH-cWH-cWH-cWH O+ VIIIa planarity=0.55 ions_channel=SR ions_outside={}
+          direction=parallel rise=3.34 twist=35.81
+        A.G1004 AB.G1004 AA.G1004 AC.G1004 cWH-cWH-cWH-cWH O+ VIIIa planarity=0.41 ions_channel= ions_outside={}
+          direction=parallel rise=3.31 twist=25.9
+        A.G1005 AB.G1005 AA.G1005 AC.G1005 cWH-cWH-cWH-cWH O+ VIIIa planarity=0.8 ions_channel=SR ions_outside={}
+          direction=parallel rise=3.37 twist=39.96
+        A.U1006 AC.U1006 AA.U1006 AB.U1006 cWH-cWH-cWH-cWH O- VIIIa planarity=1.06 ions_channel=NA ions_outside={A.U1006: 'SR', AA.U1006: 'SR', AB.U1006: 'SR', AC.U1006: 'SR'}
 
         Tracts:
-          AA.U1006, AA.G1005, AA.G1004, AA.G1003, AA.G1002
-          AB.U1006, AB.G1005, AB.G1004, AB.G1003, AB.G1002
-          A.U1006, A.G1005, A.G1004, A.G1003, A.G1002
-          AC.U1006, AC.G1005, AC.G1004, AC.G1003, AC.G1002
+          A.G1002, A.G1003, A.G1004, A.G1005, A.U1006
+          AB.G1002, AB.G1003, AB.G1004, AB.G1005, AB.U1006
+          AA.G1002, AA.G1003, AA.G1004, AA.G1005, AA.U1006
+          AC.G1002, AC.G1003, AC.G1004, AC.G1005, AC.U1006
 
       Op* VIII n/a quadruplex with 5 tetrads
         B.G2002 BC.G2002 BA.G2002 BB.G2002 cWH-cWH-cWH-cWH O+ VIIIa planarity=0.67 ions_channel= ions_outside={}
@@ -1067,10 +1067,10 @@ Click to see the output JSON
         B.U2006 BB.U2006 BA.U2006 BC.U2006 cWH-cWH-cWH-cWH O- VIIIa planarity=1.58 ions_channel=NA,NA ions_outside={}
 
         Tracts:
-          BA.G2002, BA.G2003, BA.G2004, BA.G2005, BA.U2006
-          BB.G2002, BB.G2003, BB.G2004, BB.G2005, BB.U2006
           B.G2002, B.G2003, B.G2004, B.G2005, B.U2006
           BC.G2002, BC.G2003, BC.G2004, BC.G2005, BC.U2006
+          BA.G2002, BA.G2003, BA.G2004, BA.G2005, BA.U2006
+          BB.G2002, BB.G2003, BB.G2004, BB.G2005, BB.U2006
 
     UGGGGU-UGGGGU-UGGGGU-UGGGGU-UGGGGU-UGGGGU-UGGGGU-UGGGGU
     .([{<A-.)]}>A-.([{<a-.)]}>a-.([{<A-.)]}>A-.([{<a-.)]}>a
@@ -2355,6 +2355,58 @@ Click to see the output JSON
         {
           "tetrads": [
             {
+              "id": "A.G1002-AB.G1002-AA.G1002-AC.G1002",
+              "nt1": "A.G1002",
+              "nt2": "AB.G1002",
+              "nt3": "AA.G1002",
+              "nt4": "AC.G1002",
+              "onz": "O+",
+              "gbaClassification": "VIIIa",
+              "planarityDeviation": 0.541999999999998,
+              "ionsChannel": [],
+              "ionsOutside": []
+            },
+            {
+              "id": "A.G1003-AB.G1003-AA.G1003-AC.G1003",
+              "nt1": "A.G1003",
+              "nt2": "AB.G1003",
+              "nt3": "AA.G1003",
+              "nt4": "AC.G1003",
+              "onz": "O+",
+              "gbaClassification": "VIIIa",
+              "planarityDeviation": 0.5549999999999997,
+              "ionsChannel": [
+                "Sr"
+              ],
+              "ionsOutside": []
+            },
+            {
+              "id": "A.G1004-AB.G1004-AA.G1004-AC.G1004",
+              "nt1": "A.G1004",
+              "nt2": "AB.G1004",
+              "nt3": "AA.G1004",
+              "nt4": "AC.G1004",
+              "onz": "O+",
+              "gbaClassification": "VIIIa",
+              "planarityDeviation": 0.4059999999999988,
+              "ionsChannel": [],
+              "ionsOutside": []
+            },
+            {
+              "id": "A.G1005-AB.G1005-AA.G1005-AC.G1005",
+              "nt1": "A.G1005",
+              "nt2": "AB.G1005",
+              "nt3": "AA.G1005",
+              "nt4": "AC.G1005",
+              "onz": "O+",
+              "gbaClassification": "VIIIa",
+              "planarityDeviation": 0.7999999999999972,
+              "ionsChannel": [
+                "Sr"
+              ],
+              "ionsOutside": []
+            },
+            {
               "id": "A.U1006-AC.U1006-AA.U1006-AB.U1006",
               "nt1": "A.U1006",
               "nt2": "AC.U1006",
@@ -2384,58 +2436,6 @@ Click to see the output JSON
                   "ion": "Sr"
                 }
               ]
-            },
-            {
-              "id": "A.G1005-AB.G1005-AA.G1005-AC.G1005",
-              "nt1": "A.G1005",
-              "nt2": "AB.G1005",
-              "nt3": "AA.G1005",
-              "nt4": "AC.G1005",
-              "onz": "O+",
-              "gbaClassification": "VIIIa",
-              "planarityDeviation": 0.7999999999999972,
-              "ionsChannel": [
-                "Sr"
-              ],
-              "ionsOutside": []
-            },
-            {
-              "id": "A.G1004-AB.G1004-AA.G1004-AC.G1004",
-              "nt1": "A.G1004",
-              "nt2": "AB.G1004",
-              "nt3": "AA.G1004",
-              "nt4": "AC.G1004",
-              "onz": "O+",
-              "gbaClassification": "VIIIa",
-              "planarityDeviation": 0.4059999999999988,
-              "ionsChannel": [],
-              "ionsOutside": []
-            },
-            {
-              "id": "A.G1003-AB.G1003-AA.G1003-AC.G1003",
-              "nt1": "A.G1003",
-              "nt2": "AB.G1003",
-              "nt3": "AA.G1003",
-              "nt4": "AC.G1003",
-              "onz": "O+",
-              "gbaClassification": "VIIIa",
-              "planarityDeviation": 0.5549999999999997,
-              "ionsChannel": [
-                "Sr"
-              ],
-              "ionsOutside": []
-            },
-            {
-              "id": "A.G1002-AB.G1002-AA.G1002-AC.G1002",
-              "nt1": "A.G1002",
-              "nt2": "AB.G1002",
-              "nt3": "AA.G1002",
-              "nt4": "AC.G1002",
-              "onz": "O+",
-              "gbaClassification": "VIIIa",
-              "planarityDeviation": 0.541999999999998,
-              "ionsChannel": [],
-              "ionsOutside": []
             }
           ],
           "onzm": "Op*",
@@ -2445,32 +2445,32 @@ Click to see the output JSON
           ],
           "tracts": [
             [
-              "AA.U1006",
-              "AA.G1005",
-              "AA.G1004",
-              "AA.G1003",
-              "AA.G1002"
-            ],
-            [
-              "AB.U1006",
-              "AB.G1005",
-              "AB.G1004",
-              "AB.G1003",
-              "AB.G1002"
-            ],
-            [
-              "A.U1006",
-              "A.G1005",
-              "A.G1004",
+              "A.G1002",
               "A.G1003",
-              "A.G1002"
+              "A.G1004",
+              "A.G1005",
+              "A.U1006"
             ],
             [
-              "AC.U1006",
-              "AC.G1005",
-              "AC.G1004",
+              "AB.G1002",
+              "AB.G1003",
+              "AB.G1004",
+              "AB.G1005",
+              "AB.U1006"
+            ],
+            [
+              "AA.G1002",
+              "AA.G1003",
+              "AA.G1004",
+              "AA.G1005",
+              "AA.U1006"
+            ],
+            [
+              "AC.G1002",
               "AC.G1003",
-              "AC.G1002"
+              "AC.G1004",
+              "AC.G1005",
+              "AC.U1006"
             ]
           ],
           "loops": []
@@ -2554,20 +2554,6 @@ Click to see the output JSON
           ],
           "tracts": [
             [
-              "BA.G2002",
-              "BA.G2003",
-              "BA.G2004",
-              "BA.G2005",
-              "BA.U2006"
-            ],
-            [
-              "BB.G2002",
-              "BB.G2003",
-              "BB.G2004",
-              "BB.G2005",
-              "BB.U2006"
-            ],
-            [
               "B.G2002",
               "B.G2003",
               "B.G2004",
@@ -2580,6 +2566,20 @@ Click to see the output JSON
               "BC.G2004",
               "BC.G2005",
               "BC.U2006"
+            ],
+            [
+              "BA.G2002",
+              "BA.G2003",
+              "BA.G2004",
+              "BA.G2005",
+              "BA.U2006"
+            ],
+            [
+              "BB.G2002",
+              "BB.G2003",
+              "BB.G2004",
+              "BB.G2005",
+              "BB.U2006"
             ]
           ],
           "loops": []
@@ -2587,29 +2587,8 @@ Click to see the output JSON
       ],
       "tetradPairs": [
         {
-          "tetrad1": "A.U1006-AC.U1006-AA.U1006-AB.U1006",
-          "tetrad2": "A.G1005-AB.G1005-AA.G1005-AC.G1005",
-          "direction": "parallel",
-          "rise": 3.366499999999995,
-          "twist": 39.962531742191715
-        },
-        {
-          "tetrad1": "A.G1005-AB.G1005-AA.G1005-AC.G1005",
-          "tetrad2": "A.G1004-AB.G1004-AA.G1004-AC.G1004",
-          "direction": "parallel",
-          "rise": 3.308,
-          "twist": 25.89614444631925
-        },
-        {
-          "tetrad1": "A.G1004-AB.G1004-AA.G1004-AC.G1004",
+          "tetrad1": "A.G1002-AB.G1002-AA.G1002-AC.G1002",
           "tetrad2": "A.G1003-AB.G1003-AA.G1003-AC.G1003",
-          "direction": "parallel",
-          "rise": 3.3394999999999904,
-          "twist": 35.81115298630443
-        },
-        {
-          "tetrad1": "A.G1003-AB.G1003-AA.G1003-AC.G1003",
-          "tetrad2": "A.G1002-AB.G1002-AA.G1002-AC.G1002",
           "direction": "parallel",
           "rise": 3.2865000000000073,
           "twist": 27.11515971986807
@@ -2620,6 +2599,27 @@ Click to see the output JSON
           "direction": "parallel",
           "rise": 3.3694999999999986,
           "twist": 28.993180312675573
+        },
+        {
+          "tetrad1": "A.G1003-AB.G1003-AA.G1003-AC.G1003",
+          "tetrad2": "A.G1004-AB.G1004-AA.G1004-AC.G1004",
+          "direction": "parallel",
+          "rise": 3.3394999999999904,
+          "twist": 35.81115298630443
+        },
+        {
+          "tetrad1": "A.G1004-AB.G1004-AA.G1004-AC.G1004",
+          "tetrad2": "A.G1005-AB.G1005-AA.G1005-AC.G1005",
+          "direction": "parallel",
+          "rise": 3.308,
+          "twist": 25.89614444631925
+        },
+        {
+          "tetrad1": "A.G1005-AB.G1005-AA.G1005-AC.G1005",
+          "tetrad2": "A.U1006-AC.U1006-AA.U1006-AB.U1006",
+          "direction": "parallel",
+          "rise": 3.366499999999995,
+          "twist": 39.962531742191715
         },
         {
           "tetrad1": "B.G2002-BC.G2002-BA.G2002-BB.G2002",

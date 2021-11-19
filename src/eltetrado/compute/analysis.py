@@ -1,6 +1,7 @@
 import itertools
 import logging
 import math
+import numpy
 import os
 import string
 import subprocess
@@ -8,13 +9,9 @@ import tempfile
 
 from collections import defaultdict, Counter
 from typing import Dict, Iterable, List, Tuple, FrozenSet, Set, Optional
-
-import numpy
-
 from eltetrado.compute.model import Atom3D, Structure3D, Residue3D
 
 logging.basicConfig(level=os.environ.get("LOGLEVEL", "INFO"))
-log = logging.getLogger('quadruplex')
 
 LW_SCORE = {
     'cWW': 1,
@@ -35,13 +32,6 @@ LW_SCORE = {
     'tSH': 16,
     'cSS': 17,
     'tSS': 18
-}
-
-METALS = {
-    x.casefold() for x in [
-        'Ag', 'Au', 'Ba', 'Ca', 'Co', 'Cs', 'Cu', 'Eu', 'Fe', 'Ir', 'K', 'Li', 'Mg', 'Mn', 'Na', 'Ni', 'Os', 'Pb', 'Pt',
-        'Ru', 'Sr', 'Tl', 'V', 'Zn'
-    ]
 }
 
 
@@ -92,7 +82,7 @@ class Nucleotide:
                     self.residue3d = residue
                     break
             else:
-                log.error(f'Failed to find data in PDB or mmCIF file for residue {self.full_name}')
+                logging.error(f'Failed to find data in PDB or mmCIF file for residue {self.full_name}')
 
     def __eq__(self, other):
         return self.full_name == other.full_name
@@ -212,6 +202,9 @@ class Pair:
 
     def score(self) -> int:
         return LW_SCORE.get(self.lw, 100)
+
+    def is_canonical(self) -> bool:
+        return self.saenger in ('19-XIX', '20-XX', '28-XXVIII')
 
 
 class Tetrad:
@@ -342,7 +335,7 @@ class Tetrad:
         elif order == (3, 1, 2):
             return 'Z-'
         else:
-            log.error(f'Impossible combination: {ni} {nj} {nk} {nl}')
+            logging.error(f'Impossible combination: {ni} {nj} {nk} {nl}')
             return 'n/a'
 
     def gba_classification(self):
@@ -391,7 +384,7 @@ class Tetrad:
         }
 
         if fingerprint not in gba_classes:
-            log.error(f'Impossible combination of syn/anti: {[nt.glycosidic_bond for nt in self.nucleotides]}')
+            logging.error(f'Impossible combination of syn/anti: {[nt.glycosidic_bond for nt in self.nucleotides]}')
             return 'n/a'
         return gba_classes[fingerprint]
 
@@ -423,6 +416,9 @@ class TetradPair:
 
     def __str__(self):
         return f'      direction={self.direction} rise={round(self.rise, 2)} twist={round(self.twist, 2)}\n'
+
+    def reverse(self):
+        return TetradPair(self.tetrad2, self.tetrad1, self.stacked)
 
     def __determine_direction(self):
         # count directions 5' -> 3' as +1 or -1
@@ -492,8 +488,8 @@ class Quadruplex:
         self.tetrad_pairs: List[TetradPair] = tetrad_pairs
         self.nucleotides: Dict[str, Nucleotide] = nucleotides
 
-        self.tracts = self.__tracts()
-        self.loops = self.__loops()
+        self.tracts: List[Tract] = self.__tracts()
+        self.loops: List[Loop] = self.__loops()
 
         self.gba_classification = self.__gba_classification()
         self.loop_classification = self.__loop_classification()
@@ -549,12 +545,22 @@ class Quadruplex:
     def sign(self) -> str:
         signs = set((tetrad.get_classification()[1] for tetrad in self.tetrads))
         if len(signs - {'-', '+'}) > 0:
-            log.error(f'Tetrad classification different than [ONZ][+-]: '
-                      f'{[tetrad.get_classification() for tetrad in self.tetrads]}')
+            logging.error(f'Tetrad classification different than [ONZ][+-]: '
+                          f'{[tetrad.get_classification() for tetrad in self.tetrads]}')
             return '*'
         if len(signs) == 1:
             return signs.pop()
         return '*'
+
+    def apply_order(self):
+        self.tetrads = sorted(self.tetrads, key=lambda t: min(nt.index for nt in t.nucleotides))
+        self.tetrad_pairs = sorted([
+            tp if self.tetrads.index(tp.tetrad1) < self.tetrads.index(tp.tetrad2) else tp.reverse()
+            for tp in self.tetrad_pairs
+        ],
+                                   key=lambda tp: self.tetrads.index(tp.tetrad1))
+        self.tracts = self.__tracts()
+        self.loops = self.__loops()
 
     def __gba_classification(self) -> List[str]:
         roman_numerals = {'I': 1, 'II': 2, 'III': 3, 'IV': 4, 'V': 5, 'VI': 6, 'VII': 7, 'VIII': 8}
@@ -583,12 +589,12 @@ class Quadruplex:
         }
         fingerprint = ''.join([loop.loop_type[0] for loop in self.loops])
         if fingerprint not in loop_classes:
-            log.error(f'Unknown loop classification: {fingerprint}')
+            logging.error(f'Unknown loop classification: {fingerprint}')
             return 'n/a'
         subtype = 'a' if self.loops[0 if fingerprint != 'dpd' else 1].loop_type[-1] == '-' else 'b'
         return loop_classes[fingerprint] + subtype
 
-    def __tracts(self):
+    def __tracts(self) -> List[Tract]:
         if not self.tetrad_pairs:
             return [Tract([self.tetrads[0].nucleotides[i]]) for i in range(4)]
 
@@ -626,7 +632,7 @@ class Quadruplex:
                     return p1.score() < p2.score()
                 if (n1, n2) == p2.pair:
                     return p1.score() > p2.score()
-            log.error(f'Failed to find a pair between {n1} and {n2}')
+            logging.error(f'Failed to find a pair between {n1} and {n2}')
             return None
 
         for tetrad in self.tetrads:
@@ -644,7 +650,7 @@ class Quadruplex:
                 if nt2 in tetrad.nucleotides and any([frozenset(nt_pair.pair) == pair for nt_pair in tetrad.pairs]):
                     return 'propeller' + ('-' if is_anticlockwise(nt1, nt2, tetrad) else '+')
 
-        log.warning(f'Failed to classify the loop between {nt1} and {nt2}')
+        logging.warning(f'Failed to classify the loop between {nt1} and {nt2}')
         return 'n/a'
 
 
@@ -670,6 +676,18 @@ class Helix:
             builder += str(self.tetrads[0])
         return builder
 
+    def apply_order(self):
+        self.tetrads = sorted(self.tetrads, key=lambda t: min(nt.index for nt in t.nucleotides))
+        self.tetrad_pairs = sorted([
+            tp if self.tetrads.index(tp.tetrad1) < self.tetrads.index(tp.tetrad2) else tp.reverse()
+            for tp in self.tetrad_pairs
+        ],
+                                   key=lambda tp: self.tetrads.index(tp.tetrad1))
+        self.quadruplexes = sorted(self.quadruplexes, key=lambda q: min(self.tetrads.index(qt) for qt in q.tetrads))
+
+        for quadruplex in self.quadruplexes:
+            quadruplex.apply_order()
+
     def __quadruplexes(self):
         if not self.tetrad_pairs:
             return [Quadruplex(self.tetrads, [], self.nucleotides)]
@@ -679,25 +697,26 @@ class Helix:
         for tetrad in [self.tetrad_pairs[0].tetrad1] + [tetrad_pair.tetrad2 for tetrad_pair in self.tetrad_pairs]:
             if tetrads:
                 if tetrad.chains.isdisjoint(tetrads[-1].chains):
-                    quadruplexes.append(
-                        Quadruplex(tetrads, filter_tetrad_pairs(self.tetrad_pairs, tetrads), self.nucleotides))
+                    quadruplexes.append(Quadruplex(tetrads, self.__filter_tetrad_pairs(tetrads), self.nucleotides))
                     tetrads = list()
             tetrads.append(tetrad)
 
-        quadruplexes.append(Quadruplex(tetrads, filter_tetrad_pairs(self.tetrad_pairs, tetrads), self.nucleotides))
+        quadruplexes.append(Quadruplex(tetrads, self.__filter_tetrad_pairs(tetrads), self.nucleotides))
 
         return quadruplexes
 
+    def __filter_tetrad_pairs(self, tetrads: Iterable[Tetrad]) -> List[TetradPair]:
+        chains = set()
+        for tetrad in tetrads:
+            chains.update(tetrad.chains)
 
-def find_metal_ions(structure3d: Structure3D):
-    atoms = []
-    used = set()
-    for residue in structure3d.residues:
-        for atom in residue.atoms:
-            if atom.atom_name.casefold() in METALS and tuple(atom.coordinates()) not in used:
-                atoms.append(atom)
-                used.add(tuple(atom.coordinates()))
-    return atoms
+        def check_tetrad(t: Tetrad) -> bool:
+            return not t.chains.isdisjoint(chains)
+
+        def check_pair(tp: TetradPair) -> bool:
+            return check_tetrad(tp.tetrad1) and check_tetrad(tp.tetrad2)
+
+        return list(filter(check_pair, self.tetrad_pairs))
 
 
 class Analysis:
@@ -706,17 +725,14 @@ class Analysis:
         self.nucleotides: Dict[str, Nucleotide] = {nt['nt_id']: Nucleotide(nt, structure3d) for nt in data['nts']}
         self.stacking: Set[Tuple[Nucleotide]] = self.__read_stacking(data)
         self.pairs: Dict[Tuple[Nucleotide, Nucleotide], Pair] = self.__read_pairs(data)
-        self.canonical: Set[Pair] = {
-            pair for pair in self.pairs.values() if pair.saenger in ('19-XIX', '20-XX', '28-XXVIII')
-        }
-        self.metal_ions: List = find_metal_ions(structure3d)
-        self.metals = self.__format_metal_ions()
-        self.graph: Dict[Nucleotide, List[Nucleotide]] = dict()
-        self.tetrads: Set[Tetrad] = set()
-        self.tetrad_pairs: List[TetradPair] = list()
-        self.stems: Dict[Tetrad, List[Tetrad]] = dict()
-        self.stacks: Dict[Tetrad, List[Tetrad]] = dict()
-        self.helices: List[Helix] = list()
+        self.canonical: Set[Pair] = set(filter(Pair.is_canonical, self.pairs.values()))
+        self.metal_ions: List[Atom3D] = structure3d.find_metal_ions() if structure3d else []
+        self.graph: Dict[Nucleotide, List[Nucleotide]] = {}
+        self.tetrads: List[Tetrad] = []
+        self.tetrad_pairs: List[TetradPair] = []
+        self.stems: Dict[Tetrad, List[Tetrad]] = {}
+        self.stacks: Dict[Tetrad, List[Tetrad]] = {}
+        self.helices: List[Helix] = []
         self.sequence: str
         self.line1: str
         self.line2: str
@@ -762,7 +778,7 @@ class Analysis:
             else:
                 flag = False
 
-        self.tetrads = tetrads
+        self.tetrads = sorted(tetrads, key=lambda t: min(t.nucleotides[i].index for i in range(4)))
 
     def find_stacks(self, stacking_mismatch: int):
         stackings = defaultdict(list)
@@ -837,6 +853,7 @@ class Analysis:
             if score > (4 - stacking_mismatch):
                 nts1, nts2 = tetrad_scores[ti][tj][1:]
                 stacked = dict([(nts1[i], nts2[i]) for i in range(4)])
+                stacked.update({v: k for k, v in stacked.items()})
                 tetrad_pairs.append(TetradPair(ti, tj, stacked))
 
         helices = []
@@ -877,7 +894,7 @@ class Analysis:
                 self.__reorder_chains(permutation)
                 classification = list(self.__get_classification())
                 score = (sum(scores[c] for c in classification), self.__sum_squares_chain_distances(permutation))
-                log.debug(f'Checking reorder: {" ".join(permutation)} {"".join(classification)}')
+                logging.debug(f'Checking reorder: {" ".join(permutation)} {"".join(classification)}')
                 if score < best_score:
                     best_score = score
                     best_permutation = permutation
@@ -885,7 +902,7 @@ class Analysis:
 
         if final_order:
             self.__reorder_chains(final_order)
-            log.debug(f'Selected reorder: {" ".join(final_order)} {"".join(list(self.__get_classification()))}')
+            logging.debug(f'Selected reorder: {" ".join(final_order)} {"".join(list(self.__get_classification()))}')
 
     def chain_order(self) -> Dict[str, int]:
         return {nt.model_chain: 0 for nt in sorted(self.nucleotides.values(), key=lambda nt: nt.index)}
@@ -923,6 +940,18 @@ class Analysis:
                     min_tetrad.ions_outside[min_nt].append(ion)
             else:
                 logging.debug(f'Skipping an ion, because it is too far from any tetrad (distance={min_distance})')
+
+    def apply_order(self):
+        self.tetrads = sorted(self.tetrads, key=lambda t: min(nt.index for nt in t.nucleotides))
+        self.tetrad_pairs = sorted([
+            tp if self.tetrads.index(tp.tetrad1) < self.tetrads.index(tp.tetrad2) else tp.reverse()
+            for tp in self.tetrad_pairs
+        ],
+                                   key=lambda tp: self.tetrads.index(tp.tetrad1))
+        self.helices = sorted(self.helices, key=lambda h: min(self.tetrads.index(ht) for ht in h.tetrads))
+
+        for helix in self.helices:
+            helix.apply_order()
 
     def compute_twoline_dotbracket(self):
         layer1, layer2 = [], []
@@ -996,10 +1025,6 @@ class Analysis:
                 pairs[(nt1, nt2)] = pair
                 pairs[(nt2, nt1)] = pair.reverse()
         return pairs
-
-    def __format_metal_ions(self):
-        counter = Counter(map(lambda atom: atom.atom_name.title(), self.metal_ions))
-        return ','.join(f'{k}={v}' for k, v in sorted(counter.items()))
 
     def __elimination_conflicts(self, pairs):
         orders = dict()
@@ -1087,7 +1112,7 @@ class Visualizer:
         if run.returncode == 0:
             print('\nPlot:', output_pdf)
         else:
-            log.error(f'Failed to prepare visualization, reason:\n  {run.stderr.decode()}')
+            logging.error(f'Failed to prepare visualization, reason:\n  {run.stderr.decode()}')
 
     def __extract_nucleotides(self):
         nucleotides = list()
@@ -1116,21 +1141,10 @@ class Visualizer:
         return name
 
 
-def _read_pairs(data: dict):
-    pairs = dict()
-    for pair in data['pairs']:
-        nt1, nt2, lw, saenger = pair['nt1'], pair['nt2'], pair['LW'], pair['Saenger']
-        if Pair.is_valid(lw):
-            pair = Pair(nt1, nt2, lw, saenger)
-            pairs[(nt1, nt2)] = pair
-            pairs[(nt2, nt1)] = pair.reverse()
-    return pairs
-
-
 class AnalysisSimple:
 
     def __init__(self, data: dict):
-        self.pairs = _read_pairs(data)
+        self.pairs = read_pairs(data)
         self.graph = dict()
 
     def build_graph(self):
@@ -1160,18 +1174,15 @@ class AnalysisSimple:
         return False
 
 
-def filter_tetrad_pairs(tetrad_pairs: List[TetradPair], tetrads: Iterable[Tetrad]) -> List[TetradPair]:
-    chains = set()
-    for tetrad in tetrads:
-        chains.update(tetrad.chains)
-
-    def check_tetrad(t: Tetrad) -> bool:
-        return not t.chains.isdisjoint(chains)
-
-    def check_pair(tp: TetradPair) -> bool:
-        return check_tetrad(tp.tetrad1) and check_tetrad(tp.tetrad2)
-
-    return list(filter(check_pair, tetrad_pairs))
+def read_pairs(data: dict):
+    pairs = dict()
+    for pair in data['pairs']:
+        nt1, nt2, lw, saenger = pair['nt1'], pair['nt2'], pair['LW'], pair['Saenger']
+        if Pair.is_valid(lw):
+            pair = Pair(nt1, nt2, lw, saenger)
+            pairs[(nt1, nt2)] = pair
+            pairs[(nt2, nt1)] = pair.reverse()
+    return pairs
 
 
 def center_of_mass(atoms):
@@ -1196,6 +1207,7 @@ def eltetrado(dssr: Dict, structure3d: Structure3D, strict: bool, no_reorder: bo
     if not no_reorder:
         structure.find_best_chain_reorder()
 
+    structure.apply_order()
     structure.compute_twoline_dotbracket()
 
     return structure

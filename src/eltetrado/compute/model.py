@@ -5,6 +5,13 @@ from typing import List
 
 import numpy
 
+METALS = {
+    x.casefold() for x in [
+        'Ag', 'Au', 'Ba', 'Ca', 'Co', 'Cs', 'Cu', 'Eu', 'Fe', 'Ir', 'K', 'Li', 'Mg', 'Mn', 'Na', 'Ni', 'Os', 'Pb', 'Pt',
+        'Ru', 'Sr', 'Tl', 'V', 'Zn'
+    ]
+}
+
 
 class Ion(Enum):
     Ag = 'Ag'
@@ -301,6 +308,16 @@ class Residue3D:
 @dataclass
 class Structure3D:
     residues: List[Residue3D]
+
+    def find_metal_ions(self):
+        atoms = []
+        used = set()
+        for residue in self.residues:
+            for atom in residue.atoms:
+                if atom.atom_name.casefold() in METALS and tuple(atom.coordinates()) not in used:
+                    atoms.append(atom)
+                    used.add(tuple(atom.coordinates()))
+        return atoms
 
 
 def convert_metals(analysis):
