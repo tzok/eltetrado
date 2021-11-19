@@ -259,11 +259,19 @@ class Helix:
 
 
 @dataclass
+class TwoLineDotBracket:
+    sequence: str
+    line1: str
+    line2: str
+
+
+@dataclass
 class Result:
     metals: List[Metal]
     nucleotides: List[Nucleotide]
     basePairs: List[BasePair]
     helices: List[Helix]
+    dotBracket: TwoLineDotBracket
 
 
 @dataclass
@@ -302,9 +310,9 @@ def convert_metals(analysis):
 
 def convert_nucleotides(analysis):
     return [
-        Nucleotide(nt.index, nt.model, nt.chain, nt.number, nt.icode, Molecule(nt.molecule), nt.full_name,
-                   nt.short_name, float(nt.chi if nt.chi else 'nan'), GlycosidicBond(nt.glycosidic_bond))
-        for nt in analysis.nucleotides.values()
+        Nucleotide(nt.index, nt.model, nt.chain, nt.number, nt.icode,
+                   Molecule(nt.molecule), nt.full_name, nt.short_name, float(nt.chi if nt.chi else 'nan'),
+                   GlycosidicBond(nt.glycosidic_bond)) for nt in analysis.nucleotides.values()
     ]
 
 
@@ -324,16 +332,17 @@ def convert_ions_channel(tetrad):
 def convert_ions_outside(tetrad):
     return [
         IonOutside(nt.full_name, Ion(ion.atom_name.title()))
-        for nt, ions_list in tetrad.ions_outside.items() for ion in ions_list
+        for nt, ions_list in tetrad.ions_outside.items()
+        for ion in ions_list
     ]
 
 
 def convert_tetrads(quadruplex):
     return [
-        Tetrad(repr(t), t.nucleotides[0].full_name, t.nucleotides[1].full_name, t.nucleotides[2].full_name,
-               t.nucleotides[3].full_name, ONZ(t.get_classification()), GbaTetradClassification(t.gba_classification()),
-               float(t.planarity_deviation), convert_ions_channel(t), convert_ions_outside(t))
-        for t in quadruplex.tetrads
+        Tetrad(repr(t), t.nucleotides[0].full_name, t.nucleotides[1].full_name,
+               t.nucleotides[2].full_name, t.nucleotides[3].full_name, ONZ(t.get_classification()),
+               GbaTetradClassification(t.gba_classification()), float(t.planarity_deviation), convert_ions_channel(t),
+               convert_ions_outside(t)) for t in quadruplex.tetrads
     ]
 
 
@@ -349,9 +358,8 @@ def convert_quadruplexes(helix):
     return [
         Quadruplex(convert_tetrads(q), ONZM(f'{q.onzm_classification()}{q.direction()}{q.sign()}'),
                    LoopClassification(q.loop_classification),
-                   [GbaQuadruplexClassification(gba) for gba in q.gba_classification],
-                   convert_tracts(q), convert_loops(q))
-        for q in filter(lambda q: len(q.tetrads) > 1, helix.quadruplexes)
+                   [GbaQuadruplexClassification(gba) for gba in q.gba_classification], convert_tracts(q),
+                   convert_loops(q)) for q in filter(lambda q: len(q.tetrads) > 1, helix.quadruplexes)
     ]
 
 
@@ -363,8 +371,14 @@ def convert_tetrad_pairs(helix):
 
 
 def convert_helices(analysis):
-    return [Helix(convert_quadruplexes(h), convert_tetrad_pairs(h)) for h in
-            filter(lambda h: len(h.tetrads) > 1, analysis.helices)]
+    return [
+        Helix(convert_quadruplexes(h), convert_tetrad_pairs(h))
+        for h in filter(lambda h: len(h.tetrads) > 1, analysis.helices)
+    ]
+
+
+def convert_dot_bracket(analysis):
+    return TwoLineDotBracket(analysis.sequence, analysis.line1, analysis.line2)
 
 
 def generate_dto(analysis):
@@ -372,4 +386,5 @@ def generate_dto(analysis):
     nucleotides = convert_nucleotides(analysis)
     base_pairs = convert_base_pairs(analysis)
     helices = convert_helices(analysis)
-    return Result(metals, nucleotides, base_pairs, helices)
+    dot_bracket = convert_dot_bracket(analysis)
+    return Result(metals, nucleotides, base_pairs, helices, dot_bracket)
