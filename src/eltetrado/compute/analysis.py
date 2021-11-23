@@ -241,6 +241,9 @@ class Tetrad:
     def __hash__(self):
         return self.__hash
 
+    def __eq__(self, other):
+        return hash(self) == hash(other)
+
     def __iter__(self):
         return iter(self.nucleotides)
 
@@ -743,18 +746,21 @@ class Analysis:
                         if Tetrad.is_valid(i, j, k, l, self.pairs):
                             tetrads.add(Tetrad(i, j, k, l, self.pairs, no_reorder))
 
-        # when two tetrads share some of the nucleotides, remove the one which has worse score
-        flag = True
-        while flag:
+        # build graph of tetrads
+        while True:
+            graph = {t: [] for t in tetrads}
             for (ti, tj) in itertools.combinations(tetrads, 2):
                 if not ti.is_disjoint(tj):
-                    if ti.get_score() < tj.get_score():
-                        tetrads.remove(tj)
-                    else:
-                        tetrads.remove(ti)
-                    break
+                    graph[ti].append(tj)
+                    graph[tj].append(ti)
+
+            # remove tetrad which conflicts the most with others
+            # in case of a tie, remove one which has the worst planarity deviation
+            candidates = sorted(tetrads, key=lambda t: (len(graph[t]), t.planarity_deviation), reverse=True)
+            if len(graph[candidates[0]]) > 0:
+                tetrads.remove(candidates[0])
             else:
-                flag = False
+                break
 
         self.tetrads = sorted(tetrads, key=lambda t: min(t.nucleotides[i].index for i in range(4)))
 
