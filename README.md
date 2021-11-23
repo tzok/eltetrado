@@ -27,8 +27,8 @@ call `pip3`:
 # Dependencies
 
 The project is written in Python 3.6+ and requires
-[Biopython](https://biopython.org/) and [NumPy](https://numpy.org/) in
-to run.
+[mmcif-pdbx](https://github.com/Electrostatics/mmcif_pdbx),
+[orjson](https://github.com/ijl/orjson) and [NumPy](https://numpy.org/).
 
 ElTetrado depends on DSSR (Lu *et al.*, 2015) in terms of detection of
 base pairing and stacking. The binary `x3dna-dssr` can be
@@ -867,7 +867,7 @@ Click to see the output JSON
               "nt4": "A.G13",
               "onz": "O+",
               "gbaClassification": "VIIIa",
-              "planarityDeviation": 0.6331162511735108,
+              "planarityDeviation": 0.6331162511735106,
               "ionsChannel": [],
               "ionsOutside": []
             }
@@ -941,7 +941,7 @@ Click to see the output JSON
               "nt4": "B.G28",
               "onz": "O+",
               "gbaClassification": "VIIIa",
-              "planarityDeviation": 0.3100267125587727,
+              "planarityDeviation": 0.31002671255877334,
               "ionsChannel": [],
               "ionsOutside": []
             }
