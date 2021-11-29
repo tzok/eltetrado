@@ -185,6 +185,27 @@ class Direction(Enum):
     hybrid = 'hybrid'
 
 
+class LeontisWesthof(Enum):
+    cWW = 'cWW'
+    cWH = 'cWH'
+    cWS = 'cWS'
+    cHW = 'cHW'
+    cHH = 'cHH'
+    cHS = 'cHS'
+    cSW = 'cSW'
+    cSH = 'cSH'
+    cSS = 'cSS'
+    tWW = 'tWW'
+    tWH = 'tWH'
+    tWS = 'tWS'
+    tHW = 'tHW'
+    tHH = 'tHH'
+    tHS = 'tHS'
+    tSW = 'tSW'
+    tSH = 'tSH'
+    tSS = 'tSS'
+
+
 @dataclass
 class Metal:
     symbol: Ion
@@ -209,6 +230,7 @@ class Nucleotide:
 class BasePair:
     nt1: str
     nt2: str
+    lw: LeontisWesthof
     stericity: Stericity
     edge5: Edge
     edge3: Edge
@@ -337,8 +359,8 @@ def convert_base_pairs(analysis):
     lw2stericity = lambda lw: Stericity.cis if lw[0] == 'c' else Stericity.trans
     lw2edge = lambda lw: Edge.WC if lw == 'W' else Edge.H if lw == 'H' else Edge.S
     return [
-        BasePair(bp.pair[0].full_name, bp.pair[1].full_name, lw2stericity(bp.lw), lw2edge(bp.lw[1]), lw2edge(bp.lw[2]))
-        for bp in analysis.pairs.values()
+        BasePair(bp.pair[0].full_name, bp.pair[1].full_name, bp.lw, lw2stericity(bp.lw), lw2edge(bp.lw[1]),
+                 lw2edge(bp.lw[2])) for bp in analysis.pairs.values()
     ]
 
 
