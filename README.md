@@ -522,6 +522,7 @@ Click to see the output JSON
     {
       "nt1": "A.G1",
       "nt2": "A.A3",
+      "lw": "tSH",
       "stericity": "trans",
       "edge5": "Sugar",
       "edge3": "Hoogsteen"
@@ -529,6 +530,7 @@ Click to see the output JSON
     {
       "nt1": "A.A3",
       "nt2": "A.G1",
+      "lw": "tHS",
       "stericity": "trans",
       "edge5": "Hoogsteen",
       "edge3": "Sugar"
@@ -536,6 +538,7 @@ Click to see the output JSON
     {
       "nt1": "A.G1",
       "nt2": "A.G4",
+      "lw": "cWH",
       "stericity": "cis",
       "edge5": "Watson-Crick",
       "edge3": "Hoogsteen"
@@ -543,6 +546,7 @@ Click to see the output JSON
     {
       "nt1": "A.G4",
       "nt2": "A.G1",
+      "lw": "cHW",
       "stericity": "cis",
       "edge5": "Hoogsteen",
       "edge3": "Watson-Crick"
@@ -550,6 +554,7 @@ Click to see the output JSON
     {
       "nt1": "A.G1",
       "nt2": "A.G13",
+      "lw": "cHW",
       "stericity": "cis",
       "edge5": "Hoogsteen",
       "edge3": "Watson-Crick"
@@ -557,6 +562,7 @@ Click to see the output JSON
     {
       "nt1": "A.G13",
       "nt2": "A.G1",
+      "lw": "cWH",
       "stericity": "cis",
       "edge5": "Watson-Crick",
       "edge3": "Hoogsteen"
@@ -564,6 +570,7 @@ Click to see the output JSON
     {
       "nt1": "A.G2",
       "nt2": "A.G5",
+      "lw": "cWH",
       "stericity": "cis",
       "edge5": "Watson-Crick",
       "edge3": "Hoogsteen"
@@ -571,6 +578,7 @@ Click to see the output JSON
     {
       "nt1": "A.G5",
       "nt2": "A.G2",
+      "lw": "cHW",
       "stericity": "cis",
       "edge5": "Hoogsteen",
       "edge3": "Watson-Crick"
@@ -578,6 +586,7 @@ Click to see the output JSON
     {
       "nt1": "A.G2",
       "nt2": "A.G11",
+      "lw": "tWW",
       "stericity": "trans",
       "edge5": "Watson-Crick",
       "edge3": "Watson-Crick"
@@ -585,6 +594,7 @@ Click to see the output JSON
     {
       "nt1": "A.G11",
       "nt2": "A.G2",
+      "lw": "tWW",
       "stericity": "trans",
       "edge5": "Watson-Crick",
       "edge3": "Watson-Crick"
@@ -592,6 +602,7 @@ Click to see the output JSON
     {
       "nt1": "A.G2",
       "nt2": "A.G14",
+      "lw": "cHW",
       "stericity": "cis",
       "edge5": "Hoogsteen",
       "edge3": "Watson-Crick"
@@ -599,6 +610,7 @@ Click to see the output JSON
     {
       "nt1": "A.G14",
       "nt2": "A.G2",
+      "lw": "cWH",
       "stericity": "cis",
       "edge5": "Watson-Crick",
       "edge3": "Hoogsteen"
@@ -606,6 +618,7 @@ Click to see the output JSON
     {
       "nt1": "A.G4",
       "nt2": "A.G10",
+      "lw": "cWH",
       "stericity": "cis",
       "edge5": "Watson-Crick",
       "edge3": "Hoogsteen"
@@ -613,6 +626,7 @@ Click to see the output JSON
     {
       "nt1": "A.G10",
       "nt2": "A.G4",
+      "lw": "cHW",
       "stericity": "cis",
       "edge5": "Hoogsteen",
       "edge3": "Watson-Crick"
@@ -620,6 +634,7 @@ Click to see the output JSON
     {
       "nt1": "A.G4",
       "nt2": "B.A17",
+      "lw": "tHH",
       "stericity": "trans",
       "edge5": "Hoogsteen",
       "edge3": "Hoogsteen"
@@ -627,6 +642,7 @@ Click to see the output JSON
     {
       "nt1": "B.A17",
       "nt2": "A.G4",
+      "lw": "tHH",
       "stericity": "trans",
       "edge5": "Hoogsteen",
       "edge3": "Hoogsteen"
@@ -634,6 +650,7 @@ Click to see the output JSON
     {
       "nt1": "A.G5",
       "nt2": "A.G11",
+      "lw": "cWH",
       "stericity": "cis",
       "edge5": "Watson-Crick",
       "edge3": "Hoogsteen"
@@ -641,6 +658,7 @@ Click to see the output JSON
     {
       "nt1": "A.G11",
       "nt2": "A.G5",
+      "lw": "cHW",
       "stericity": "cis",
       "edge5": "Hoogsteen",
       "edge3": "Watson-Crick"
@@ -648,6 +666,7 @@ Click to see the output JSON
     {
       "nt1": "A.G10",
       "nt2": "A.A12",
+      "lw": "tSH",
       "stericity": "trans",
       "edge5": "Sugar",
       "edge3": "Hoogsteen"
@@ -655,6 +674,7 @@ Click to see the output JSON
     {
       "nt1": "A.A12",
       "nt2": "A.G10",
+      "lw": "tHS",
       "stericity": "trans",
       "edge5": "Hoogsteen",
       "edge3": "Sugar"
@@ -662,6 +682,7 @@ Click to see the output JSON
     {
       "nt1": "A.G10",
       "nt2": "A.G13",
+      "lw": "cWH",
       "stericity": "cis",
       "edge5": "Watson-Crick",
       "edge3": "Hoogsteen"
@@ -669,6 +690,7 @@ Click to see the output JSON
     {
       "nt1": "A.G13",
       "nt2": "A.G10",
+      "lw": "cHW",
       "stericity": "cis",
       "edge5": "Hoogsteen",
       "edge3": "Watson-Crick"
@@ -676,6 +698,7 @@ Click to see the output JSON
     {
       "nt1": "A.G11",
       "nt2": "A.G14",
+      "lw": "cWH",
       "stericity": "cis",
       "edge5": "Watson-Crick",
       "edge3": "Hoogsteen"
@@ -683,6 +706,7 @@ Click to see the output JSON
     {
       "nt1": "A.G14",
       "nt2": "A.G11",
+      "lw": "cHW",
       "stericity": "cis",
       "edge5": "Hoogsteen",
       "edge3": "Watson-Crick"
@@ -690,6 +714,7 @@ Click to see the output JSON
     {
       "nt1": "A.G13",
       "nt2": "B.G27",
+      "lw": "cHH",
       "stericity": "cis",
       "edge5": "Hoogsteen",
       "edge3": "Hoogsteen"
@@ -697,6 +722,7 @@ Click to see the output JSON
     {
       "nt1": "B.G27",
       "nt2": "A.G13",
+      "lw": "cHH",
       "stericity": "cis",
       "edge5": "Hoogsteen",
       "edge3": "Hoogsteen"
@@ -704,6 +730,7 @@ Click to see the output JSON
     {
       "nt1": "B.G15",
       "nt2": "B.A17",
+      "lw": "tSH",
       "stericity": "trans",
       "edge5": "Sugar",
       "edge3": "Hoogsteen"
@@ -711,6 +738,7 @@ Click to see the output JSON
     {
       "nt1": "B.A17",
       "nt2": "B.G15",
+      "lw": "tHS",
       "stericity": "trans",
       "edge5": "Hoogsteen",
       "edge3": "Sugar"
@@ -718,6 +746,7 @@ Click to see the output JSON
     {
       "nt1": "B.G15",
       "nt2": "B.G18",
+      "lw": "cWH",
       "stericity": "cis",
       "edge5": "Watson-Crick",
       "edge3": "Hoogsteen"
@@ -725,6 +754,7 @@ Click to see the output JSON
     {
       "nt1": "B.G18",
       "nt2": "B.G15",
+      "lw": "cHW",
       "stericity": "cis",
       "edge5": "Hoogsteen",
       "edge3": "Watson-Crick"
@@ -732,6 +762,7 @@ Click to see the output JSON
     {
       "nt1": "B.G15",
       "nt2": "B.G27",
+      "lw": "cHW",
       "stericity": "cis",
       "edge5": "Hoogsteen",
       "edge3": "Watson-Crick"
@@ -739,6 +770,7 @@ Click to see the output JSON
     {
       "nt1": "B.G27",
       "nt2": "B.G15",
+      "lw": "cWH",
       "stericity": "cis",
       "edge5": "Watson-Crick",
       "edge3": "Hoogsteen"
@@ -746,6 +778,7 @@ Click to see the output JSON
     {
       "nt1": "B.G16",
       "nt2": "B.G19",
+      "lw": "cWH",
       "stericity": "cis",
       "edge5": "Watson-Crick",
       "edge3": "Hoogsteen"
@@ -753,6 +786,7 @@ Click to see the output JSON
     {
       "nt1": "B.G19",
       "nt2": "B.G16",
+      "lw": "cHW",
       "stericity": "cis",
       "edge5": "Hoogsteen",
       "edge3": "Watson-Crick"
@@ -760,6 +794,7 @@ Click to see the output JSON
     {
       "nt1": "B.G16",
       "nt2": "B.G28",
+      "lw": "cHW",
       "stericity": "cis",
       "edge5": "Hoogsteen",
       "edge3": "Watson-Crick"
@@ -767,6 +802,7 @@ Click to see the output JSON
     {
       "nt1": "B.G28",
       "nt2": "B.G16",
+      "lw": "cWH",
       "stericity": "cis",
       "edge5": "Watson-Crick",
       "edge3": "Hoogsteen"
@@ -774,6 +810,7 @@ Click to see the output JSON
     {
       "nt1": "B.G18",
       "nt2": "B.G24",
+      "lw": "cWH",
       "stericity": "cis",
       "edge5": "Watson-Crick",
       "edge3": "Hoogsteen"
@@ -781,6 +818,7 @@ Click to see the output JSON
     {
       "nt1": "B.G24",
       "nt2": "B.G18",
+      "lw": "cHW",
       "stericity": "cis",
       "edge5": "Hoogsteen",
       "edge3": "Watson-Crick"
@@ -788,6 +826,7 @@ Click to see the output JSON
     {
       "nt1": "B.G19",
       "nt2": "B.G25",
+      "lw": "cWH",
       "stericity": "cis",
       "edge5": "Watson-Crick",
       "edge3": "Hoogsteen"
@@ -795,6 +834,7 @@ Click to see the output JSON
     {
       "nt1": "B.G25",
       "nt2": "B.G19",
+      "lw": "cHW",
       "stericity": "cis",
       "edge5": "Hoogsteen",
       "edge3": "Watson-Crick"
@@ -802,6 +842,7 @@ Click to see the output JSON
     {
       "nt1": "B.G24",
       "nt2": "B.A26",
+      "lw": "tSH",
       "stericity": "trans",
       "edge5": "Sugar",
       "edge3": "Hoogsteen"
@@ -809,6 +850,7 @@ Click to see the output JSON
     {
       "nt1": "B.A26",
       "nt2": "B.G24",
+      "lw": "tHS",
       "stericity": "trans",
       "edge5": "Hoogsteen",
       "edge3": "Sugar"
@@ -816,6 +858,7 @@ Click to see the output JSON
     {
       "nt1": "B.G24",
       "nt2": "B.G27",
+      "lw": "cWH",
       "stericity": "cis",
       "edge5": "Watson-Crick",
       "edge3": "Hoogsteen"
@@ -823,6 +866,7 @@ Click to see the output JSON
     {
       "nt1": "B.G27",
       "nt2": "B.G24",
+      "lw": "cHW",
       "stericity": "cis",
       "edge5": "Hoogsteen",
       "edge3": "Watson-Crick"
@@ -830,6 +874,7 @@ Click to see the output JSON
     {
       "nt1": "B.G25",
       "nt2": "B.G28",
+      "lw": "cWH",
       "stericity": "cis",
       "edge5": "Watson-Crick",
       "edge3": "Hoogsteen"
@@ -837,6 +882,7 @@ Click to see the output JSON
     {
       "nt1": "B.G28",
       "nt2": "B.G25",
+      "lw": "cHW",
       "stericity": "cis",
       "edge5": "Hoogsteen",
       "edge3": "Watson-Crick"
@@ -1679,6 +1725,7 @@ Click to see the output JSON
     {
       "nt1": "A.U1001",
       "nt2": "B.G2003",
+      "lw": "cSS",
       "stericity": "cis",
       "edge5": "Sugar",
       "edge3": "Sugar"
@@ -1686,6 +1733,7 @@ Click to see the output JSON
     {
       "nt1": "B.G2003",
       "nt2": "A.U1001",
+      "lw": "cSS",
       "stericity": "cis",
       "edge5": "Sugar",
       "edge3": "Sugar"
@@ -1693,6 +1741,7 @@ Click to see the output JSON
     {
       "nt1": "A.G1002",
       "nt2": "AB.G1002",
+      "lw": "cWH",
       "stericity": "cis",
       "edge5": "Watson-Crick",
       "edge3": "Hoogsteen"
@@ -1700,6 +1749,7 @@ Click to see the output JSON
     {
       "nt1": "AB.G1002",
       "nt2": "A.G1002",
+      "lw": "cHW",
       "stericity": "cis",
       "edge5": "Hoogsteen",
       "edge3": "Watson-Crick"
@@ -1707,6 +1757,7 @@ Click to see the output JSON
     {
       "nt1": "A.G1002",
       "nt2": "AC.G1002",
+      "lw": "cHW",
       "stericity": "cis",
       "edge5": "Hoogsteen",
       "edge3": "Watson-Crick"
@@ -1714,6 +1765,7 @@ Click to see the output JSON
     {
       "nt1": "AC.G1002",
       "nt2": "A.G1002",
+      "lw": "cWH",
       "stericity": "cis",
       "edge5": "Watson-Crick",
       "edge3": "Hoogsteen"
@@ -1721,6 +1773,7 @@ Click to see the output JSON
     {
       "nt1": "A.G1003",
       "nt2": "AB.G1003",
+      "lw": "cWH",
       "stericity": "cis",
       "edge5": "Watson-Crick",
       "edge3": "Hoogsteen"
@@ -1728,6 +1781,7 @@ Click to see the output JSON
     {
       "nt1": "AB.G1003",
       "nt2": "A.G1003",
+      "lw": "cHW",
       "stericity": "cis",
       "edge5": "Hoogsteen",
       "edge3": "Watson-Crick"
@@ -1735,6 +1789,7 @@ Click to see the output JSON
     {
       "nt1": "A.G1003",
       "nt2": "AC.G1003",
+      "lw": "cHW",
       "stericity": "cis",
       "edge5": "Hoogsteen",
       "edge3": "Watson-Crick"
@@ -1742,6 +1797,7 @@ Click to see the output JSON
     {
       "nt1": "AC.G1003",
       "nt2": "A.G1003",
+      "lw": "cWH",
       "stericity": "cis",
       "edge5": "Watson-Crick",
       "edge3": "Hoogsteen"
@@ -1749,6 +1805,7 @@ Click to see the output JSON
     {
       "nt1": "A.G1003",
       "nt2": "B.U2001",
+      "lw": "cSS",
       "stericity": "cis",
       "edge5": "Sugar",
       "edge3": "Sugar"
@@ -1756,6 +1813,7 @@ Click to see the output JSON
     {
       "nt1": "B.U2001",
       "nt2": "A.G1003",
+      "lw": "cSS",
       "stericity": "cis",
       "edge5": "Sugar",
       "edge3": "Sugar"
@@ -1763,6 +1821,7 @@ Click to see the output JSON
     {
       "nt1": "A.G1004",
       "nt2": "AB.G1004",
+      "lw": "cWH",
       "stericity": "cis",
       "edge5": "Watson-Crick",
       "edge3": "Hoogsteen"
@@ -1770,6 +1829,7 @@ Click to see the output JSON
     {
       "nt1": "AB.G1004",
       "nt2": "A.G1004",
+      "lw": "cHW",
       "stericity": "cis",
       "edge5": "Hoogsteen",
       "edge3": "Watson-Crick"
@@ -1777,6 +1837,7 @@ Click to see the output JSON
     {
       "nt1": "A.G1004",
       "nt2": "AC.G1004",
+      "lw": "cHW",
       "stericity": "cis",
       "edge5": "Hoogsteen",
       "edge3": "Watson-Crick"
@@ -1784,6 +1845,7 @@ Click to see the output JSON
     {
       "nt1": "AC.G1004",
       "nt2": "A.G1004",
+      "lw": "cWH",
       "stericity": "cis",
       "edge5": "Watson-Crick",
       "edge3": "Hoogsteen"
@@ -1791,6 +1853,7 @@ Click to see the output JSON
     {
       "nt1": "A.G1005",
       "nt2": "AB.G1005",
+      "lw": "cWH",
       "stericity": "cis",
       "edge5": "Watson-Crick",
       "edge3": "Hoogsteen"
@@ -1798,6 +1861,7 @@ Click to see the output JSON
     {
       "nt1": "AB.G1005",
       "nt2": "A.G1005",
+      "lw": "cHW",
       "stericity": "cis",
       "edge5": "Hoogsteen",
       "edge3": "Watson-Crick"
@@ -1805,6 +1869,7 @@ Click to see the output JSON
     {
       "nt1": "A.G1005",
       "nt2": "AC.G1005",
+      "lw": "cHW",
       "stericity": "cis",
       "edge5": "Hoogsteen",
       "edge3": "Watson-Crick"
@@ -1812,6 +1877,7 @@ Click to see the output JSON
     {
       "nt1": "AC.G1005",
       "nt2": "A.G1005",
+      "lw": "cWH",
       "stericity": "cis",
       "edge5": "Watson-Crick",
       "edge3": "Hoogsteen"
@@ -1819,6 +1885,7 @@ Click to see the output JSON
     {
       "nt1": "A.U1006",
       "nt2": "AB.U1006",
+      "lw": "cHW",
       "stericity": "cis",
       "edge5": "Hoogsteen",
       "edge3": "Watson-Crick"
@@ -1826,6 +1893,7 @@ Click to see the output JSON
     {
       "nt1": "AB.U1006",
       "nt2": "A.U1006",
+      "lw": "cWH",
       "stericity": "cis",
       "edge5": "Watson-Crick",
       "edge3": "Hoogsteen"
@@ -1833,6 +1901,7 @@ Click to see the output JSON
     {
       "nt1": "A.U1006",
       "nt2": "AC.U1006",
+      "lw": "cWH",
       "stericity": "cis",
       "edge5": "Watson-Crick",
       "edge3": "Hoogsteen"
@@ -1840,6 +1909,7 @@ Click to see the output JSON
     {
       "nt1": "AC.U1006",
       "nt2": "A.U1006",
+      "lw": "cHW",
       "stericity": "cis",
       "edge5": "Hoogsteen",
       "edge3": "Watson-Crick"
@@ -1847,6 +1917,7 @@ Click to see the output JSON
     {
       "nt1": "AA.U1001",
       "nt2": "BA.G2003",
+      "lw": "cSS",
       "stericity": "cis",
       "edge5": "Sugar",
       "edge3": "Sugar"
@@ -1854,6 +1925,7 @@ Click to see the output JSON
     {
       "nt1": "BA.G2003",
       "nt2": "AA.U1001",
+      "lw": "cSS",
       "stericity": "cis",
       "edge5": "Sugar",
       "edge3": "Sugar"
@@ -1861,6 +1933,7 @@ Click to see the output JSON
     {
       "nt1": "AA.G1002",
       "nt2": "AB.G1002",
+      "lw": "cHW",
       "stericity": "cis",
       "edge5": "Hoogsteen",
       "edge3": "Watson-Crick"
@@ -1868,6 +1941,7 @@ Click to see the output JSON
     {
       "nt1": "AB.G1002",
       "nt2": "AA.G1002",
+      "lw": "cWH",
       "stericity": "cis",
       "edge5": "Watson-Crick",
       "edge3": "Hoogsteen"
@@ -1875,6 +1949,7 @@ Click to see the output JSON
     {
       "nt1": "AA.G1002",
       "nt2": "AC.G1002",
+      "lw": "cWH",
       "stericity": "cis",
       "edge5": "Watson-Crick",
       "edge3": "Hoogsteen"
@@ -1882,6 +1957,7 @@ Click to see the output JSON
     {
       "nt1": "AC.G1002",
       "nt2": "AA.G1002",
+      "lw": "cHW",
       "stericity": "cis",
       "edge5": "Hoogsteen",
       "edge3": "Watson-Crick"
@@ -1889,6 +1965,7 @@ Click to see the output JSON
     {
       "nt1": "AA.G1003",
       "nt2": "AB.G1003",
+      "lw": "cHW",
       "stericity": "cis",
       "edge5": "Hoogsteen",
       "edge3": "Watson-Crick"
@@ -1896,6 +1973,7 @@ Click to see the output JSON
     {
       "nt1": "AB.G1003",
       "nt2": "AA.G1003",
+      "lw": "cWH",
       "stericity": "cis",
       "edge5": "Watson-Crick",
       "edge3": "Hoogsteen"
@@ -1903,6 +1981,7 @@ Click to see the output JSON
     {
       "nt1": "AA.G1003",
       "nt2": "AC.G1003",
+      "lw": "cWH",
       "stericity": "cis",
       "edge5": "Watson-Crick",
       "edge3": "Hoogsteen"
@@ -1910,6 +1989,7 @@ Click to see the output JSON
     {
       "nt1": "AC.G1003",
       "nt2": "AA.G1003",
+      "lw": "cHW",
       "stericity": "cis",
       "edge5": "Hoogsteen",
       "edge3": "Watson-Crick"
@@ -1917,6 +1997,7 @@ Click to see the output JSON
     {
       "nt1": "AA.G1003",
       "nt2": "BA.U2001",
+      "lw": "cSS",
       "stericity": "cis",
       "edge5": "Sugar",
       "edge3": "Sugar"
@@ -1924,6 +2005,7 @@ Click to see the output JSON
     {
       "nt1": "BA.U2001",
       "nt2": "AA.G1003",
+      "lw": "cSS",
       "stericity": "cis",
       "edge5": "Sugar",
       "edge3": "Sugar"
@@ -1931,6 +2013,7 @@ Click to see the output JSON
     {
       "nt1": "AA.G1004",
       "nt2": "AB.G1004",
+      "lw": "cHW",
       "stericity": "cis",
       "edge5": "Hoogsteen",
       "edge3": "Watson-Crick"
@@ -1938,6 +2021,7 @@ Click to see the output JSON
     {
       "nt1": "AB.G1004",
       "nt2": "AA.G1004",
+      "lw": "cWH",
       "stericity": "cis",
       "edge5": "Watson-Crick",
       "edge3": "Hoogsteen"
@@ -1945,6 +2029,7 @@ Click to see the output JSON
     {
       "nt1": "AA.G1004",
       "nt2": "AC.G1004",
+      "lw": "cWH",
       "stericity": "cis",
       "edge5": "Watson-Crick",
       "edge3": "Hoogsteen"
@@ -1952,6 +2037,7 @@ Click to see the output JSON
     {
       "nt1": "AC.G1004",
       "nt2": "AA.G1004",
+      "lw": "cHW",
       "stericity": "cis",
       "edge5": "Hoogsteen",
       "edge3": "Watson-Crick"
@@ -1959,6 +2045,7 @@ Click to see the output JSON
     {
       "nt1": "AA.G1005",
       "nt2": "AB.G1005",
+      "lw": "cHW",
       "stericity": "cis",
       "edge5": "Hoogsteen",
       "edge3": "Watson-Crick"
@@ -1966,6 +2053,7 @@ Click to see the output JSON
     {
       "nt1": "AB.G1005",
       "nt2": "AA.G1005",
+      "lw": "cWH",
       "stericity": "cis",
       "edge5": "Watson-Crick",
       "edge3": "Hoogsteen"
@@ -1973,6 +2061,7 @@ Click to see the output JSON
     {
       "nt1": "AA.G1005",
       "nt2": "AC.G1005",
+      "lw": "cWH",
       "stericity": "cis",
       "edge5": "Watson-Crick",
       "edge3": "Hoogsteen"
@@ -1980,6 +2069,7 @@ Click to see the output JSON
     {
       "nt1": "AC.G1005",
       "nt2": "AA.G1005",
+      "lw": "cHW",
       "stericity": "cis",
       "edge5": "Hoogsteen",
       "edge3": "Watson-Crick"
@@ -1987,6 +2077,7 @@ Click to see the output JSON
     {
       "nt1": "AA.U1006",
       "nt2": "AB.U1006",
+      "lw": "cWH",
       "stericity": "cis",
       "edge5": "Watson-Crick",
       "edge3": "Hoogsteen"
@@ -1994,6 +2085,7 @@ Click to see the output JSON
     {
       "nt1": "AB.U1006",
       "nt2": "AA.U1006",
+      "lw": "cHW",
       "stericity": "cis",
       "edge5": "Hoogsteen",
       "edge3": "Watson-Crick"
@@ -2001,6 +2093,7 @@ Click to see the output JSON
     {
       "nt1": "AA.U1006",
       "nt2": "AC.U1006",
+      "lw": "cHW",
       "stericity": "cis",
       "edge5": "Hoogsteen",
       "edge3": "Watson-Crick"
@@ -2008,6 +2101,7 @@ Click to see the output JSON
     {
       "nt1": "AC.U1006",
       "nt2": "AA.U1006",
+      "lw": "cWH",
       "stericity": "cis",
       "edge5": "Watson-Crick",
       "edge3": "Hoogsteen"
@@ -2015,6 +2109,7 @@ Click to see the output JSON
     {
       "nt1": "AB.U1001",
       "nt2": "BB.G2003",
+      "lw": "cSS",
       "stericity": "cis",
       "edge5": "Sugar",
       "edge3": "Sugar"
@@ -2022,6 +2117,7 @@ Click to see the output JSON
     {
       "nt1": "BB.G2003",
       "nt2": "AB.U1001",
+      "lw": "cSS",
       "stericity": "cis",
       "edge5": "Sugar",
       "edge3": "Sugar"
@@ -2029,6 +2125,7 @@ Click to see the output JSON
     {
       "nt1": "AB.G1003",
       "nt2": "BB.U2001",
+      "lw": "cSS",
       "stericity": "cis",
       "edge5": "Sugar",
       "edge3": "Sugar"
@@ -2036,6 +2133,7 @@ Click to see the output JSON
     {
       "nt1": "BB.U2001",
       "nt2": "AB.G1003",
+      "lw": "cSS",
       "stericity": "cis",
       "edge5": "Sugar",
       "edge3": "Sugar"
@@ -2043,6 +2141,7 @@ Click to see the output JSON
     {
       "nt1": "AC.U1001",
       "nt2": "BC.G2003",
+      "lw": "cSS",
       "stericity": "cis",
       "edge5": "Sugar",
       "edge3": "Sugar"
@@ -2050,6 +2149,7 @@ Click to see the output JSON
     {
       "nt1": "BC.G2003",
       "nt2": "AC.U1001",
+      "lw": "cSS",
       "stericity": "cis",
       "edge5": "Sugar",
       "edge3": "Sugar"
@@ -2057,6 +2157,7 @@ Click to see the output JSON
     {
       "nt1": "AC.G1003",
       "nt2": "BC.U2001",
+      "lw": "cSS",
       "stericity": "cis",
       "edge5": "Sugar",
       "edge3": "Sugar"
@@ -2064,6 +2165,7 @@ Click to see the output JSON
     {
       "nt1": "BC.U2001",
       "nt2": "AC.G1003",
+      "lw": "cSS",
       "stericity": "cis",
       "edge5": "Sugar",
       "edge3": "Sugar"
@@ -2071,6 +2173,7 @@ Click to see the output JSON
     {
       "nt1": "B.G2002",
       "nt2": "BB.G2002",
+      "lw": "cHW",
       "stericity": "cis",
       "edge5": "Hoogsteen",
       "edge3": "Watson-Crick"
@@ -2078,6 +2181,7 @@ Click to see the output JSON
     {
       "nt1": "BB.G2002",
       "nt2": "B.G2002",
+      "lw": "cWH",
       "stericity": "cis",
       "edge5": "Watson-Crick",
       "edge3": "Hoogsteen"
@@ -2085,6 +2189,7 @@ Click to see the output JSON
     {
       "nt1": "B.G2002",
       "nt2": "BC.G2002",
+      "lw": "cWH",
       "stericity": "cis",
       "edge5": "Watson-Crick",
       "edge3": "Hoogsteen"
@@ -2092,6 +2197,7 @@ Click to see the output JSON
     {
       "nt1": "BC.G2002",
       "nt2": "B.G2002",
+      "lw": "cHW",
       "stericity": "cis",
       "edge5": "Hoogsteen",
       "edge3": "Watson-Crick"
@@ -2099,6 +2205,7 @@ Click to see the output JSON
     {
       "nt1": "B.G2003",
       "nt2": "BB.G2003",
+      "lw": "cHW",
       "stericity": "cis",
       "edge5": "Hoogsteen",
       "edge3": "Watson-Crick"
@@ -2106,6 +2213,7 @@ Click to see the output JSON
     {
       "nt1": "BB.G2003",
       "nt2": "B.G2003",
+      "lw": "cWH",
       "stericity": "cis",
       "edge5": "Watson-Crick",
       "edge3": "Hoogsteen"
@@ -2113,6 +2221,7 @@ Click to see the output JSON
     {
       "nt1": "B.G2003",
       "nt2": "BC.G2003",
+      "lw": "cWH",
       "stericity": "cis",
       "edge5": "Watson-Crick",
       "edge3": "Hoogsteen"
@@ -2120,6 +2229,7 @@ Click to see the output JSON
     {
       "nt1": "BC.G2003",
       "nt2": "B.G2003",
+      "lw": "cHW",
       "stericity": "cis",
       "edge5": "Hoogsteen",
       "edge3": "Watson-Crick"
@@ -2127,6 +2237,7 @@ Click to see the output JSON
     {
       "nt1": "B.G2004",
       "nt2": "BB.G2004",
+      "lw": "cHW",
       "stericity": "cis",
       "edge5": "Hoogsteen",
       "edge3": "Watson-Crick"
@@ -2134,6 +2245,7 @@ Click to see the output JSON
     {
       "nt1": "BB.G2004",
       "nt2": "B.G2004",
+      "lw": "cWH",
       "stericity": "cis",
       "edge5": "Watson-Crick",
       "edge3": "Hoogsteen"
@@ -2141,6 +2253,7 @@ Click to see the output JSON
     {
       "nt1": "B.G2004",
       "nt2": "BC.G2004",
+      "lw": "cWH",
       "stericity": "cis",
       "edge5": "Watson-Crick",
       "edge3": "Hoogsteen"
@@ -2148,6 +2261,7 @@ Click to see the output JSON
     {
       "nt1": "BC.G2004",
       "nt2": "B.G2004",
+      "lw": "cHW",
       "stericity": "cis",
       "edge5": "Hoogsteen",
       "edge3": "Watson-Crick"
@@ -2155,6 +2269,7 @@ Click to see the output JSON
     {
       "nt1": "B.G2005",
       "nt2": "BB.G2005",
+      "lw": "cHW",
       "stericity": "cis",
       "edge5": "Hoogsteen",
       "edge3": "Watson-Crick"
@@ -2162,6 +2277,7 @@ Click to see the output JSON
     {
       "nt1": "BB.G2005",
       "nt2": "B.G2005",
+      "lw": "cWH",
       "stericity": "cis",
       "edge5": "Watson-Crick",
       "edge3": "Hoogsteen"
@@ -2169,6 +2285,7 @@ Click to see the output JSON
     {
       "nt1": "B.G2005",
       "nt2": "BC.G2005",
+      "lw": "cWH",
       "stericity": "cis",
       "edge5": "Watson-Crick",
       "edge3": "Hoogsteen"
@@ -2176,6 +2293,7 @@ Click to see the output JSON
     {
       "nt1": "BC.G2005",
       "nt2": "B.G2005",
+      "lw": "cHW",
       "stericity": "cis",
       "edge5": "Hoogsteen",
       "edge3": "Watson-Crick"
@@ -2183,6 +2301,7 @@ Click to see the output JSON
     {
       "nt1": "B.U2006",
       "nt2": "BB.U2006",
+      "lw": "cWH",
       "stericity": "cis",
       "edge5": "Watson-Crick",
       "edge3": "Hoogsteen"
@@ -2190,6 +2309,7 @@ Click to see the output JSON
     {
       "nt1": "BB.U2006",
       "nt2": "B.U2006",
+      "lw": "cHW",
       "stericity": "cis",
       "edge5": "Hoogsteen",
       "edge3": "Watson-Crick"
@@ -2197,6 +2317,7 @@ Click to see the output JSON
     {
       "nt1": "B.U2006",
       "nt2": "BC.U2006",
+      "lw": "cHW",
       "stericity": "cis",
       "edge5": "Hoogsteen",
       "edge3": "Watson-Crick"
@@ -2204,6 +2325,7 @@ Click to see the output JSON
     {
       "nt1": "BC.U2006",
       "nt2": "B.U2006",
+      "lw": "cWH",
       "stericity": "cis",
       "edge5": "Watson-Crick",
       "edge3": "Hoogsteen"
@@ -2211,6 +2333,7 @@ Click to see the output JSON
     {
       "nt1": "BA.G2002",
       "nt2": "BB.G2002",
+      "lw": "cWH",
       "stericity": "cis",
       "edge5": "Watson-Crick",
       "edge3": "Hoogsteen"
@@ -2218,6 +2341,7 @@ Click to see the output JSON
     {
       "nt1": "BB.G2002",
       "nt2": "BA.G2002",
+      "lw": "cHW",
       "stericity": "cis",
       "edge5": "Hoogsteen",
       "edge3": "Watson-Crick"
@@ -2225,6 +2349,7 @@ Click to see the output JSON
     {
       "nt1": "BA.G2002",
       "nt2": "BC.G2002",
+      "lw": "cHW",
       "stericity": "cis",
       "edge5": "Hoogsteen",
       "edge3": "Watson-Crick"
@@ -2232,6 +2357,7 @@ Click to see the output JSON
     {
       "nt1": "BC.G2002",
       "nt2": "BA.G2002",
+      "lw": "cWH",
       "stericity": "cis",
       "edge5": "Watson-Crick",
       "edge3": "Hoogsteen"
@@ -2239,6 +2365,7 @@ Click to see the output JSON
     {
       "nt1": "BA.G2003",
       "nt2": "BB.G2003",
+      "lw": "cWH",
       "stericity": "cis",
       "edge5": "Watson-Crick",
       "edge3": "Hoogsteen"
@@ -2246,6 +2373,7 @@ Click to see the output JSON
     {
       "nt1": "BB.G2003",
       "nt2": "BA.G2003",
+      "lw": "cHW",
       "stericity": "cis",
       "edge5": "Hoogsteen",
       "edge3": "Watson-Crick"
@@ -2253,6 +2381,7 @@ Click to see the output JSON
     {
       "nt1": "BA.G2003",
       "nt2": "BC.G2003",
+      "lw": "cHW",
       "stericity": "cis",
       "edge5": "Hoogsteen",
       "edge3": "Watson-Crick"
@@ -2260,6 +2389,7 @@ Click to see the output JSON
     {
       "nt1": "BC.G2003",
       "nt2": "BA.G2003",
+      "lw": "cWH",
       "stericity": "cis",
       "edge5": "Watson-Crick",
       "edge3": "Hoogsteen"
@@ -2267,6 +2397,7 @@ Click to see the output JSON
     {
       "nt1": "BA.G2004",
       "nt2": "BB.G2004",
+      "lw": "cWH",
       "stericity": "cis",
       "edge5": "Watson-Crick",
       "edge3": "Hoogsteen"
@@ -2274,6 +2405,7 @@ Click to see the output JSON
     {
       "nt1": "BB.G2004",
       "nt2": "BA.G2004",
+      "lw": "cHW",
       "stericity": "cis",
       "edge5": "Hoogsteen",
       "edge3": "Watson-Crick"
@@ -2281,6 +2413,7 @@ Click to see the output JSON
     {
       "nt1": "BA.G2004",
       "nt2": "BC.G2004",
+      "lw": "cHW",
       "stericity": "cis",
       "edge5": "Hoogsteen",
       "edge3": "Watson-Crick"
@@ -2288,6 +2421,7 @@ Click to see the output JSON
     {
       "nt1": "BC.G2004",
       "nt2": "BA.G2004",
+      "lw": "cWH",
       "stericity": "cis",
       "edge5": "Watson-Crick",
       "edge3": "Hoogsteen"
@@ -2295,6 +2429,7 @@ Click to see the output JSON
     {
       "nt1": "BA.G2005",
       "nt2": "BB.G2005",
+      "lw": "cWH",
       "stericity": "cis",
       "edge5": "Watson-Crick",
       "edge3": "Hoogsteen"
@@ -2302,6 +2437,7 @@ Click to see the output JSON
     {
       "nt1": "BB.G2005",
       "nt2": "BA.G2005",
+      "lw": "cHW",
       "stericity": "cis",
       "edge5": "Hoogsteen",
       "edge3": "Watson-Crick"
@@ -2309,6 +2445,7 @@ Click to see the output JSON
     {
       "nt1": "BA.G2005",
       "nt2": "BC.G2005",
+      "lw": "cHW",
       "stericity": "cis",
       "edge5": "Hoogsteen",
       "edge3": "Watson-Crick"
@@ -2316,6 +2453,7 @@ Click to see the output JSON
     {
       "nt1": "BC.G2005",
       "nt2": "BA.G2005",
+      "lw": "cWH",
       "stericity": "cis",
       "edge5": "Watson-Crick",
       "edge3": "Hoogsteen"
@@ -2323,6 +2461,7 @@ Click to see the output JSON
     {
       "nt1": "BA.U2006",
       "nt2": "BB.U2006",
+      "lw": "cHW",
       "stericity": "cis",
       "edge5": "Hoogsteen",
       "edge3": "Watson-Crick"
@@ -2330,6 +2469,7 @@ Click to see the output JSON
     {
       "nt1": "BB.U2006",
       "nt2": "BA.U2006",
+      "lw": "cWH",
       "stericity": "cis",
       "edge5": "Watson-Crick",
       "edge3": "Hoogsteen"
@@ -2337,6 +2477,7 @@ Click to see the output JSON
     {
       "nt1": "BA.U2006",
       "nt2": "BC.U2006",
+      "lw": "cWH",
       "stericity": "cis",
       "edge5": "Watson-Crick",
       "edge3": "Hoogsteen"
@@ -2344,6 +2485,7 @@ Click to see the output JSON
     {
       "nt1": "BC.U2006",
       "nt2": "BA.U2006",
+      "lw": "cHW",
       "stericity": "cis",
       "edge5": "Hoogsteen",
       "edge3": "Watson-Crick"
