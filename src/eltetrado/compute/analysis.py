@@ -791,12 +791,21 @@ class Analysis:
             best_score = 0
             best_order = tj.nucleotides
 
-            for nts2 in itertools.permutations(tj.nucleotides):
+            n1, n2, n3, n4 = tj.nucleotides
+            viable_permutations = [(n1, n2, n3, n4), (n2, n3, n4, n1), (n3, n4, n1, n2), (n4, n1, n2, n3),
+                                   (n1, n4, n3, n2), (n4, n3, n2, n1), (n3, n2, n1, n4), (n2, n1, n4, n3)]
+
+            for nts2 in viable_permutations:
                 score = 0
                 for i in range(4):
                     if is_next_by_stacking(nts1[i], nts2[i]) or is_next_sequentially(nts1[i], nts2[i]):
                         score += 1
-                if score > best_score:
+                if score == best_score:
+                    score_stacking = sum(1 for i in range(4) if is_next_by_stacking(nts1[i], nts2[i]))
+                    score_sequential = sum(1 for i in range(4) if is_next_sequentially(nts1[i], nts2[i]))
+                    if score_sequential > score_stacking:
+                        best_order = nts2
+                elif score > best_score:
                     best_score = score
                     best_order = nts2
                 if best_score == 4:
