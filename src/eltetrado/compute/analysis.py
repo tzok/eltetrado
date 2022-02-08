@@ -747,7 +747,7 @@ class Analysis:
                             tetrads.add(Tetrad(i, j, k, l, self.pairs, no_reorder))
 
         # build graph of tetrads
-        while True:
+        while tetrads:
             graph = {t: [] for t in tetrads}
             for (ti, tj) in itertools.combinations(tetrads, 2):
                 if not ti.is_disjoint(tj):
@@ -1176,7 +1176,8 @@ def center_of_mass(atoms):
     return numpy.array((sum(xs) / len(coords), sum(ys) / len(coords), sum(zs) / len(coords)))
 
 
-def eltetrado(dssr: Dict, structure3d: Structure3D, strict: bool, no_reorder: bool, stacking_mismatch: int) -> Analysis:
+def eltetrado(dssr: Dict, structure3d: Optional[Structure3D], strict: bool, no_reorder: bool,
+              stacking_mismatch: int) -> Analysis:
     if 'pairs' not in dssr:
         return Analysis({}, None)
 
