@@ -12,9 +12,26 @@ canonical   <- 'black'
 
 args = commandArgs(trailingOnly=TRUE)
 
+# example data for testing
+#
+# seq.fasta:
+# GUGUGUGU
+#
+# h1.helix:
+# #8
+# i j length value
+# 1 3 1 1
+# 5 7 1 1
+#
+# h2.helix
+# #8
+# 1 i length value
+# 3 5 1 1
+# 1 7 1 1
 if (length(args) != 4) {
     stop("Usage: ./mp.R fasta helix1 helix2 pdf\nExample: ./mp.R /tmp/seq.fasta /tmp/h1.helix /tmp/h2.helix /tmp/output.pdf")
 }
+
 
 # install main dependencies
 packages <- c('BiocManager')
