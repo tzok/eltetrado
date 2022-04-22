@@ -1,4 +1,4 @@
-mmcif-pdbx~=2.0.1
-numpy~=1.21.4
-orjson~=3.6.4
-git+https://github.com/tzok/fr3d-python-adapter
+mmcif
+numpy
+orjson
+requests

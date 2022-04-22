@@ -1,12 +1,15 @@
 import argparse
+import gzip
 import os
 import sys
+import tempfile
+from typing import TextIO
 
 import orjson
 
-from eltetrado.compute.analysis import Visualizer, eltetrado, has_tetrad
-from eltetrado.compute.io import load_dssr_results, read_3d_structure
-from eltetrado.compute.model import generate_dto
+from analysis import Visualizer, eltetrado, has_tetrad
+from model import generate_dto
+from structure import read_3d_structure, read_2d_structure
 
 
 def eltetrado_cli():
@@ -14,13 +17,13 @@ def eltetrado_cli():
         version = f.read().strip()
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('--pdb', help='path to input PDB or PDBx/mmCIF file')
-    parser.add_argument('--dssr-json', help='path to input JSON file generated with `x3dna-dssr --json`')
-    parser.add_argument('--output', help='(optional) path for output JSON file')
+    parser.add_argument('-i', '--input', help='path to input PDB or PDBx/mmCIF file')
+    parser.add_argument('-o', '--output', help='(optional) path for output JSON file')
+    parser.add_argument('-m', '--model', help='(optional) model number to process', default=1, type=int)
     parser.add_argument('--stacking-mismatch',
                         help='a perfect tetrad stacking covers 4 nucleotides; this option can be used with value 1 or '
-                        '2 to allow this number of nucleotides to be non-stacked with otherwise well aligned '
-                        'tetrad [default=2]',
+                             '2 to allow this number of nucleotides to be non-stacked with otherwise well aligned '
+                             'tetrad [default=2]',
                         default=2,
                         type=int)
     parser.add_argument('--strict',
@@ -28,34 +31,34 @@ def eltetrado_cli():
                         help='nucleotides in tetrad are found when linked only by cWH pairing')
     parser.add_argument('--no-reorder',
                         action='store_true',
-                        help='chains of bi- and tetramolecular quadruplexes are reordered to be able to have them '
-                        'classified; when this is set, chains will be processed in original order and '
-                        'bi-/tetramolecular quadruplexes will not be classified')
+                        help='chains of bi- and tetramolecular quadruplexes should be reordered to be able to have '
+                             'them classified; when this is set, chains will be processed in original order, which for '
+                             'bi-/tetramolecular means that they will likely be misclassified; use with care!')
     parser.add_argument('--complete-2d',
                         action='store_true',
                         help='when set, the visualization will also show canonical base pairs to provide context for '
-                        'the quadruplex')
+                             'the quadruplex')
     parser.add_argument('--no-image',
                         action='store_true',
                         help='when set, the visualization will not be created at all')
     parser.add_argument('--version', action='version', version='%(prog)s {}'.format(version))
     args = parser.parse_args()
 
-    if not args.pdb and not args.dssr_json:
+    if not args.input:
         print(parser.print_help())
         sys.exit(1)
 
-    dssr = load_dssr_results(args.dssr_json, args.pdb)
-    structure3d = read_3d_structure(args.pdb)
-    structure = eltetrado(dssr, structure3d, args.strict, args.no_reorder, args.stacking_mismatch)
-    print(structure)
+    cif_or_pdb = handle_input_file(args.input)
+    structure3d = read_3d_structure(cif_or_pdb, args.model)
+    structure2d = read_2d_structure(cif_or_pdb, args.model)
 
-    visualizer = Visualizer(structure.tetrads, structure.sequence, structure.shifts, structure.nucleotides.values(),
-                            structure.canonical if args.complete_2d else tuple())
+    analysis = eltetrado(structure2d, structure3d, args.strict, args.no_reorder, args.stacking_mismatch)
+    print(analysis)
 
     if not args.no_image:
-        inputname = args.pdb if args.pdb else args.dssr_json
-        basename = os.path.basename(inputname)
+        visualizer = Visualizer(analysis, analysis.tetrads, args.complete_2d)
+
+        basename = os.path.basename(args.input)
         root, ext = os.path.splitext(basename)
         if ext == '.gz':
             root, ext = os.path.splitext(root)
@@ -63,21 +66,21 @@ def eltetrado_cli():
         suffix = 'str'
         visualizer.visualize(prefix, suffix)
 
-        for i, helix in enumerate(structure.helices):
-            hv = Visualizer(helix.tetrads, structure.sequence, structure.shifts)
+        for i, helix in enumerate(analysis.helices):
+            hv = Visualizer(analysis, helix.tetrads, args.complete_2d)
             suffix = 'h{}'.format(i + 1)
             hv.visualize(prefix, suffix)
 
             for j, quadruplex in enumerate(helix.quadruplexes):
-                qv = Visualizer(quadruplex.tetrads, structure.sequence, structure.shifts)
+                qv = Visualizer(analysis, quadruplex.tetrads, args.complete_2d)
                 qv.visualize(prefix, '{}-q{}'.format(suffix, j + 1))
 
                 for k, tetrad in enumerate(quadruplex.tetrads):
-                    tv = Visualizer([tetrad], structure.sequence, structure.shifts)
+                    tv = Visualizer(analysis, [tetrad], args.complete_2d)
                     tv.visualize(prefix, '{}-q{}-t{}'.format(suffix, j + 1, k + 1))
 
     if args.output:
-        dto = generate_dto(structure)
+        dto = generate_dto(analysis)
 
         with open(args.output, 'wb') as jsonfile:
             jsonfile.write(orjson.dumps(dto))
@@ -88,14 +91,37 @@ def has_tetrad_cli():
         version = f.read().strip()
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('--pdb', help='path to input PDB or PDBx/mmCIF file')
-    parser.add_argument('--dssr-json', help='path to input JSON file generated with `x3dna-dssr --json`')
+    parser.add_argument('-i', '--input', help='path to input PDB or PDBx/mmCIF file')
     parser.add_argument('--version', action='version', version='%(prog)s {}'.format(version))
     args = parser.parse_args()
 
-    if not args.pdb and not args.dssr_json:
+    if not args.input:
         print(parser.print_help())
         sys.exit(1)
 
-    dssr = load_dssr_results(args.dssr_json, args.pdb)
-    sys.exit(0 if has_tetrad(dssr) else 1)
+    cif_or_pdb = handle_input_file(args.input)
+    structure2d = read_2d_structure(cif_or_pdb)
+    structure3d = read_3d_structure(cif_or_pdb)
+    flag = has_tetrad(structure2d, structure3d)
+    sys.exit(0 if flag else 1)
+
+
+def handle_input_file(path) -> TextIO:
+    root, ext = os.path.splitext(path)
+
+    if ext == '.gz':
+        root, ext = os.path.splitext(root)
+        file = tempfile.NamedTemporaryFile('w+', suffix=ext)
+        with gzip.open(path, 'rt') as f:
+            file.write(f.read())
+            file.seek(0)
+    else:
+        file = tempfile.NamedTemporaryFile('w+', suffix=ext)
+        with open(path) as f:
+            file.write(f.read())
+            file.seek(0)
+    return file
+
+
+if __name__ == '__main__':
+    eltetrado_cli()
