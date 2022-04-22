@@ -5,7 +5,7 @@ from typing import List, TextIO, Tuple, Dict, Union
 import requests
 from mmcif.io import IoAdapter
 
-from model import Atom3D, Residue3D, ResidueLabel, ResidueAuth, Structure3D, Structure2D
+from eltetrado.model import Atom3D, Residue3D, ResidueLabel, ResidueAuth, Structure3D, Structure2D
 
 RNAPOLIS_WS_URL = os.getenv('RNAPOLIS_WS_URL', 'https://rnapolis-ws.cs.put.poznan.pl/api')
 

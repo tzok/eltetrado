@@ -11,7 +11,7 @@ from typing import Dict, Iterable, List, Tuple, Optional, Set
 
 import numpy
 
-from model import Atom3D, Structure3D, Structure2D, BasePair3D, Residue3D, GlycosidicBond, ONZ, \
+from eltetrado.model import Atom3D, Structure3D, Structure2D, BasePair3D, Residue3D, GlycosidicBond, ONZ, \
     GbaTetradClassification, Ion, Direction, LoopType, ONZM, GbaQuadruplexClassification, LoopClassification
 
 logging.basicConfig(level=os.environ.get("LOGLEVEL", "INFO"))

@@ -7,9 +7,9 @@ from typing import TextIO
 
 import orjson
 
-from analysis import Visualizer, eltetrado, has_tetrad
-from model import generate_dto
-from structure import read_3d_structure, read_2d_structure
+from eltetrado.analysis import Visualizer, eltetrado, has_tetrad
+from eltetrado.model import generate_dto
+from eltetrado.structure import read_3d_structure, read_2d_structure
 
 
 def eltetrado_cli():
@@ -92,6 +92,7 @@ def has_tetrad_cli():
 
     parser = argparse.ArgumentParser()
     parser.add_argument('-i', '--input', help='path to input PDB or PDBx/mmCIF file')
+    parser.add_argument('-m', '--model', help='(optional) model number to process', default=1, type=int)
     parser.add_argument('--version', action='version', version='%(prog)s {}'.format(version))
     args = parser.parse_args()
 
@@ -100,8 +101,8 @@ def has_tetrad_cli():
         sys.exit(1)
 
     cif_or_pdb = handle_input_file(args.input)
-    structure2d = read_2d_structure(cif_or_pdb)
-    structure3d = read_3d_structure(cif_or_pdb)
+    structure2d = read_2d_structure(cif_or_pdb, args.model)
+    structure3d = read_3d_structure(cif_or_pdb, args.model)
     flag = has_tetrad(structure2d, structure3d)
     sys.exit(0 if flag else 1)
 
