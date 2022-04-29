@@ -461,12 +461,12 @@ class NucleotideDTO:
     index: int
     chain: str
     number: int
-    icode: str
+    icode: Optional[str]
     molecule: str
     fullName: str
     shortName: str
     chi: float
-    glycosidicBond: str
+    glycosidicBond: Optional[str]
 
 
 @dataclass
@@ -519,21 +519,18 @@ class LoopClassificationDTO:
 
 @dataclass
 class QuadruplexDTO:
-    tetrads: List[str]
+    tetrads: List[TetradDTO]
     onzm: str
     loopClassification: LoopClassificationDTO
     gbaClassification: List[str]
-    tract1: List[str]
-    tract2: List[str]
-    tract3: List[str]
-    tract4: List[str]
+    tracts: List[List[str]]
     loops: List[LoopDTO]
 
 
 @dataclass
 class HelixDTO:
-    tetrads: List[str]
     quadruplexes: List[QuadruplexDTO]
+    tetradPairs: List[TetradPairDTO]
 
 
 @dataclass
@@ -548,8 +545,6 @@ class ResultDTO:
     metals: List[MetalDTO]
     nucleotides: List[NucleotideDTO]
     basePairs: List[BasePairDTO]
-    tetrads: List[TetradDTO]
-    tetradPairs: List[TetradPairDTO]
     helices: List[HelixDTO]
     dotBracket: TwoLineDotBracketDTO
 
@@ -655,7 +650,9 @@ class Residue3D:
 
     # TODO: the ranges could be modified to match Saenger
     @property
-    def chi_class(self) -> GlycosidicBond:
+    def chi_class(self) -> Optional[GlycosidicBond]:
+        if math.isnan(self.chi):
+            return None
         if -math.pi / 2 < self.chi < math.pi / 2:
             return GlycosidicBond.syn
         return GlycosidicBond.anti
@@ -682,13 +679,13 @@ class Residue3D:
         atoms = [self.find_atom("O4'"), self.find_atom("C1'"), self.find_atom("N9"), self.find_atom("C4")]
         if all(atoms):
             return Residue3D.__torsion_angle(atoms)
-        return float('NaN')
+        return math.nan
 
     def __chi_pyrimidine(self) -> float:
         atoms = [self.find_atom("O4'"), self.find_atom("C1'"), self.find_atom("N1"), self.find_atom("C2")]
         if all(atoms):
             return Residue3D.__torsion_angle(atoms)
-        return float('NaN')
+        return math.nan
 
     @staticmethod
     def __torsion_angle(atoms: List[Atom3D]) -> float:
@@ -863,7 +860,7 @@ def convert_base_pairs(analysis) -> List[BasePairDTO]:
     return [BasePairDTO(bp.nt1.full_name, bp.nt2.full_name, bp.lw.value) for bp in analysis.base_pairs]
 
 
-def convert_tetrads(analysis) -> List[TetradDTO]:
+def convert_tetrads(quadruplex) -> List[TetradDTO]:
     id_ = lambda tetrad: f'{tetrad.nt1.full_name}-{tetrad.nt2.full_name}-{tetrad.nt3.full_name}-{tetrad.nt4.full_name}'
     ions_channel = lambda tetrad: [atom.atomName for atom in tetrad.ions_channel]
     ions_outside = lambda tetrad: [IonOutsideDTO(nt.full_name, atom.atomName) for nt, atoms in tetrad.ions_outside for
@@ -872,7 +869,7 @@ def convert_tetrads(analysis) -> List[TetradDTO]:
         TetradDTO(id_(tetrad), tetrad.nt1.full_name, tetrad.nt2.full_name, tetrad.nt3.full_name, tetrad.nt4.full_name,
                   tetrad.onz.value, tetrad.gba_class.value, float(tetrad.planarity_deviation), ions_channel(tetrad),
                   ions_outside(tetrad))
-        for tetrad in analysis.tetrads
+        for tetrad in quadruplex.tetrads
     ]
 
 
@@ -885,24 +882,21 @@ def convert_tetrad_pairs(analysis) -> List[TetradPairDTO]:
 
 
 def convert_quadruplexes(helix) -> List[QuadruplexDTO]:
-    id_ = lambda tetrad: f'{tetrad.nt1.full_name}-{tetrad.nt2.full_name}-{tetrad.nt3.full_name}-{tetrad.nt4.full_name}'
     nts_ = lambda nts: [nt.full_name for nt in nts]
     return [
-        QuadruplexDTO([id_(t) for t in q.tetrads], q.onzm.value,
+        QuadruplexDTO(convert_tetrads(q), q.onzm.value,
                       LoopClassificationDTO(q.loop_class.value, q.loop_class.loop_progression()),
                       [g.value for g in q.gba_classes],
-                      nts_(q.tracts[0].nucleotides), nts_(q.tracts[1].nucleotides),
-                      nts_(q.tracts[2].nucleotides),
-                      nts_(q.tracts[3].nucleotides),
+                      [nts_(q.tracts[0].nucleotides), nts_(q.tracts[1].nucleotides),
+                       nts_(q.tracts[2].nucleotides), nts_(q.tracts[3].nucleotides)],
                       [LoopDTO(l.loop_type.value, nts_(l.nucleotides)) for l in q.loops])
         for q in helix.quadruplexes
     ]
 
 
 def convert_helices(analysis) -> List[HelixDTO]:
-    id_ = lambda tetrad: f'{tetrad.nt1.full_name}-{tetrad.nt2.full_name}-{tetrad.nt3.full_name}-{tetrad.nt4.full_name}'
     return [
-        HelixDTO([id_(t) for t in h.tetrads], convert_quadruplexes(h)) for h in analysis.helices
+        HelixDTO(convert_quadruplexes(h), convert_tetrad_pairs(analysis)) for h in analysis.helices
     ]
 
 
@@ -914,8 +908,6 @@ def generate_dto(analysis):
     metals = convert_metals(analysis)
     nucleotides = convert_nucleotides(analysis)
     base_pairs = convert_base_pairs(analysis)
-    tetrads = convert_tetrads(analysis)
-    tetrad_pairs = convert_tetrad_pairs(analysis)
     helices = convert_helices(analysis)
     dot_bracket = convert_dot_bracket(analysis)
-    return ResultDTO(metals, nucleotides, base_pairs, tetrads, tetrad_pairs, helices, dot_bracket)
+    return ResultDTO(metals, nucleotides, base_pairs, helices, dot_bracket)
