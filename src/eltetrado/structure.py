@@ -13,7 +13,7 @@ RNAPOLIS_WS_URL = os.getenv('RNAPOLIS_WS_URL', 'https://rnapolis-ws.cs.put.pozna
 def read_2d_structure(cif_or_pdb: TextIO, model: int) -> Structure2D:
     cif_or_pdb.seek(0)
     result = requests.post(f'{RNAPOLIS_WS_URL}/analyze/{model}', cif_or_pdb.read(),
-                           headers={'Content-Type': 'text/plain'})
+                           headers={'Content-Type': 'text/plain'}, timeout=60 * 5)
     if result.status_code != http.HTTPStatus.OK:
         result.raise_for_status()
     return Structure2D(**result.json())
