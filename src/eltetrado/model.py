@@ -512,10 +512,16 @@ class LoopDTO:
 
 
 @dataclass
+class LoopClassificationDTO:
+    classification: str
+    loop_progression: str
+
+
+@dataclass
 class QuadruplexDTO:
     tetrads: List[str]
     onzm: str
-    loopClassification: str
+    loopClassification: LoopClassificationDTO
     gbaClassification: List[str]
     tract1: List[str]
     tract2: List[str]
@@ -882,9 +888,13 @@ def convert_quadruplexes(helix) -> List[QuadruplexDTO]:
     id_ = lambda tetrad: f'{tetrad.nt1.full_name}-{tetrad.nt2.full_name}-{tetrad.nt3.full_name}-{tetrad.nt4.full_name}'
     nts_ = lambda nts: [nt.full_name for nt in nts]
     return [
-        QuadruplexDTO([id_(t) for t in q.tetrads], q.onzm.value, q.loop_class.value, [g.value for g in q.gba_classes],
-                      nts_(q.tracts[0].nucleotides), nts_(q.tracts[1].nucleotides), nts_(q.tracts[2].nucleotides),
-                      nts_(q.tracts[3].nucleotides), [LoopDTO(l.loop_type.value, nts_(l.nucleotides)) for l in q.loops])
+        QuadruplexDTO([id_(t) for t in q.tetrads], q.onzm.value,
+                      LoopClassificationDTO(q.loop_class.value, q.loop_class.loop_progression()),
+                      [g.value for g in q.gba_classes],
+                      nts_(q.tracts[0].nucleotides), nts_(q.tracts[1].nucleotides),
+                      nts_(q.tracts[2].nucleotides),
+                      nts_(q.tracts[3].nucleotides),
+                      [LoopDTO(l.loop_type.value, nts_(l.nucleotides)) for l in q.loops])
         for q in helix.quadruplexes
     ]
 
