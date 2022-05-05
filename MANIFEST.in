@@ -1,2 +1,2 @@
-include src/eltetrado/compute/VERSION
-include src/eltetrado/compute/quadraw.R
+include src/eltetrado/VERSION
+include src/eltetrado/quadraw.R
