@@ -749,22 +749,36 @@ class Analysis:
             self.helices = self.__find_helices()
 
     def __group_related_chains(self) -> List[List[str]]:
-        chains = [{n.chain for tetrad in h.tetrads for n in tetrad.nucleotides} for h in self.helices]
+        candidates = set()
+
+        for h in self.helices:
+            for t in h.tetrads:
+                candidates.add(frozenset([t.nt1.chain, t.nt2.chain, t.nt3.chain, t.nt4.chain]))
+
+        candidates = [set(c) for c in candidates]
         changed = True
 
         while changed:
             changed = False
-            for i, j in itertools.combinations(range(len(chains)), 2):
-                qi, qj = chains[i], chains[j]
+
+            for i, j in itertools.combinations(range(len(candidates)), 2):
+                qi, qj = candidates[i], candidates[j]
 
                 if not qi.isdisjoint(qj):
                     qi.update(qj)
-                    del chains[j]
+                    del candidates[j]
                     changed = True
                     break
 
-        chains = [sorted(c) for c in chains]
-        return sorted(chains, key=lambda c: c[0])
+        candidates = sorted(candidates, key=lambda x: len(x), reverse=True)
+        groups = []
+
+        for candidate in candidates:
+            if any([group.issuperset(candidate) for group in groups]):
+                continue
+            groups.append(candidate)
+
+        return sorted([sorted(group) for group in groups], key=lambda x: x[0])
 
     def __reorder_chains(self, chain_order: Iterable[str]):
         i = 1
