@@ -119,7 +119,7 @@ def parse_cif(cif: TextIO) \
                 if pdbx_strand_id and pdbx_seq_one_letter_code_can:
                     for strand in pdbx_strand_id.split(','):
                         for i, letter in enumerate(pdbx_seq_one_letter_code_can):
-                            sequence[(strand, i)] = letter
+                            sequence[(strand, i + 1)] = letter
 
     return atoms, modified, sequence
 
