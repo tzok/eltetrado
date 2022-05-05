@@ -316,7 +316,7 @@ class Quadruplex:
 
         counter = Counter([tp.direction.value[0] for tp in self.tetrad_pairs])
         direction, support = counter.most_common()[0]
-        if support != len(self.tetrads):
+        if support != len(self.tetrad_pairs):
             direction = 'h'
 
         counter = Counter([t.onz.value[1] for t in self.tetrads])
