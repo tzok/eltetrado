@@ -717,18 +717,18 @@ Click to see the output JSON
     $ curl https://www.ebi.ac.uk/pdbe/static/entry/download/4rj1-assembly-1.cif.gz | gzip -d > 4rj1-1.cif
     $ ./eltetrado --input 4rj1-1.cif --output 4rj1-1.json
 
-    Chain order: A AB AC AA B BB BC BA
+    Chain order: A AB AA AC B BC BA BB
     n4-helix with 10 tetrads
-      Np* VIII n/a quadruplex with 5 tetrads
-        A.U1006 AC.U1006 AA.U1006 AB.U1006 cWH cWH cWH cWH N- VIIIa planarity=1.06 ions_channel=NA ions_outside=A.U1006: [SR] AA.U1006: [SR] AB.U1006: [SR] AC.U1006: [SR]
+      Op* VIII n/a quadruplex with 5 tetrads
+        A.U1006 AC.U1006 AA.U1006 AB.U1006 cWH cWH cWH cWH O- VIIIa planarity=1.06 ions_channel=NA ions_outside=A.U1006: [SR] AA.U1006: [SR] AB.U1006: [SR] AC.U1006: [SR]
           direction=parallel rise=3.37 twist=39.96
-        A.G1005 AC.G1005 AA.G1005 AB.G1005 cHW cHW cHW cHW N+ VIIIa planarity=0.8  
+        A.G1005 AC.G1005 AA.G1005 AB.G1005 cHW cHW cHW cHW O+ VIIIa planarity=0.8  
           direction=parallel rise=3.31 twist=25.9
-        A.G1004 AC.G1004 AA.G1004 AB.G1004 cHW cHW cHW cHW N+ VIIIa planarity=0.41 ions_channel=SR 
+        A.G1004 AC.G1004 AA.G1004 AB.G1004 cHW cHW cHW cHW O+ VIIIa planarity=0.41 ions_channel=SR 
           direction=parallel rise=3.34 twist=35.81
-        A.G1003 AC.G1003 AA.G1003 AB.G1003 cHW cHW cHW cHW N+ VIIIa planarity=0.55 ions_channel=SR 
+        A.G1003 AC.G1003 AA.G1003 AB.G1003 cHW cHW cHW cHW O+ VIIIa planarity=0.55 ions_channel=SR 
           direction=parallel rise=3.29 twist=27.12
-        A.G1002 AC.G1002 AA.G1002 AB.G1002 cHW cHW cHW cHW N+ VIIIa planarity=0.54  ions_outside=AB.G1002: [CA] AC.G1002: [CA] AA.G1002: [CA] A.G1002: [CA]
+        A.G1002 AC.G1002 AA.G1002 AB.G1002 cHW cHW cHW cHW O+ VIIIa planarity=0.54  ions_outside=AB.G1002: [CA] AC.G1002: [CA] AA.G1002: [CA] A.G1002: [CA]
 
         Tracts:
           A.U1006, A.G1005, A.G1004, A.G1003, A.G1002
@@ -736,16 +736,16 @@ Click to see the output JSON
           AA.U1006, AA.G1005, AA.G1004, AA.G1003, AA.G1002
           AB.U1006, AB.G1005, AB.G1004, AB.G1003, AB.G1002
 
-      Np* VIII n/a quadruplex with 5 tetrads
-        B.G2002 BC.G2002 BA.G2002 BB.G2002 cWH cWH cWH cWH N- VIIIa planarity=0.67  
+      Op* VIII n/a quadruplex with 5 tetrads
+        B.G2002 BC.G2002 BA.G2002 BB.G2002 cWH cWH cWH cWH O+ VIIIa planarity=0.67  
           direction=parallel rise=3.37 twist=27.41
-        B.G2003 BC.G2003 BA.G2003 BB.G2003 cWH cWH cWH cWH N- VIIIa planarity=0.58 ions_channel=SR ions_outside=B.G2003: [CA] BA.G2003: [CA] BB.G2003: [CA] BC.G2003: [CA]
+        B.G2003 BC.G2003 BA.G2003 BB.G2003 cWH cWH cWH cWH O+ VIIIa planarity=0.58 ions_channel=SR ions_outside=B.G2003: [CA] BA.G2003: [CA] BB.G2003: [CA] BC.G2003: [CA]
           direction=parallel rise=3.32 twist=35.04
-        B.G2004 BC.G2004 BA.G2004 BB.G2004 cWH cWH cWH cWH N- VIIIa planarity=0.23 ions_channel=SR 
+        B.G2004 BC.G2004 BA.G2004 BB.G2004 cWH cWH cWH cWH O+ VIIIa planarity=0.23 ions_channel=SR 
           direction=parallel rise=3.27 twist=25.15
-        B.G2005 BC.G2005 BA.G2005 BB.G2005 cWH cWH cWH cWH N- VIIIa planarity=0.78 ions_channel=NA 
+        B.G2005 BC.G2005 BA.G2005 BB.G2005 cWH cWH cWH cWH O+ VIIIa planarity=0.78 ions_channel=NA 
           direction=parallel rise=7.14 twist=43.41
-        B.U2006 BC.U2006 BA.U2006 BB.U2006 cHW cHW cHW cHW N+ VIIIa planarity=1.58 ions_channel=NA,NA 
+        B.U2006 BC.U2006 BA.U2006 BB.U2006 cHW cHW cHW cHW O- VIIIa planarity=1.58 ions_channel=NA,NA 
 
         Tracts:
           B.G2002, B.G2003, B.G2004, B.G2005, B.U2006
@@ -754,8 +754,8 @@ Click to see the output JSON
           BB.G2002, BB.G2003, BB.G2004, BB.G2005, BB.U2006
 
     UGGGGU-UGGGGU-UGGGGU-UGGGGU-UGGGGU-UGGGGU-UGGGGU-UGGGGU
-    .([{<A-.BCDEF-.)]}>a-.bcdef-.([{<A-.BCDEF-.)]}>a-.bcdef
-    .([{<A-.)]}>a-.([{<A-.)]}>a-.([{<A-.)]}>a-.([{<A-.)]}>a
+    .([{<A-.([{<A-.)]}>a-.)]}>a-.([{<A-.)]}>a-.([{<A-.)]}>a
+    .([{<A-.)]}>a-.([{<A-.)]}>a-.([{<A-.([{<A-.)]}>a-.)]}>a
 
 <details>
 <summary>
@@ -846,7 +846,7 @@ Click to see the output JSON
       "glycosidicBond": "anti"
     },
     {
-      "index": 19,
+      "index": 13,
       "chain": "AA",
       "number": 1001,
       "icode": null,
@@ -857,7 +857,7 @@ Click to see the output JSON
       "glycosidicBond": "anti"
     },
     {
-      "index": 20,
+      "index": 14,
       "chain": "AA",
       "number": 1002,
       "icode": null,
@@ -868,7 +868,7 @@ Click to see the output JSON
       "glycosidicBond": "anti"
     },
     {
-      "index": 21,
+      "index": 15,
       "chain": "AA",
       "number": 1003,
       "icode": null,
@@ -879,7 +879,7 @@ Click to see the output JSON
       "glycosidicBond": "anti"
     },
     {
-      "index": 22,
+      "index": 16,
       "chain": "AA",
       "number": 1004,
       "icode": null,
@@ -890,7 +890,7 @@ Click to see the output JSON
       "glycosidicBond": "anti"
     },
     {
-      "index": 23,
+      "index": 17,
       "chain": "AA",
       "number": 1005,
       "icode": null,
@@ -901,7 +901,7 @@ Click to see the output JSON
       "glycosidicBond": "anti"
     },
     {
-      "index": 24,
+      "index": 18,
       "chain": "AA",
       "number": 1006,
       "icode": null,
@@ -978,7 +978,7 @@ Click to see the output JSON
       "glycosidicBond": "anti"
     },
     {
-      "index": 13,
+      "index": 19,
       "chain": "AC",
       "number": 1001,
       "icode": null,
@@ -989,7 +989,7 @@ Click to see the output JSON
       "glycosidicBond": "anti"
     },
     {
-      "index": 14,
+      "index": 20,
       "chain": "AC",
       "number": 1002,
       "icode": null,
@@ -1000,7 +1000,7 @@ Click to see the output JSON
       "glycosidicBond": "anti"
     },
     {
-      "index": 15,
+      "index": 21,
       "chain": "AC",
       "number": 1003,
       "icode": null,
@@ -1011,7 +1011,7 @@ Click to see the output JSON
       "glycosidicBond": "anti"
     },
     {
-      "index": 16,
+      "index": 22,
       "chain": "AC",
       "number": 1004,
       "icode": null,
@@ -1022,7 +1022,7 @@ Click to see the output JSON
       "glycosidicBond": "anti"
     },
     {
-      "index": 17,
+      "index": 23,
       "chain": "AC",
       "number": 1005,
       "icode": null,
@@ -1033,7 +1033,7 @@ Click to see the output JSON
       "glycosidicBond": "anti"
     },
     {
-      "index": 18,
+      "index": 24,
       "chain": "AC",
       "number": 1006,
       "icode": null,
@@ -1110,7 +1110,7 @@ Click to see the output JSON
       "glycosidicBond": "anti"
     },
     {
-      "index": 43,
+      "index": 37,
       "chain": "BA",
       "number": 2001,
       "icode": null,
@@ -1121,7 +1121,7 @@ Click to see the output JSON
       "glycosidicBond": "anti"
     },
     {
-      "index": 44,
+      "index": 38,
       "chain": "BA",
       "number": 2002,
       "icode": null,
@@ -1132,7 +1132,7 @@ Click to see the output JSON
       "glycosidicBond": "anti"
     },
     {
-      "index": 45,
+      "index": 39,
       "chain": "BA",
       "number": 2003,
       "icode": null,
@@ -1143,7 +1143,7 @@ Click to see the output JSON
       "glycosidicBond": "anti"
     },
     {
-      "index": 46,
+      "index": 40,
       "chain": "BA",
       "number": 2004,
       "icode": null,
@@ -1154,7 +1154,7 @@ Click to see the output JSON
       "glycosidicBond": "anti"
     },
     {
-      "index": 47,
+      "index": 41,
       "chain": "BA",
       "number": 2005,
       "icode": null,
@@ -1165,7 +1165,7 @@ Click to see the output JSON
       "glycosidicBond": "anti"
     },
     {
-      "index": 48,
+      "index": 42,
       "chain": "BA",
       "number": 2006,
       "icode": null,
@@ -1176,7 +1176,7 @@ Click to see the output JSON
       "glycosidicBond": "anti"
     },
     {
-      "index": 31,
+      "index": 43,
       "chain": "BB",
       "number": 2001,
       "icode": null,
@@ -1187,7 +1187,7 @@ Click to see the output JSON
       "glycosidicBond": "anti"
     },
     {
-      "index": 32,
+      "index": 44,
       "chain": "BB",
       "number": 2002,
       "icode": null,
@@ -1198,7 +1198,7 @@ Click to see the output JSON
       "glycosidicBond": "anti"
     },
     {
-      "index": 33,
+      "index": 45,
       "chain": "BB",
       "number": 2003,
       "icode": null,
@@ -1209,7 +1209,7 @@ Click to see the output JSON
       "glycosidicBond": "anti"
     },
     {
-      "index": 34,
+      "index": 46,
       "chain": "BB",
       "number": 2004,
       "icode": null,
@@ -1220,7 +1220,7 @@ Click to see the output JSON
       "glycosidicBond": "anti"
     },
     {
-      "index": 35,
+      "index": 47,
       "chain": "BB",
       "number": 2005,
       "icode": null,
@@ -1231,7 +1231,7 @@ Click to see the output JSON
       "glycosidicBond": "anti"
     },
     {
-      "index": 36,
+      "index": 48,
       "chain": "BB",
       "number": 2006,
       "icode": null,
@@ -1242,7 +1242,7 @@ Click to see the output JSON
       "glycosidicBond": "anti"
     },
     {
-      "index": 37,
+      "index": 31,
       "chain": "BC",
       "number": 2001,
       "icode": null,
@@ -1253,7 +1253,7 @@ Click to see the output JSON
       "glycosidicBond": "anti"
     },
     {
-      "index": 38,
+      "index": 32,
       "chain": "BC",
       "number": 2002,
       "icode": null,
@@ -1264,7 +1264,7 @@ Click to see the output JSON
       "glycosidicBond": "anti"
     },
     {
-      "index": 39,
+      "index": 33,
       "chain": "BC",
       "number": 2003,
       "icode": null,
@@ -1275,7 +1275,7 @@ Click to see the output JSON
       "glycosidicBond": "anti"
     },
     {
-      "index": 40,
+      "index": 34,
       "chain": "BC",
       "number": 2004,
       "icode": null,
@@ -1286,7 +1286,7 @@ Click to see the output JSON
       "glycosidicBond": "anti"
     },
     {
-      "index": 41,
+      "index": 35,
       "chain": "BC",
       "number": 2005,
       "icode": null,
@@ -1297,7 +1297,7 @@ Click to see the output JSON
       "glycosidicBond": "anti"
     },
     {
-      "index": 42,
+      "index": 36,
       "chain": "BC",
       "number": 2006,
       "icode": null,
@@ -5065,7 +5065,7 @@ Click to see the output JSON
               "nt2": "AC.U1006",
               "nt3": "AA.U1006",
               "nt4": "AB.U1006",
-              "onz": "N-",
+              "onz": "O-",
               "gbaClassification": "VIIIa",
               "planarityDeviation": 1.061,
               "ionsChannel": [
@@ -5096,7 +5096,7 @@ Click to see the output JSON
               "nt2": "AC.G1005",
               "nt3": "AA.G1005",
               "nt4": "AB.G1005",
-              "onz": "N+",
+              "onz": "O+",
               "gbaClassification": "VIIIa",
               "planarityDeviation": 0.7999999999999972,
               "ionsChannel": [],
@@ -5108,7 +5108,7 @@ Click to see the output JSON
               "nt2": "AC.G1004",
               "nt3": "AA.G1004",
               "nt4": "AB.G1004",
-              "onz": "N+",
+              "onz": "O+",
               "gbaClassification": "VIIIa",
               "planarityDeviation": 0.4059999999999988,
               "ionsChannel": [
@@ -5122,7 +5122,7 @@ Click to see the output JSON
               "nt2": "AC.G1003",
               "nt3": "AA.G1003",
               "nt4": "AB.G1003",
-              "onz": "N+",
+              "onz": "O+",
               "gbaClassification": "VIIIa",
               "planarityDeviation": 0.5549999999999997,
               "ionsChannel": [
@@ -5136,7 +5136,7 @@ Click to see the output JSON
               "nt2": "AC.G1002",
               "nt3": "AA.G1002",
               "nt4": "AB.G1002",
-              "onz": "N+",
+              "onz": "O+",
               "gbaClassification": "VIIIa",
               "planarityDeviation": 0.541999999999998,
               "ionsChannel": [],
@@ -5160,7 +5160,7 @@ Click to see the output JSON
               ]
             }
           ],
-          "onzm": "Np*",
+          "onzm": "Op*",
           "loopClassification": null,
           "gbaClassification": [
             "VIII"
@@ -5205,7 +5205,7 @@ Click to see the output JSON
               "nt2": "BC.G2002",
               "nt3": "BA.G2002",
               "nt4": "BB.G2002",
-              "onz": "N-",
+              "onz": "O+",
               "gbaClassification": "VIIIa",
               "planarityDeviation": 0.6730000000000018,
               "ionsChannel": [],
@@ -5217,7 +5217,7 @@ Click to see the output JSON
               "nt2": "BC.G2003",
               "nt3": "BA.G2003",
               "nt4": "BB.G2003",
-              "onz": "N-",
+              "onz": "O+",
               "gbaClassification": "VIIIa",
               "planarityDeviation": 0.5769999999999982,
               "ionsChannel": [
@@ -5248,7 +5248,7 @@ Click to see the output JSON
               "nt2": "BC.G2004",
               "nt3": "BA.G2004",
               "nt4": "BB.G2004",
-              "onz": "N-",
+              "onz": "O+",
               "gbaClassification": "VIIIa",
               "planarityDeviation": 0.2289999999999992,
               "ionsChannel": [
@@ -5262,7 +5262,7 @@ Click to see the output JSON
               "nt2": "BC.G2005",
               "nt3": "BA.G2005",
               "nt4": "BB.G2005",
-              "onz": "N-",
+              "onz": "O+",
               "gbaClassification": "VIIIa",
               "planarityDeviation": 0.7810000000000006,
               "ionsChannel": [
@@ -5276,7 +5276,7 @@ Click to see the output JSON
               "nt2": "BC.U2006",
               "nt3": "BA.U2006",
               "nt4": "BB.U2006",
-              "onz": "N+",
+              "onz": "O-",
               "gbaClassification": "VIIIa",
               "planarityDeviation": 1.5840000000000005,
               "ionsChannel": [
@@ -5286,7 +5286,7 @@ Click to see the output JSON
               "ionsOutside": []
             }
           ],
-          "onzm": "Np*",
+          "onzm": "Op*",
           "loopClassification": null,
           "gbaClassification": [
             "VIII"
@@ -5393,8 +5393,8 @@ Click to see the output JSON
   ],
   "dotBracket": {
     "sequence": "UGGGGU-UGGGGU-UGGGGU-UGGGGU-UGGGGU-UGGGGU-UGGGGU-UGGGGU",
-    "line1": ".([{<A-.BCDEF-.)]}>a-.bcdef-.([{<A-.BCDEF-.)]}>a-.bcdef",
-    "line2": ".([{<A-.)]}>a-.([{<A-.)]}>a-.([{<A-.)]}>a-.([{<A-.)]}>a"
+    "line1": ".([{<A-.([{<A-.)]}>a-.)]}>a-.([{<A-.)]}>a-.([{<A-.)]}>a",
+    "line2": ".([{<A-.)]}>a-.([{<A-.)]}>a-.([{<A-.([{<A-.)]}>a-.)]}>a"
   }
 }
 ```
