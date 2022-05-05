@@ -567,6 +567,7 @@ class Atom3D:
 class Residue3D:
     index: int
     name: str
+    one_letter_name: str
     model: int
     label: Optional[ResidueLabel]
     auth: Optional[ResidueAuth]
@@ -597,20 +598,6 @@ class Residue3D:
         if self.auth is not None:
             return self.auth.icode if self.auth.icode not in (' ', '?') else None
         return None
-
-    @property
-    def one_letter_name(self) -> str:
-        # RNA
-        if len(self.name) == 1:
-            return self.name
-        # DNA
-        if len(self.name) == 2 and self.name[0].upper() == 'D':
-            return self.name[1]
-        # try the last letter of the name
-        if str.isalpha(self.name[-1]):
-            return self.name[-1]
-        # any nucleotide
-        return 'n'
 
     @property
     def molecule_type(self) -> Molecule:
@@ -851,7 +838,8 @@ def convert_metals(analysis) -> List[MetalDTO]:
 
 def convert_nucleotides(analysis) -> List[NucleotideDTO]:
     return [
-        NucleotideDTO(nt.index, nt.chain, nt.number, nt.icode, nt.molecule_type.value, nt.full_name, nt.one_letter_name,
+        NucleotideDTO(nt.index, nt.chain, nt.number, nt.icode, nt.molecule_type.value, nt.full_name,
+                      nt.get_one_letter_name,
                       math.degrees(nt.chi), nt.chi_class.value if nt.chi_class else None)
         for nt in analysis.structure3d.residues
     ]

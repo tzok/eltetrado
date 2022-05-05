@@ -1,6 +1,6 @@
 import http
 import os
-from typing import List, TextIO, Tuple, Dict, Union
+from typing import List, TextIO, Tuple, Dict, Union, Optional
 
 import requests
 from mmcif.io import IoAdapter
@@ -20,9 +20,9 @@ def read_2d_structure(cif_or_pdb: TextIO, model: int) -> Structure2D:
 
 
 def read_3d_structure(cif_or_pdb: TextIO, model: int) -> Structure3D:
-    atoms, modified = parse_cif(cif_or_pdb) if is_cif(cif_or_pdb) else parse_pdb(cif_or_pdb)
+    atoms, modified, sequence = parse_cif(cif_or_pdb) if is_cif(cif_or_pdb) else parse_pdb(cif_or_pdb)
     atoms = list(filter(lambda atom: atom.model == model, atoms))
-    return group_atoms(atoms, modified)
+    return group_atoms(atoms, modified, sequence)
 
 
 def is_cif(cif_or_pdb: TextIO) -> bool:
@@ -33,17 +33,20 @@ def is_cif(cif_or_pdb: TextIO) -> bool:
     return False
 
 
-def parse_cif(cif: TextIO) -> Tuple[List[Atom3D], Dict[Union[ResidueLabel, ResidueAuth], str]]:
+def parse_cif(cif: TextIO) \
+        -> Tuple[List[Atom3D], Dict[Union[ResidueLabel, ResidueAuth], str], Dict[Tuple[str, int], str]]:
     cif.seek(0)
 
     io_adapter = IoAdapter()
     data = io_adapter.readFile(cif.name)
     atoms = []
     modified = {}
+    sequence = {}
 
     if data:
         atom_site = data[0].getObj('atom_site')
         mod_residue = data[0].getObj('pdbx_struct_mod_residue')
+        entity_poly = data[0].getObj('entity_poly')
 
         if atom_site:
             for row in atom_site.getRowList():
@@ -65,11 +68,11 @@ def parse_cif(cif: TextIO) -> Tuple[List[Atom3D], Dict[Union[ResidueLabel, Resid
                     raise RuntimeError(f'Cannot parse an atom line with empty residue name: {row}')
 
                 label = None
-                if label_chain_name is not None and label_residue_number is not None and label_residue_name is not None:
+                if label_chain_name and label_residue_number and label_residue_name:
                     label = ResidueLabel(label_chain_name, label_residue_number, label_residue_name)
 
                 auth = None
-                if auth_chain_name is not None and auth_residue_number is not None and auth_residue_name is not None and insertion_code is not None:
+                if auth_chain_name and auth_residue_number and auth_residue_name and insertion_code:
                     auth = ResidueAuth(auth_chain_name, auth_residue_number, insertion_code, auth_residue_name)
 
                 model = int(row_dict.get('pdbx_PDB_model_num', '1'))
@@ -81,7 +84,7 @@ def parse_cif(cif: TextIO) -> Tuple[List[Atom3D], Dict[Union[ResidueLabel, Resid
 
         if mod_residue:
             for row in mod_residue.getRowList():
-                row_dict = dict(zip(atom_site.getAttributeList(), row))
+                row_dict = dict(zip(mod_residue.getAttributeList(), row))
 
                 label_chain_name = row_dict.get('label_asym_id', None)
                 label_residue_number = try_parse_int(row_dict.get('label_seq_id', None))
@@ -92,11 +95,11 @@ def parse_cif(cif: TextIO) -> Tuple[List[Atom3D], Dict[Union[ResidueLabel, Resid
                 insertion_code = row_dict.get('PDB_ins_code', None)
 
                 label = None
-                if label_chain_name is not None and label_residue_number is not None and label_residue_name is not None:
+                if label_chain_name and label_residue_number and label_residue_name:
                     label = ResidueLabel(label_chain_name, label_residue_number, label_residue_name)
 
                 auth = None
-                if auth_chain_name is not None and auth_residue_number is not None and auth_residue_name is not None and insertion_code is not None:
+                if auth_chain_name and auth_residue_number and auth_residue_name and insertion_code:
                     auth = ResidueAuth(auth_chain_name, auth_residue_number, insertion_code, auth_residue_name)
 
                 # TODO: is processing this data for each model separately required?
@@ -106,10 +109,22 @@ def parse_cif(cif: TextIO) -> Tuple[List[Atom3D], Dict[Union[ResidueLabel, Resid
                 modified[label] = standard_residue_name
                 modified[auth] = standard_residue_name
 
-    return atoms, modified
+        if entity_poly:
+            for row in entity_poly.getRowList():
+                row_dict = dict(zip(entity_poly.getAttributeList(), row))
+
+                pdbx_strand_id = row_dict.get('pdbx_strand_id', None)
+                pdbx_seq_one_letter_code_can = row_dict.get('pdbx_seq_one_letter_code_can', None)
+
+                if pdbx_strand_id and pdbx_seq_one_letter_code_can:
+                    for strand in pdbx_strand_id.split(','):
+                        for i, letter in enumerate(pdbx_seq_one_letter_code_can):
+                            sequence[(strand, i)] = letter
+
+    return atoms, modified, sequence
 
 
-def parse_pdb(pdb: TextIO) -> Tuple[List[Atom3D], Dict[Union[ResidueLabel, ResidueAuth], str]]:
+def parse_pdb(pdb: TextIO) -> Tuple[List[Atom3D], Dict[ResidueAuth, str], Dict]:
     pdb.seek(0)
     atoms = []
     modified = {}
@@ -141,10 +156,11 @@ def parse_pdb(pdb: TextIO) -> Tuple[List[Atom3D], Dict[Union[ResidueLabel, Resid
             auth = ResidueAuth(chain_identifier, residue_number, insertion_code, original_name)
             modified[auth] = standard_residue_name
 
-    return atoms, modified
+    return atoms, modified, {}
 
 
-def group_atoms(atoms: List[Atom3D], modified: Dict[Union[ResidueLabel, ResidueAuth], str]) -> Structure3D:
+def group_atoms(atoms: List[Atom3D], modified: Dict[Union[ResidueLabel, ResidueAuth], str],
+                sequence: Dict[Tuple[str, int], str]) -> Structure3D:
     if not atoms:
         return Structure3D([])
 
@@ -162,7 +178,8 @@ def group_atoms(atoms: List[Atom3D], modified: Dict[Union[ResidueLabel, ResidueA
             auth = key_previous[1]
             model = key_previous[2]
             name = get_residue_name(auth, label, modified)
-            residues.append(Residue3D(index, name, model, label, auth, frozenset(residue_atoms)))
+            one_letter_name = get_one_letter_name(label, sequence, name)
+            residues.append(Residue3D(index, name, one_letter_name, model, label, auth, tuple(residue_atoms)))
             index += 1
             key_previous = key
             residue_atoms = [atom]
@@ -171,11 +188,13 @@ def group_atoms(atoms: List[Atom3D], modified: Dict[Union[ResidueLabel, ResidueA
     auth = key_previous[1]
     model = key_previous[2]
     name = get_residue_name(auth, label, modified)
-    residues.append(Residue3D(index, name, model, label, auth, frozenset(residue_atoms)))
+    one_letter_name = get_one_letter_name(label, sequence, name)
+    residues.append(Residue3D(index, name, one_letter_name, model, label, auth, tuple(residue_atoms)))
     return Structure3D(residues)
 
 
-def get_residue_name(auth, label, modified):
+def get_residue_name(auth: ResidueAuth, label: ResidueLabel,
+                     modified: Dict[Union[ResidueAuth, ResidueLabel], str]) -> str:
     if auth in modified:
         name = modified[auth].lower()
     elif label in modified:
@@ -190,7 +209,27 @@ def get_residue_name(auth, label, modified):
     return name
 
 
-def try_parse_int(s: str):
+def get_one_letter_name(label: ResidueLabel, sequence: Dict[Tuple[str, int], str], name: str) -> str:
+    # try getting the value from _entity_poly first
+    if label:
+        key = (label.chain, label.number)
+        if key in sequence:
+            return sequence[key]
+
+    # RNA
+    if len(name) == 1:
+        return name
+    # DNA
+    if len(name) == 2 and name[0].upper() == 'D':
+        return name[1]
+    # try the last letter of the name
+    if str.isalpha(name[-1]):
+        return name[-1]
+    # any nucleotide
+    return 'n'
+
+
+def try_parse_int(s: str) -> Optional[int]:
     try:
         return int(s)
     except:
