@@ -839,8 +839,7 @@ def convert_metals(analysis) -> List[MetalDTO]:
 def convert_nucleotides(analysis) -> List[NucleotideDTO]:
     return [
         NucleotideDTO(nt.index, nt.chain, nt.number, nt.icode, nt.molecule_type.value, nt.full_name,
-                      nt.get_one_letter_name,
-                      math.degrees(nt.chi), nt.chi_class.value if nt.chi_class else None)
+                      nt.one_letter_name, math.degrees(nt.chi), nt.chi_class.value if nt.chi_class else None)
         for nt in analysis.structure3d.residues
     ]
 
