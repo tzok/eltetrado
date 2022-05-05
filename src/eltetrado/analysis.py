@@ -721,7 +721,7 @@ class Analysis:
                 for permutation in itertools.permutations(chains):
                     self.__reorder_chains(permutation)
                     classifications = [t.onz for h in self.helices for t in h.tetrads]
-                    logging.info(
+                    logging.debug(
                         f'Checking reorder: {" ".join(permutation)} {" ".join(map(lambda c: c.value, classifications))}')
 
                     onz_score = sum(c.score() for c in classifications)
@@ -737,8 +737,8 @@ class Analysis:
         if len(final_order) > 1:
             self.__reorder_chains(final_order)
             classifications = [t.onz for h in self.helices for t in h.tetrads]
-            logging.info(f'Selected chain order: {" ".join(final_order)} '
-                         f'{" ".join(map(lambda onz: onz.value, classifications))}')
+            logging.debug(f'Selected chain order: {" ".join(final_order)} '
+                          f'{" ".join(map(lambda onz: onz.value, classifications))}')
 
             self.tetrads = self.__find_tetrads(True)
             self.tetrad_scores = self.__calculate_tetrad_scores()
