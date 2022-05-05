@@ -73,7 +73,7 @@ class Tetrad:
             self.nt1, self.nt2, self.nt3, self.nt4 = self.nt1, self.nt4, self.nt3, self.nt2
             self.pair_12, self.pair_23, self.pair_34, self.pair_41 = self.pair_41.reverse(), self.pair_34.reverse(), self.pair_23.reverse(), self.pair_12.reverse()
 
-        # classify again after reordering
+        # ONZ and da Silva's classification are valid in 5'-3' order
         self.onz = self.__classify_onz()
         self.gba_class = self.__classify_by_gba()
 
@@ -98,10 +98,6 @@ class Tetrad:
             raise RuntimeError(f'Cannot apply order: {order}')
 
         self.nt1, self.nt2, self.nt3, self.nt4 = order
-
-        # classify again after reordering
-        self.onz = self.__classify_onz()
-        self.gba_class = self.__classify_by_gba()
 
     def __classify_onz(self) -> ONZ:
         # transform into (0, 1, 2, 3)
@@ -797,6 +793,7 @@ class Analysis:
             for tp in self.tetrad_pairs:
                 order = (tp.stacked[tp.tetrad1.nt1], tp.stacked[tp.tetrad1.nt2],
                          tp.stacked[tp.tetrad1.nt3], tp.stacked[tp.tetrad1.nt4])
+                tp.tetrad2.reorder_to_match_5p_3p()  # this is required to recalculate ONZ
                 tp.tetrad2.reorder_to_match_other_tetrad(order)
 
     def __chain_order_score(self, chain_order: Tuple[str, ...]) -> int:
