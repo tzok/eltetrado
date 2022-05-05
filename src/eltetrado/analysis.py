@@ -109,6 +109,9 @@ class Tetrad:
         indices = sorted((ni, nj, nk, nl))
         ni, nj, nk, nl = (indices.index(x) for x in (ni, nj, nk, nl))
 
+        while ni != 0:
+            ni, nj, nk, nl = nl, ni, nj, nk
+
         order = (nj, nk, nl)
         if order == (1, 2, 3):
             return ONZ.O_PLUS
