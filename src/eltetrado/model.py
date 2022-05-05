@@ -647,6 +647,7 @@ class Residue3D:
         torsion = self.__chi_purine()
         if math.isnan(torsion):
             return self.__chi_pyrimidine()
+        return torsion
 
     # TODO: the ranges could be modified to match Saenger
     @property
