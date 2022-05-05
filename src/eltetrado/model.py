@@ -884,8 +884,9 @@ def convert_tetrad_pairs(analysis) -> List[TetradPairDTO]:
 def convert_quadruplexes(helix) -> List[QuadruplexDTO]:
     nts_ = lambda nts: [nt.full_name for nt in nts]
     return [
-        QuadruplexDTO(convert_tetrads(q), q.onzm.value,
-                      LoopClassificationDTO(q.loop_class.value, q.loop_class.loop_progression()),
+        QuadruplexDTO(convert_tetrads(q), q.onzm.value if q.onzm else None,
+                      LoopClassificationDTO(q.loop_class.value,
+                                            q.loop_class.loop_progression()) if q.loop_class else None,
                       [g.value for g in q.gba_classes],
                       [nts_(q.tracts[0].nucleotides), nts_(q.tracts[1].nucleotides),
                        nts_(q.tracts[2].nucleotides), nts_(q.tracts[3].nucleotides)],
