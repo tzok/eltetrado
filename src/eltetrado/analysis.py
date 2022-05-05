@@ -730,6 +730,10 @@ class Analysis:
                     if score < best_score:
                         best_score = score
                         best_permutation = permutation
+                    elif score == best_score:
+                        # in case of a tie, pick permutation earlier in lexicographical sense
+                        if permutation < best_permutation:
+                            best_permutation = permutation
 
             final_order.extend(best_permutation)
 
