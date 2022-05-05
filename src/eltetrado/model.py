@@ -863,8 +863,8 @@ def convert_base_pairs(analysis) -> List[BasePairDTO]:
 def convert_tetrads(quadruplex) -> List[TetradDTO]:
     id_ = lambda tetrad: f'{tetrad.nt1.full_name}-{tetrad.nt2.full_name}-{tetrad.nt3.full_name}-{tetrad.nt4.full_name}'
     ions_channel = lambda tetrad: [atom.atomName for atom in tetrad.ions_channel]
-    ions_outside = lambda tetrad: [IonOutsideDTO(nt.full_name, atom.atomName) for nt, atoms in tetrad.ions_outside for
-                                   atom in atoms]
+    ions_outside = lambda tetrad: [IonOutsideDTO(nt.full_name, atom.atomName)
+                                   for nt, atoms in tetrad.ions_outside.items() for atom in atoms]
     return [
         TetradDTO(id_(tetrad), tetrad.nt1.full_name, tetrad.nt2.full_name, tetrad.nt3.full_name, tetrad.nt4.full_name,
                   tetrad.onz.value, tetrad.gba_class.value, float(tetrad.planarity_deviation), ions_channel(tetrad),
