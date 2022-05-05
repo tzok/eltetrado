@@ -27,7 +27,7 @@ call `pip3`:
 # Dependencies
 
 The project is written in Python 3.6+ and requires
-[mmcif](hhttps://pypi.org/project/mmcif/),
+[mmcif](https://pypi.org/project/mmcif/),
 [orjson](https://github.com/ijl/orjson), [NumPy](https://numpy.org/) and
 [requests](https://docs.python-requests.org/en/latest/).
 
