@@ -193,5 +193,5 @@ def get_residue_name(auth, label, modified):
 def try_parse_int(s: str):
     try:
         return int(s)
-    except ValueError:
+    except:
         return None
