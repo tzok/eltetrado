@@ -36,7 +36,7 @@ Visualization is created by `R` 3.6+ script which uses
 dependency will be automatically installed if not present.
 
 Base pairs and stacking interactions are identified by
-[BPNET](https://github.com/computational-biology/bpnet) (Roy *et al.*
+[BPNet](https://github.com/computational-biology/bpnet) (Roy *et al.*
 2022) hosted as a service, so there is no need for installation or
 configuration of this component.
 
