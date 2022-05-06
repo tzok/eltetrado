@@ -35,6 +35,11 @@ Visualization is created by `R` 3.6+ script which uses
 [R4RNA](https://www.e-rna.org/r-chie/) (Lai *et al.* 2012) library. The
 dependency will be automatically installed if not present.
 
+Base pairs and stacking interactions are identified by
+[BPNET](https://github.com/computational-biology/bpnet) (Roy *et al.*
+2022) hosted as a service, so there is no need for installation or
+configuration of this component.
+
 # Usage
 
 ElTetrado is a command line application, which requires to be provided
@@ -5416,23 +5421,28 @@ intramural financing program.
 
 <div id="refs" class="references csl-bib-body">
 
-1.  Topology-Based Classification of Tetrads and Quadruplex
+1.  Contact Networks in RNA: A Structural Bioinformatics Study with a
+    New Tool. P. Roy, D. Bhattacharyya. *Journal of Computer-Aided
+    Molecular Design*. 2022. 36(2):131–140.
+    doi:[10.1007/s10822-021-00438-x](https://doi.org/10.1007/s10822-021-00438-x)
+
+2.  Topology-Based Classification of Tetrads and Quadruplex
     Structures. M. Popenda, J. Miskiewicz, J. Sarzynska, T. Zok, M.
     Szachniuk. *Bioinformatics*. 2020. 36(4):1129–1134.
     doi:[10.1093/bioinformatics/btz738](https://doi.org/10.1093/bioinformatics/btz738)
 
-2.  ElTetrado: A Tool for Identification and Classification of Tetrads
+3.  ElTetrado: A Tool for Identification and Classification of Tetrads
     and Quadruplexes. T. Zok, M. Popenda, M. Szachniuk. *BMC
     Bioinformatics*. 2020. 21(1):40.
     doi:[10.1186/s12859-020-3385-1](https://doi.org/10.1186/s12859-020-3385-1)
 
-3.  R-Chie : A Web Server and R Package for Visualizing RNA Secondary
+4.  R-Chie : A Web Server and R Package for Visualizing RNA Secondary
     Structures. D. Lai, J.R. Proctor, J.Y.A. Zhu, I.M. Meyer. *Nucleic
     Acids Research*. 2012. 40(12):e95.
-    doi:[10.1093/nar/gks241](https://doi.org/10.1093/nar/gks241)
+    doi:[f99845](https://doi.org/f99845)
 
-4.  Geometric Nomenclature and Classification of RNA Base Pairs. N.B.
+5.  Geometric Nomenclature and Classification of RNA Base Pairs. N.B.
     Leontis, E. Westhof. *RNA*. 2001. 7(4):499–512.
-    doi:[10.1017/S1355838201002515](https://doi.org/10.1017/S1355838201002515)
+    doi:[10.1017/s1355838201002515](https://doi.org/10.1017/s1355838201002515)
 
 </div>
