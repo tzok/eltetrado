@@ -861,11 +861,11 @@ def convert_tetrads(quadruplex) -> List[TetradDTO]:
     ]
 
 
-def convert_tetrad_pairs(analysis) -> List[TetradPairDTO]:
+def convert_tetrad_pairs(helix) -> List[TetradPairDTO]:
     id_ = lambda tetrad: f'{tetrad.nt1.full_name}-{tetrad.nt2.full_name}-{tetrad.nt3.full_name}-{tetrad.nt4.full_name}'
     return [
         TetradPairDTO(id_(tp.tetrad1), id_(tp.tetrad2), tp.direction.value, float(tp.rise), float(tp.twist))
-        for tp in analysis.tetrad_pairs
+        for tp in helix.tetrad_pairs
     ]
 
 
@@ -885,7 +885,7 @@ def convert_quadruplexes(helix) -> List[QuadruplexDTO]:
 
 def convert_helices(analysis) -> List[HelixDTO]:
     return [
-        HelixDTO(convert_quadruplexes(h), convert_tetrad_pairs(analysis)) for h in analysis.helices
+        HelixDTO(convert_quadruplexes(h), convert_tetrad_pairs(h)) for h in analysis.helices
     ]
 
 
