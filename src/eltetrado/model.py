@@ -614,7 +614,7 @@ class Residue3D:
             if self.auth.name[-1] in string.digits:
                 builder += '/'
             builder += f'{self.auth.number}'
-            if self.auth.icode not in (' ', '?'):
+            if self.auth.icode:
                 builder += f'^{self.auth.icode}'
             return builder
         else:
