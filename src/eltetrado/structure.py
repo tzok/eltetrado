@@ -60,6 +60,10 @@ def parse_cif(cif: TextIO) \
                 auth_residue_name = row_dict.get('auth_comp_id', None)
                 insertion_code = row_dict.get('pdbx_PDB_ins_code', None)
 
+                # mmCIF marks empty values with ?
+                if insertion_code == '?':
+                    insertion_code = None
+
                 if label_chain_name is None and auth_chain_name is None:
                     raise RuntimeError(f'Cannot parse an atom line with empty chain name: {row}')
                 if label_residue_number is None and auth_residue_number is None:
@@ -72,7 +76,7 @@ def parse_cif(cif: TextIO) \
                     label = ResidueLabel(label_chain_name, label_residue_number, label_residue_name)
 
                 auth = None
-                if auth_chain_name and auth_residue_number and auth_residue_name and insertion_code:
+                if auth_chain_name and auth_residue_number and auth_residue_name:
                     auth = ResidueAuth(auth_chain_name, auth_residue_number, insertion_code, auth_residue_name)
 
                 model = int(row_dict.get('pdbx_PDB_model_num', '1'))
@@ -141,7 +145,7 @@ def parse_pdb(pdb: TextIO) -> Tuple[List[Atom3D], Dict[ResidueAuth, str], Dict]:
             residue_name = line[18:20].strip()
             chain_identifier = line[21]
             residue_number = int(line[22:26].strip())
-            insertion_code = line[26]
+            insertion_code = line[26] if line[26] != ' ' else None
             x = float(line[30:38].strip())
             y = float(line[38:46].strip())
             z = float(line[46:54].strip())
