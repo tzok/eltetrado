@@ -482,6 +482,8 @@ class BasePairDTO:
     nt1: str
     nt2: str
     lw: str
+    in_tetrad: bool
+    canonical: bool
 
 
 @dataclass
@@ -814,6 +816,21 @@ class BasePair3D:
         )
         return self.lw == "cWW" and (nts == "AU" or nts == "CG" or nts == "GU")
 
+    def in_tetrad(self, analysis) -> bool:
+        for tetrad in analysis.tetrads:
+            if self in (
+                tetrad.pair_12,
+                tetrad.pair_23,
+                tetrad.pair_34,
+                tetrad.pair_41,
+                tetrad.pair_12.reverse(),
+                tetrad.pair_23.reverse(),
+                tetrad.pair_34.reverse(),
+                tetrad.pair_41.reverse(),
+            ):
+                return True
+        return False
+
 
 @dataclass
 class Stacking3D:
@@ -914,7 +931,13 @@ def convert_nucleotides(analysis) -> List[NucleotideDTO]:
 
 def convert_base_pairs(analysis) -> List[BasePairDTO]:
     return [
-        BasePairDTO(bp.nt1.full_name, bp.nt2.full_name, bp.lw.value)
+        BasePairDTO(
+            bp.nt1.full_name,
+            bp.nt2.full_name,
+            bp.lw.value,
+            bp.in_tetrad(analysis),
+            bp.is_canonical(),
+        )
         for bp in analysis.base_pairs
     ]
 
