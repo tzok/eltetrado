@@ -119,7 +119,7 @@ class Tetrad:
             )
 
         # flip order if necessary
-        if self.pair_12.score() > self.pair_41.reverse().score():
+        if self.pair_12.score > self.pair_41.reverse().score:
             self.nt1, self.nt2, self.nt3, self.nt4 = (
                 self.nt1,
                 self.nt4,
@@ -573,12 +573,12 @@ class Quadruplex:
         for pair in [tetrad.pair_12, tetrad.pair_23, tetrad.pair_34, tetrad.pair_41]:
             # main check
             if pair.nt1 == first and pair.nt2 == last:
-                if pair.score() < pair.reverse().score():
+                if pair.score < pair.reverse().score:
                     return "-"
                 return "+"
             # reverse check
             if pair.nt1 == last and pair.nt2 == first:
-                if pair.score() < pair.reverse().score():
+                if pair.score < pair.reverse().score:
                     return "+"
                 return "-"
         return None
@@ -1199,7 +1199,7 @@ class Analysis:
         )
 
     def canonical(self) -> List[BasePair3D]:
-        return [base_pair for base_pair in self.base_pairs if base_pair.is_canonical()]
+        return [base_pair for base_pair in self.base_pairs if base_pair.is_canonical]
 
 
 @dataclass

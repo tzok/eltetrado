@@ -807,9 +807,11 @@ class BasePair3D:
         lw = f"{self.lw.name[0]}{self.lw.name[2]}{self.lw.name[1]}"
         return BasePair3D(self.nt2, self.nt1, LeontisWesthof[lw])
 
+    @property
     def score(self) -> int:
         return self.score_table.get(self.lw, 20)
 
+    @property
     def is_canonical(self) -> bool:
         nts = "".join(
             sorted([self.nt1.one_letter_name.upper(), self.nt2.one_letter_name.upper()])
@@ -926,6 +928,7 @@ def convert_nucleotides(analysis) -> List[NucleotideDTO]:
             nt.chi_class.value if nt.chi_class else None,
         )
         for nt in analysis.structure3d.residues
+        if nt.is_nucleotide
     ]
 
 
@@ -936,7 +939,7 @@ def convert_base_pairs(analysis) -> List[BasePairDTO]:
             bp.nt2.full_name,
             bp.lw.value,
             bp.in_tetrad(analysis),
-            bp.is_canonical(),
+            bp.is_canonical,
         )
         for bp in analysis.base_pairs
     ]
