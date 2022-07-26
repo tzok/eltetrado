@@ -4,9 +4,10 @@ import string
 from collections import Counter, defaultdict
 from dataclasses import dataclass
 from enum import Enum
-from typing import List, Optional, Dict, Tuple
+from typing import Dict, List, Optional, Tuple
 
 import numpy
+import numpy.typing
 
 
 class LeontisWesthof(Enum):
@@ -527,8 +528,8 @@ class LoopClassificationDTO:
 @dataclass
 class QuadruplexDTO:
     tetrads: List[TetradDTO]
-    onzm: str
-    loopClassification: LoopClassificationDTO
+    onzm: Optional[str]
+    loopClassification: Optional[LoopClassificationDTO]
     gbaClassification: List[str]
     tracts: List[List[str]]
     loops: List[LoopDTO]
@@ -566,7 +567,7 @@ class Atom3D:
     y: float
     z: float
 
-    def coordinates(self) -> numpy.ndarray:
+    def coordinates(self) -> numpy.typing.NDArray[numpy.floating]:
         return numpy.array([self.x, self.y, self.z])
 
 
@@ -578,7 +579,7 @@ class Residue3D:
     model: int
     label: Optional[ResidueLabel]
     auth: Optional[ResidueAuth]
-    atoms: Tuple[Atom3D]
+    atoms: Tuple[Atom3D, ...]
 
     # Dict representing expected name of atom involved in glycosidic bond
     outermost_atoms = {"A": "N9", "G": "N9", "C": "N1", "U": "N1", "T": "N1"}
@@ -592,13 +593,21 @@ class Residue3D:
     def chain(self) -> str:
         if self.auth is not None:
             return self.auth.chain
-        return self.label.chain
+        if self.label is not None:
+            return self.label.chain
+        raise RuntimeError(
+            "Unknown chain name, both ResidueAuth and ResidueLabel are empty"
+        )
 
     @property
     def number(self) -> int:
         if self.auth is not None:
             return self.auth.number
-        return self.label.number
+        if self.label is not None:
+            return self.label.number
+        raise RuntimeError(
+            "Unknown residue number, both ResidueAuth and ResidueLabel are empty"
+        )
 
     @property
     def icode(self) -> Optional[str]:
@@ -616,7 +625,7 @@ class Residue3D:
 
     @property
     def full_name(self) -> str:
-        if self.auth:
+        if self.auth is not None:
             builder = f"{self.auth.chain}.{self.auth.name}"
             if self.auth.name[-1] in string.digits:
                 builder += "/"
@@ -624,12 +633,15 @@ class Residue3D:
             if self.auth.icode:
                 builder += f"^{self.auth.icode}"
             return builder
-        else:
+        elif self.label is not None:
             builder = f"{self.label.chain}.{self.label.name}"
             if self.label.name[-1] in string.digits:
                 builder += "/"
             builder += f"{self.label.number}"
             return builder
+        raise RuntimeError(
+            "Unknown full residue name, both ResidueAuth and ResidueLabel are empty"
+        )
 
     @property
     def chi(self) -> float:
@@ -679,8 +691,8 @@ class Residue3D:
             self.find_atom("N9"),
             self.find_atom("C4"),
         ]
-        if all(atoms):
-            return Residue3D.__torsion_angle(atoms)
+        if all([atom is not None for atom in atoms]):
+            return Residue3D.__torsion_angle(atoms)  # type: ignore
         return math.nan
 
     def __chi_pyrimidine(self) -> float:
@@ -690,8 +702,8 @@ class Residue3D:
             self.find_atom("N1"),
             self.find_atom("C2"),
         ]
-        if all(atoms):
-            return Residue3D.__torsion_angle(atoms)
+        if all([atom is not None for atom in atoms]):
+            return Residue3D.__torsion_angle(atoms)  # type: ignore
         return math.nan
 
     @staticmethod
@@ -700,9 +712,9 @@ class Residue3D:
         v1 = atoms[1].coordinates() - atoms[0].coordinates()
         v2 = atoms[2].coordinates() - atoms[1].coordinates()
         v3 = atoms[3].coordinates() - atoms[2].coordinates()
-        t1 = numpy.cross(v1, v2)
-        t2 = numpy.cross(v2, v3)
-        t3 = v1 * numpy.linalg.norm(v2)
+        t1: numpy.typing.NDArray[numpy.floating] = numpy.cross(v1, v2)
+        t2: numpy.typing.NDArray[numpy.floating] = numpy.cross(v2, v3)
+        t3: numpy.typing.NDArray[numpy.floating] = v1 * numpy.linalg.norm(v2)
         return math.atan2(numpy.dot(t2, t3), numpy.dot(t1, t2))
 
     def __outer_generator(self):
@@ -828,7 +840,8 @@ class Structure3D:
         for base_pair in structure2d.basePairs:
             nt1 = self.find_residue(base_pair.nt1.label, base_pair.nt1.auth)
             nt2 = self.find_residue(base_pair.nt2.label, base_pair.nt2.auth)
-            result.append(BasePair3D(nt1, nt2, base_pair.lw))
+            if nt1 is not None and nt2 is not None:
+                result.append(BasePair3D(nt1, nt2, base_pair.lw))
         return result
 
     def base_pair_graph(
@@ -856,7 +869,8 @@ class Structure3D:
         for stacking in structure2d.stackings:
             nt1 = self.find_residue(stacking.nt1.label, stacking.nt1.auth)
             nt2 = self.find_residue(stacking.nt2.label, stacking.nt2.auth)
-            result.append(Stacking3D(nt1, nt2))
+            if nt1 is not None and nt2 is not None:
+                result.append(Stacking3D(nt1, nt2))
         return result
 
     def stacking_graph(

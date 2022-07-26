@@ -5,27 +5,28 @@ import os
 import string
 import subprocess
 import tempfile
-from collections import defaultdict, Counter
+from collections import Counter, defaultdict
 from dataclasses import dataclass, field
-from typing import Dict, Iterable, List, Tuple, Optional, Set
+from typing import IO, Dict, FrozenSet, Iterable, List, Optional, Set, Tuple
 
 import numpy
+import numpy.typing
 
 from eltetrado.model import (
-    Atom3D,
-    Structure3D,
-    Structure2D,
-    BasePair3D,
-    Residue3D,
-    GlycosidicBond,
     ONZ,
-    GbaTetradClassification,
-    Ion,
-    Direction,
-    LoopType,
     ONZM,
+    Atom3D,
+    BasePair3D,
+    Direction,
     GbaQuadruplexClassification,
+    GbaTetradClassification,
+    GlycosidicBond,
+    Ion,
     LoopClassification,
+    LoopType,
+    Residue3D,
+    Structure2D,
+    Structure3D,
 )
 
 logging.basicConfig(level=os.environ.get("LOGLEVEL", "INFO"))
@@ -237,7 +238,7 @@ class Tetrad:
             return None
 
         # this will create a 4-letter string made of 's' for syn or 'a' for anti
-        fingerprint = "".join([nt.chi_class.value[0] for nt in self.nucleotides])
+        fingerprint = "".join([nt.chi_class.value[0] for nt in self.nucleotides])  # type: ignore
 
         # this dict has all classes mapped to fingerprints
         gba_classes = {
@@ -269,7 +270,7 @@ class Tetrad:
     def __calculate_planarity_deviation(self) -> float:
         outer = [nt.outermost_atom for nt in self.nucleotides]
         inner = [nt.innermost_atom for nt in self.nucleotides]
-        return numpy.linalg.norm(center_of_mass(outer) - center_of_mass(inner))
+        return numpy.linalg.norm(center_of_mass(outer) - center_of_mass(inner)).item()
 
     @property
     def nucleotides(self) -> Tuple[Residue3D, Residue3D, Residue3D, Residue3D]:
@@ -283,7 +284,7 @@ class Tetrad:
             f"    "
             f"{self.nt1.full_name} {self.nt2.full_name} {self.nt3.full_name} {self.nt4.full_name} "
             f"{self.pair_12.lw.value} {self.pair_23.lw.value} {self.pair_34.lw.value} {self.pair_41.lw.value} "
-            f"{self.onz.value} {self.gba_class.value} "
+            f"{self.onz.value} {self.gba_class.value if self.gba_class is not None else ''} "
             f"planarity={round(self.planarity_deviation, 2)} "
             f"{self.__ions_channel_str()} "
             f"{self.__ions_outside_str()}\n"
@@ -364,17 +365,30 @@ class TetradPair:
     def __calculate_rise(self) -> float:
         t1 = self.tetrad1.outer_and_inner_atoms()
         t2 = self.tetrad2.outer_and_inner_atoms()
-        return numpy.linalg.norm(center_of_mass(t1) - center_of_mass(t2))
+        return numpy.linalg.norm(center_of_mass(t1) - center_of_mass(t2)).item()
 
     def __calculate_twist(self) -> float:
         nt1_1, nt1_2, _, _ = self.tetrad1.nucleotides
         nt2_1, nt2_2, _, _ = self.tetrad2_nts_best_order
 
-        v1 = nt1_1.find_atom("C1'").coordinates() - nt1_2.find_atom("C1'").coordinates()
-        v1 = v1 / numpy.linalg.norm(v1)
-        v2 = nt2_1.find_atom("C1'").coordinates() - nt2_2.find_atom("C1'").coordinates()
-        v2 = v2 / numpy.linalg.norm(v2)
-        return math.degrees(numpy.arccos(numpy.clip(numpy.dot(v1, v2), -1.0, 1.0)))
+        atom1 = nt1_1.find_atom("C1'")
+        atom2 = nt1_2.find_atom("C1'")
+        atom3 = nt2_1.find_atom("C1'")
+        atom4 = nt2_2.find_atom("C1'")
+
+        if (
+            atom1 is not None
+            and atom2 is not None
+            and atom3 is not None
+            and atom4 is not None
+        ):
+            v1 = atom1.coordinates() - atom2.coordinates()
+            v1 = v1 / numpy.linalg.norm(v1)
+            v2 = atom3.coordinates() - atom4.coordinates()
+            v2 = v2 / numpy.linalg.norm(v2)
+            return math.degrees(numpy.arccos(numpy.clip(numpy.dot(v1, v2), -1.0, 1.0)))
+
+        return math.nan
 
     def __str__(self):
         return f"      direction={self.direction.value} rise={round(self.rise, 2)} twist={round(self.twist, 2)}\n"
@@ -457,8 +471,12 @@ class Quadruplex:
             "VII": 7,
             "VIII": 8,
         }
-        gbas = sorted(gbas, key=lambda gba: roman_numerals.get(gba, 100))
-        return list(map(lambda x: GbaQuadruplexClassification[x], gbas))
+        return list(
+            map(
+                lambda x: GbaQuadruplexClassification[x],
+                sorted(gbas, key=lambda gba: roman_numerals.get(gba, 100)),
+            )
+        )
 
     def __find_tracts(self) -> List[Tract]:
         tracts = [
@@ -584,13 +602,13 @@ class Quadruplex:
             "dpd": "12",
             "ldp": "13",
         }
-        fingerprint = "".join([loop.loop_type.value[0] for loop in self.loops])
+        fingerprint = "".join([loop.loop_type.value[0] for loop in self.loops])  # type: ignore
         if fingerprint not in loop_classes:
             logging.error(f"Unknown loop classification: {fingerprint}")
             return None
         subtype = (
             "a"
-            if self.loops[0 if fingerprint != "dpd" else 1].loop_type.value[-1] == "-"
+            if self.loops[0 if fingerprint != "dpd" else 1].loop_type.value[-1] == "-"  # type: ignore
             else "b"
         )
         return LoopClassification.from_value(f"{loop_classes[fingerprint]}{subtype}")
@@ -791,7 +809,10 @@ class Analysis:
         def is_next_sequentially(nt1: Residue3D, nt2: Residue3D) -> bool:
             return nt1.chain == nt2.chain and abs(nt1.index - nt2.index) == 1
 
-        tetrad_scores = defaultdict(dict)
+        tetrad_scores: Dict[
+            Tetrad,
+            Dict[Tetrad, Tuple[int, Tuple[Residue3D, ...], Tuple[Residue3D, ...]]],
+        ] = defaultdict(dict)
 
         for ti, tj in itertools.combinations(self.tetrads, 2):
             nts1 = ti.nucleotides
@@ -813,17 +834,15 @@ class Analysis:
             ]
 
             for nts2 in viable_permutations:
-                score_stacking = [
-                    1 if is_next_by_stacking(nts1[i], nts2[i]) else 0 for i in range(4)
+                flags_sequential: List[bool] = [
+                    is_next_sequentially(nts1[i], nts2[i]) for i in range(4)
                 ]
-                score_sequential = [
-                    1 if is_next_sequentially(nts1[i], nts2[i]) else 0 for i in range(4)
+                flags_stacking: List[bool] = [
+                    is_next_by_stacking(nts1[i], nts2[i]) for i in range(4)
                 ]
-                score = sum(
-                    [max(score_stacking[i], score_sequential[i]) for i in range(4)]
-                )
-                score_sequential = sum(score_sequential)
-                score_stacking = sum(score_stacking)
+                score = sum(flags_stacking[i] | flags_sequential[i] for i in range(4))
+                score_sequential = sum(flags_sequential)
+                score_stacking = sum(flags_stacking)
 
                 if (score, score_sequential, score_stacking) > (
                     best_score,
@@ -882,13 +901,13 @@ class Analysis:
                 stacked = {nts1[i]: nts2[i] for i in range(4)}
                 stacked.update({v: k for k, v in stacked.items()})
                 tetrad_pairs.append(TetradPair(ti, tj, stacked))
-                order = (
+                stacked_order = (
                     stacked[ti.nt1],
                     stacked[ti.nt2],
                     stacked[ti.nt3],
                     stacked[ti.nt4],
                 )
-                tj.reorder_to_match_other_tetrad(order)
+                tj.reorder_to_match_other_tetrad(stacked_order)
 
         return tetrad_pairs
 
@@ -926,7 +945,7 @@ class Analysis:
         final_order = []
 
         for chains in chain_groups:
-            best_permutation, best_score = chains, (1e10, 1e10)
+            best_permutation, best_score = tuple(chains), (1e10, 1e10)
 
             if len(chains) > 1:
                 for permutation in itertools.permutations(chains):
@@ -964,15 +983,15 @@ class Analysis:
             self.helices = self.__find_helices()
 
     def __group_related_chains(self) -> List[List[str]]:
-        candidates = set()
+        candidates_prior: Set[FrozenSet[str]] = set()
 
         for h in self.helices:
             for t in h.tetrads:
-                candidates.add(
+                candidates_prior.add(
                     frozenset([t.nt1.chain, t.nt2.chain, t.nt3.chain, t.nt4.chain])
                 )
 
-        candidates = [set(c) for c in candidates]
+        candidates: List[Set[str]] = [set(c) for c in candidates_prior]
         changed = True
 
         while changed:
@@ -988,7 +1007,7 @@ class Analysis:
                     break
 
         candidates = sorted(candidates, key=lambda x: len(x), reverse=True)
-        groups = []
+        groups: List[Set[str]] = []
 
         for candidate in candidates:
             if any([group.issuperset(candidate) for group in groups]):
@@ -1048,13 +1067,9 @@ class Analysis:
                         used.add(coordinates)
         return ions
 
-    def __assign_ions_to_tetrads(
-        self,
-    ) -> Tuple[
-        Dict[Tetrad, List[Atom3D]], Dict[Tuple[Tetrad, Residue3D], List[Atom3D]]
-    ]:
+    def __assign_ions_to_tetrads(self):
         if len(self.tetrads) == 0:
-            return {}, {}
+            return
 
         ions_channel = defaultdict(list)
         ions_outside = defaultdict(list)
@@ -1064,7 +1079,7 @@ class Analysis:
             min_tetrad = self.tetrads[0]
 
             for tetrad in self.tetrads:
-                distance = numpy.linalg.norm(ion.coordinates() - tetrad.center())
+                distance = numpy.linalg.norm(ion.coordinates() - tetrad.center()).item()
                 if distance < min_distance:
                     min_distance = distance
                     min_tetrad = tetrad
@@ -1083,7 +1098,7 @@ class Analysis:
                     for atom in nt.atoms:
                         distance = numpy.linalg.norm(
                             ion.coordinates() - atom.coordinates()
-                        )
+                        ).item()
                         if distance < min_distance:
                             min_distance = distance
                             min_tetrad = tetrad
@@ -1238,7 +1253,7 @@ class Visualizer:
 
     def __to_helix(
         self, layer: List[BasePair3D], canonical: Optional[List[BasePair3D]] = None
-    ) -> tempfile.NamedTemporaryFile():
+    ) -> IO[str]:
         onz_value = {
             ONZ.O_PLUS: 1,
             ONZ.O_MINUS: 2,
@@ -1255,19 +1270,17 @@ class Visualizer:
         helix.write("i\tj\tlength\tvalue\n")
 
         for pair in layer:
-            x, y = pair.nt1, pair.nt2
             x, y = (
-                nucleotides.index(x) + 1 + shifts[x],
-                nucleotides.index(y) + 1 + shifts[y],
+                nucleotides.index(pair.nt1) + 1 + shifts[pair.nt1],
+                nucleotides.index(pair.nt2) + 1 + shifts[pair.nt2],
             )
             onz = self.onz_dict[pair]
             helix.write(f"{x}\t{y}\t1\t{onz_value.get(onz, 7)}\n")
         if canonical:
             for pair in canonical:
-                x, y = pair.nt1, pair.nt2
                 x, y = (
-                    nucleotides.index(x) + 1 + shifts[x],
-                    nucleotides.index(y) + 1 + shifts[y],
+                    nucleotides.index(pair.nt1) + 1 + shifts[pair.nt1],
+                    nucleotides.index(pair.nt2) + 1 + shifts[pair.nt2],
                 )
                 helix.write(f"{x}\t{y}\t1\t8\n")
 
@@ -1301,7 +1314,7 @@ class AnalysisSimple:
         return False
 
 
-def center_of_mass(atoms):
+def center_of_mass(atoms) -> numpy.typing.NDArray[numpy.floating]:
     coords = [atom.coordinates() for atom in atoms]
     xs = (coord[0] for coord in coords)
     ys = (coord[1] for coord in coords)

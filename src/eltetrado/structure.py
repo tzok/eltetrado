@@ -1,17 +1,17 @@
 import http
 import os
-from typing import List, TextIO, Tuple, Dict, Union, Optional
+from typing import IO, Dict, List, Optional, Tuple, Union
 
 import requests
-from mmcif.io import IoAdapter
+from mmcif.io.IoAdapterPy import IoAdapterPy
 
 from eltetrado.model import (
     Atom3D,
     Residue3D,
-    ResidueLabel,
     ResidueAuth,
-    Structure3D,
+    ResidueLabel,
     Structure2D,
+    Structure3D,
 )
 
 RNAPOLIS_WS_URL = os.getenv(
@@ -19,7 +19,7 @@ RNAPOLIS_WS_URL = os.getenv(
 )
 
 
-def read_2d_structure(cif_or_pdb: TextIO, model: int) -> Structure2D:
+def read_2d_structure(cif_or_pdb: IO[str], model: int) -> Structure2D:
     cif_or_pdb.seek(0)
     result = requests.post(
         f"{RNAPOLIS_WS_URL}/analyze/{model}",
@@ -32,7 +32,7 @@ def read_2d_structure(cif_or_pdb: TextIO, model: int) -> Structure2D:
     return Structure2D(**result.json())
 
 
-def read_3d_structure(cif_or_pdb: TextIO, model: int) -> Structure3D:
+def read_3d_structure(cif_or_pdb: IO[str], model: int) -> Structure3D:
     atoms, modified, sequence = (
         parse_cif(cif_or_pdb) if is_cif(cif_or_pdb) else parse_pdb(cif_or_pdb)
     )
@@ -40,7 +40,7 @@ def read_3d_structure(cif_or_pdb: TextIO, model: int) -> Structure3D:
     return group_atoms(atoms, modified, sequence)
 
 
-def is_cif(cif_or_pdb: TextIO) -> bool:
+def is_cif(cif_or_pdb: IO[str]) -> bool:
     cif_or_pdb.seek(0)
     for line in cif_or_pdb.readlines():
         if line.startswith("_atom_site"):
@@ -49,7 +49,7 @@ def is_cif(cif_or_pdb: TextIO) -> bool:
 
 
 def parse_cif(
-    cif: TextIO,
+    cif: IO[str],
 ) -> Tuple[
     List[Atom3D],
     Dict[Union[ResidueLabel, ResidueAuth], str],
@@ -57,10 +57,10 @@ def parse_cif(
 ]:
     cif.seek(0)
 
-    io_adapter = IoAdapter()
+    io_adapter = IoAdapterPy()
     data = io_adapter.readFile(cif.name)
-    atoms = []
-    modified = {}
+    atoms: List[Atom3D] = []
+    modified: Dict[Union[ResidueLabel, ResidueAuth], str] = {}
     sequence = {}
 
     if data:
@@ -155,8 +155,10 @@ def parse_cif(
                 # model = row_dict.get('PDB_model_num', '1')
                 standard_residue_name = row_dict.get("parent_comp_id", "n")
 
-                modified[label] = standard_residue_name
-                modified[auth] = standard_residue_name
+                if label is not None:
+                    modified[label] = standard_residue_name
+                if auth is not None:
+                    modified[auth] = standard_residue_name
 
         if entity_poly:
             for row in entity_poly.getRowList():
@@ -175,10 +177,16 @@ def parse_cif(
     return atoms, modified, sequence
 
 
-def parse_pdb(pdb: TextIO) -> Tuple[List[Atom3D], Dict[ResidueAuth, str], Dict]:
+def parse_pdb(
+    pdb: IO[str],
+) -> Tuple[
+    List[Atom3D],
+    Dict[Union[ResidueLabel, ResidueAuth], str],
+    Dict[Tuple[str, int], str],
+]:
     pdb.seek(0)
-    atoms = []
-    modified = {}
+    atoms: List[Atom3D] = []
+    modified: Dict[Union[ResidueLabel, ResidueAuth], str] = {}
     model = 1
 
     for line in pdb.readlines():
@@ -224,7 +232,7 @@ def group_atoms(
 
     key_previous = (atoms[0].label, atoms[0].auth, atoms[0].model)
     residue_atoms = [atoms[0]]
-    residues = []
+    residues: List[Residue3D] = []
     index = 1
 
     for atom in atoms[1:]:
@@ -266,17 +274,17 @@ def group_atoms(
 
 
 def get_residue_name(
-    auth: ResidueAuth,
-    label: ResidueLabel,
+    auth: Optional[ResidueAuth],
+    label: Optional[ResidueLabel],
     modified: Dict[Union[ResidueAuth, ResidueLabel], str],
 ) -> str:
-    if auth in modified:
+    if auth is not None and auth in modified:
         name = modified[auth].lower()
-    elif label in modified:
+    elif label is not None and label in modified:
         name = modified[label].lower()
-    elif auth:
+    elif auth is not None:
         name = auth.name
-    elif label:
+    elif label is not None:
         name = label.name
     else:
         # any nucleotide
@@ -285,10 +293,10 @@ def get_residue_name(
 
 
 def get_one_letter_name(
-    label: ResidueLabel, sequence: Dict[Tuple[str, int], str], name: str
+    label: Optional[ResidueLabel], sequence: Dict[Tuple[str, int], str], name: str
 ) -> str:
     # try getting the value from _entity_poly first
-    if label:
+    if label is not None:
         key = (label.chain, label.number)
         if key in sequence:
             return sequence[key]

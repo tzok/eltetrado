@@ -3,13 +3,13 @@ import gzip
 import os
 import sys
 import tempfile
-from typing import TextIO
+from typing import IO
 
 import orjson
 
 from eltetrado.analysis import Visualizer, eltetrado, has_tetrad
 from eltetrado.model import generate_dto
-from eltetrado.structure import read_3d_structure, read_2d_structure
+from eltetrado.structure import read_2d_structure, read_3d_structure
 
 
 def eltetrado_cli():
@@ -127,7 +127,7 @@ def has_tetrad_cli():
     sys.exit(0 if flag else 1)
 
 
-def handle_input_file(path) -> TextIO:
+def handle_input_file(path) -> IO[str]:
     root, ext = os.path.splitext(path)
 
     if ext == ".gz":
