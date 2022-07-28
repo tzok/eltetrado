@@ -1,13 +1,16 @@
 import logging
 import math
+import os
 import string
 from collections import Counter, defaultdict
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from enum import Enum
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional, Set, Tuple, Union
 
 import numpy
 import numpy.typing
+
+logging.basicConfig(level=os.environ.get("LOGLEVEL", "INFO"))
 
 
 class LeontisWesthof(Enum):
@@ -591,6 +594,9 @@ class Residue3D:
     def __hash__(self):
         return hash((self.name, self.model, self.label, self.auth, self.atoms))
 
+    def __repr__(self):
+        return f"{self.full_name}"
+
     @property
     def chain(self) -> str:
         if self.auth is not None:
@@ -843,15 +849,23 @@ class Stacking3D:
 @dataclass
 class Structure3D:
     residues: List[Residue3D]
+    residue_map: Dict[Union[ResidueLabel, ResidueAuth], Residue3D] = field(init=False)
+
+    def __post_init__(self):
+        self.residue_map = {}
+        for residue in self.residues:
+            if residue.label is not None:
+                self.residue_map[residue.label] = residue
+            if residue.auth is not None:
+                self.residue_map[residue.auth] = residue
 
     def find_residue(
         self, label: Optional[ResidueLabel], auth: Optional[ResidueAuth]
     ) -> Optional[Residue3D]:
-        for residue in self.residues:
-            if label is not None and label == residue.label:
-                return residue
-            if auth is not None and auth == residue.auth:
-                return residue
+        if label is not None and label in self.residue_map:
+            return self.residue_map.get(label)
+        if auth is not None and auth in self.residue_map:
+            return self.residue_map.get(auth)
         return None
 
     def base_pairs(self, structure2d: Structure2D) -> List[BasePair3D]:
@@ -865,12 +879,13 @@ class Structure3D:
 
     def base_pair_graph(
         self, structure2d: Structure2D, strict: bool = False
-    ) -> Dict[Residue3D, List[Residue3D]]:
-        graph = defaultdict(list)
+    ) -> Dict[Residue3D, Set[Residue3D]]:
+        graph = defaultdict(set)
         for pair in self.base_pairs(structure2d):
             if strict and pair.lw not in (LeontisWesthof.cWH, LeontisWesthof.cHW):
                 continue
-            graph[pair.nt1].append(pair.nt2)
+            graph[pair.nt1].add(pair.nt2)
+            graph[pair.nt2].add(pair.nt1)
         return graph
 
     def base_pair_dict(
@@ -894,10 +909,11 @@ class Structure3D:
 
     def stacking_graph(
         self, structure2d: Structure2D
-    ) -> Dict[Residue3D, List[Residue3D]]:
-        graph = defaultdict(list)
+    ) -> Dict[Residue3D, Set[Residue3D]]:
+        graph = defaultdict(set)
         for pair in self.stackings(structure2d):
-            graph[pair.nt1].append(pair.nt2)
+            graph[pair.nt1].add(pair.nt2)
+            graph[pair.nt2].add(pair.nt1)
         return graph
 
     def stacking_dict(

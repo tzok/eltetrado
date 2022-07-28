@@ -54,7 +54,7 @@ def eltetrado_cli():
         help="when set, the visualization will not be created at all",
     )
     parser.add_argument(
-        "--version", action="version", version="%(prog)s {}".format(version)
+        "-v", "--version", action="version", version="%(prog)s {}".format(version)
     )
     args = parser.parse_args()
 
