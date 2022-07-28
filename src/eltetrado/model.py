@@ -1,71 +1,75 @@
 import logging
 import math
+import os
 import string
 from collections import Counter, defaultdict
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from enum import Enum
-from typing import List, Optional, Dict, Tuple
+from typing import Dict, List, Optional, Set, Tuple, Union
 
 import numpy
+import numpy.typing
+
+logging.basicConfig(level=os.environ.get("LOGLEVEL", "INFO"))
 
 
 class LeontisWesthof(Enum):
-    cWW = 'cWW'
-    cWH = 'cWH'
-    cWS = 'cWS'
-    cHW = 'cHW'
-    cHH = 'cHH'
-    cHS = 'cHS'
-    cSW = 'cSW'
-    cSH = 'cSH'
-    cSS = 'cSS'
-    tWW = 'tWW'
-    tWH = 'tWH'
-    tWS = 'tWS'
-    tHW = 'tHW'
-    tHH = 'tHH'
-    tHS = 'tHS'
-    tSW = 'tSW'
-    tSH = 'tSH'
-    tSS = 'tSS'
+    cWW = "cWW"
+    cWH = "cWH"
+    cWS = "cWS"
+    cHW = "cHW"
+    cHH = "cHH"
+    cHS = "cHS"
+    cSW = "cSW"
+    cSH = "cSH"
+    cSS = "cSS"
+    tWW = "tWW"
+    tWH = "tWH"
+    tWS = "tWS"
+    tHW = "tHW"
+    tHH = "tHH"
+    tHS = "tHS"
+    tSW = "tSW"
+    tSH = "tSH"
+    tSS = "tSS"
 
 
 class Saenger(Enum):
-    I = 'I'
-    II = 'II'
-    III = 'III'
-    IV = 'IV'
-    V = 'V'
-    VI = 'VI'
-    VII = 'VII'
-    VIII = 'VIII'
-    IX = 'IX'
-    X = 'X'
-    XI = 'XI'
-    XII = 'XII'
-    XIII = 'XIII'
-    XIV = 'XIV'
-    XV = 'XV'
-    XVI = 'XVI'
-    XVII = 'XVII'
-    XVIII = 'XVIII'
-    XIX = 'XIX'
-    XX = 'XX'
-    XXI = 'XXI'
-    XXII = 'XXII'
-    XXIII = 'XXIII'
-    XXIV = 'XXIV'
-    XXV = 'XXV'
-    XXVI = 'XXVI'
-    XXVII = 'XXVII'
-    XXVIII = 'XXVIII'
+    I = "I"
+    II = "II"
+    III = "III"
+    IV = "IV"
+    V = "V"
+    VI = "VI"
+    VII = "VII"
+    VIII = "VIII"
+    IX = "IX"
+    X = "X"
+    XI = "XI"
+    XII = "XII"
+    XIII = "XIII"
+    XIV = "XIV"
+    XV = "XV"
+    XVI = "XVI"
+    XVII = "XVII"
+    XVIII = "XVIII"
+    XIX = "XIX"
+    XX = "XX"
+    XXI = "XXI"
+    XXII = "XXII"
+    XXIII = "XXIII"
+    XXIV = "XXIV"
+    XXV = "XXV"
+    XXVI = "XXVI"
+    XXVII = "XXVII"
+    XXVIII = "XXVIII"
 
 
 class StackingTopology(Enum):
-    upward = 'upward'
-    downward = 'downward'
-    inward = 'inward'
-    outward = 'outward'
+    upward = "upward"
+    downward = "downward"
+    inward = "inward"
+    outward = "outward"
 
 
 class BR(Enum):
@@ -193,57 +197,64 @@ class Structure2D:
     def __post_init__(self):
         self.basePairs = [BasePair(**x) for x in self.basePairs if isinstance(x, dict)]
         self.stackings = [Stacking(**x) for x in self.stackings if isinstance(x, dict)]
-        self.baseRiboseInteractions = [BaseRibose(**x) for x in self.baseRiboseInteractions if isinstance(x, dict)]
-        self.basePhosphateInteractions = \
-            [BasePhosphate(**x) for x in self.basePhosphateInteractions if isinstance(x, dict)]
-        self.otherInteractions = [OtherInteraction(**x) for x in self.otherInteractions if isinstance(x, dict)]
+        self.baseRiboseInteractions = [
+            BaseRibose(**x) for x in self.baseRiboseInteractions if isinstance(x, dict)
+        ]
+        self.basePhosphateInteractions = [
+            BasePhosphate(**x)
+            for x in self.basePhosphateInteractions
+            if isinstance(x, dict)
+        ]
+        self.otherInteractions = [
+            OtherInteraction(**x) for x in self.otherInteractions if isinstance(x, dict)
+        ]
 
 
 class Ion(Enum):
-    Ag = 'Ag'
-    Au = 'Au'
-    Ba = 'Ba'
-    Ca = 'Ca'
-    Co = 'Co'
-    Cs = 'Cs'
-    Cu = 'Cu'
-    Eu = 'Eu'
-    Fe = 'Fe'
-    Ir = 'Ir'
-    K = 'K'
-    Li = 'Li'
-    Mg = 'Mg'
-    Mn = 'Mn'
-    Na = 'Na'
-    Ni = 'Ni'
-    Os = 'Os'
-    Pb = 'Pb'
-    Pt = 'Pt'
-    Ru = 'Ru'
-    Sr = 'Sr'
-    Tl = 'Tl'
-    V = 'V'
-    Zn = 'Zn'
+    Ag = "Ag"
+    Au = "Au"
+    Ba = "Ba"
+    Ca = "Ca"
+    Co = "Co"
+    Cs = "Cs"
+    Cu = "Cu"
+    Eu = "Eu"
+    Fe = "Fe"
+    Ir = "Ir"
+    K = "K"
+    Li = "Li"
+    Mg = "Mg"
+    Mn = "Mn"
+    Na = "Na"
+    Ni = "Ni"
+    Os = "Os"
+    Pb = "Pb"
+    Pt = "Pt"
+    Ru = "Ru"
+    Sr = "Sr"
+    Tl = "Tl"
+    V = "V"
+    Zn = "Zn"
 
 
 class Molecule(Enum):
-    DNA = 'DNA'
-    RNA = 'RNA'
-    Other = 'Other'
+    DNA = "DNA"
+    RNA = "RNA"
+    Other = "Other"
 
 
 class GlycosidicBond(Enum):
-    anti = 'anti'
-    syn = 'syn'
+    anti = "anti"
+    syn = "syn"
 
 
 class ONZ(Enum):
-    O_PLUS = 'O+'
-    O_MINUS = 'O-'
-    N_PLUS = 'N+'
-    N_MINUS = 'N-'
-    Z_PLUS = 'Z+'
-    Z_MINUS = 'Z-'
+    O_PLUS = "O+"
+    O_MINUS = "O-"
+    N_PLUS = "N+"
+    N_MINUS = "N-"
+    Z_PLUS = "Z+"
+    Z_MINUS = "Z-"
 
     def score(self):
         if self == ONZ.O_PLUS:
@@ -262,192 +273,192 @@ class ONZ(Enum):
 
 
 class ONZM(Enum):
-    OP_PLUS = 'Op+'
-    OP_MINUS = 'Op-'
-    OP_STAR = 'Op*'
-    OA_PLUS = 'Oa+'
-    OA_MINUS = 'Oa-'
-    OA_STAR = 'Oa*'
-    OH_PLUS = 'Oh+'
-    OH_MINUS = 'Oh-'
-    OH_STAR = 'Oh*'
-    NP_PLUS = 'Np+'
-    NP_MINUS = 'Np-'
-    NP_STAR = 'Np*'
-    NA_PLUS = 'Na+'
-    NA_MINUS = 'Na-'
-    NA_STAR = 'Na*'
-    NH_PLUS = 'Nh+'
-    NH_MINUS = 'Nh-'
-    NH_STAR = 'Nh*'
-    ZP_PLUS = 'Zp+'
-    ZP_MINUS = 'Zp-'
-    ZP_STAR = 'Zp*'
-    ZA_PLUS = 'Za+'
-    ZA_MINUS = 'Za-'
-    ZA_STAR = 'Za*'
-    ZH_PLUS = 'Zh+'
-    ZH_MINUS = 'Zh-'
-    ZH_STAR = 'Zh*'
-    MP_PLUS = 'Mp+'
-    MP_MINUS = 'Mp-'
-    MP_STAR = 'Mp*'
-    MA_PLUS = 'Ma+'
-    MA_MINUS = 'Ma-'
-    MA_STAR = 'Ma*'
-    MH_PLUS = 'Mh+'
-    MH_MINUS = 'Mh-'
-    MH_STAR = 'Mh*'
+    OP_PLUS = "Op+"
+    OP_MINUS = "Op-"
+    OP_STAR = "Op*"
+    OA_PLUS = "Oa+"
+    OA_MINUS = "Oa-"
+    OA_STAR = "Oa*"
+    OH_PLUS = "Oh+"
+    OH_MINUS = "Oh-"
+    OH_STAR = "Oh*"
+    NP_PLUS = "Np+"
+    NP_MINUS = "Np-"
+    NP_STAR = "Np*"
+    NA_PLUS = "Na+"
+    NA_MINUS = "Na-"
+    NA_STAR = "Na*"
+    NH_PLUS = "Nh+"
+    NH_MINUS = "Nh-"
+    NH_STAR = "Nh*"
+    ZP_PLUS = "Zp+"
+    ZP_MINUS = "Zp-"
+    ZP_STAR = "Zp*"
+    ZA_PLUS = "Za+"
+    ZA_MINUS = "Za-"
+    ZA_STAR = "Za*"
+    ZH_PLUS = "Zh+"
+    ZH_MINUS = "Zh-"
+    ZH_STAR = "Zh*"
+    MP_PLUS = "Mp+"
+    MP_MINUS = "Mp-"
+    MP_STAR = "Mp*"
+    MA_PLUS = "Ma+"
+    MA_MINUS = "Ma-"
+    MA_STAR = "Ma*"
+    MH_PLUS = "Mh+"
+    MH_MINUS = "Mh-"
+    MH_STAR = "Mh*"
 
     @staticmethod
     def from_value(value: str):
         for candidate in ONZM:
             if candidate.value == value:
                 return candidate
-        raise RuntimeError(f'Failed to match {value} to an ONZM class')
+        raise RuntimeError(f"Failed to match {value} to an ONZM class")
 
 
 class GbaTetradClassification(Enum):
-    Ia = 'Ia'
-    IIa = 'IIa'
-    IIIa = 'IIIa'
-    IVa = 'IVa'
-    Va = 'Va'
-    VIa = 'VIa'
-    VIIa = 'VIIa'
-    VIIIa = 'VIIIa'
-    Ib = 'Ib'
-    IIb = 'IIb'
-    IIIb = 'IIIb'
-    IVb = 'IVb'
-    Vb = 'Vb'
-    VIb = 'VIb'
-    VIIb = 'VIIb'
-    VIIIb = 'VIIIb'
+    Ia = "Ia"
+    IIa = "IIa"
+    IIIa = "IIIa"
+    IVa = "IVa"
+    Va = "Va"
+    VIa = "VIa"
+    VIIa = "VIIa"
+    VIIIa = "VIIIa"
+    Ib = "Ib"
+    IIb = "IIb"
+    IIIb = "IIIb"
+    IVb = "IVb"
+    Vb = "Vb"
+    VIb = "VIb"
+    VIIb = "VIIb"
+    VIIIb = "VIIIb"
 
 
 class GbaQuadruplexClassification(Enum):
-    I = 'I'
-    II = 'II'
-    III = 'III'
-    IV = 'IV'
-    V = 'V'
-    VI = 'VI'
-    VII = 'VII'
-    VIII = 'VIII'
+    I = "I"
+    II = "II"
+    III = "III"
+    IV = "IV"
+    V = "V"
+    VI = "VI"
+    VII = "VII"
+    VIII = "VIII"
 
 
 class LoopClassification(Enum):
-    _1a = '1a'
-    _2a = '2a'
-    _3a = '3a'
-    _4a = '4a'
-    _5a = '5a'
-    _6a = '6a'
-    _7a = '7a'
-    _8a = '8a'
-    _9a = '9a'
-    _10a = '10a'
-    _11a = '11a'
-    _12a = '12a'
-    _13a = '13a'
-    _1b = '1b'
-    _2b = '2b'
-    _3b = '3b'
-    _4b = '4b'
-    _5b = '5b'
-    _6b = '6b'
-    _7b = '7b'
-    _8b = '8b'
-    _9b = '9b'
-    _10b = '10b'
-    _11b = '11b'
-    _12b = '12b'
-    _13b = '13b'
-    invalid = 'n/a'
+    _1a = "1a"
+    _2a = "2a"
+    _3a = "3a"
+    _4a = "4a"
+    _5a = "5a"
+    _6a = "6a"
+    _7a = "7a"
+    _8a = "8a"
+    _9a = "9a"
+    _10a = "10a"
+    _11a = "11a"
+    _12a = "12a"
+    _13a = "13a"
+    _1b = "1b"
+    _2b = "2b"
+    _3b = "3b"
+    _4b = "4b"
+    _5b = "5b"
+    _6b = "6b"
+    _7b = "7b"
+    _8b = "8b"
+    _9b = "9b"
+    _10b = "10b"
+    _11b = "11b"
+    _12b = "12b"
+    _13b = "13b"
+    invalid = "n/a"
 
     def loop_progression(self) -> str:
         if self == LoopClassification._1a:
-            return '-(ppp)'
+            return "-(ppp)"
         elif self == LoopClassification._1b:
-            return '+(ppp)'
+            return "+(ppp)"
         elif self == LoopClassification._2a:
-            return '-(ppl)'
+            return "-(ppl)"
         elif self == LoopClassification._2b:
-            return '+(ppl)'
+            return "+(ppl)"
         elif self == LoopClassification._3a:
-            return '-(plp)'
+            return "-(plp)"
         elif self == LoopClassification._3b:
-            return '+(plp)'
+            return "+(plp)"
         elif self == LoopClassification._4a:
-            return '-(lpp)'
+            return "-(lpp)"
         elif self == LoopClassification._4b:
-            return '+(lpp)'
+            return "+(lpp)"
         elif self == LoopClassification._5a:
-            return '(-pd+p)'
+            return "(-pd+p)"
         elif self == LoopClassification._5b:
-            return '(+pd-p)'
+            return "(+pd-p)"
         elif self == LoopClassification._6a:
-            return '-(lll)'
+            return "-(lll)"
         elif self == LoopClassification._6b:
-            return '+(lll)'
+            return "+(lll)"
         elif self == LoopClassification._7a:
-            return '-(llp)'
+            return "-(llp)"
         elif self == LoopClassification._7b:
-            return '+(llp)'
+            return "+(llp)"
         elif self == LoopClassification._8a:
-            return '-(lpl)'
+            return "-(lpl)"
         elif self == LoopClassification._8b:
-            return '+(lpl)'
+            return "+(lpl)"
         elif self == LoopClassification._9a:
-            return '-(pll)'
+            return "-(pll)"
         elif self == LoopClassification._9b:
-            return '+(pll)'
+            return "+(pll)"
         elif self == LoopClassification._10a:
-            return '(-pd+l)'
+            return "(-pd+l)"
         elif self == LoopClassification._10b:
-            return '(+pd-l)'
+            return "(+pd-l)"
         elif self == LoopClassification._11a:
-            return '(-ld+l)'
+            return "(-ld+l)"
         elif self == LoopClassification._11b:
-            return '(+ld-l)'
+            return "(+ld-l)"
         elif self == LoopClassification._12a:
-            return '(d-pd)'
+            return "(d-pd)"
         elif self == LoopClassification._12b:
-            return '(d+pd)'
+            return "(d+pd)"
         elif self == LoopClassification._13a:
-            return '(-ld+p)'
+            return "(-ld+p)"
         elif self == LoopClassification._13b:
-            return '(+ld-p)'
-        raise RuntimeError(f'Failed to get string representation of {self}')
+            return "(+ld-p)"
+        raise RuntimeError(f"Failed to get string representation of {self}")
 
     @staticmethod
     def from_value(value: str):
         for candidate in LoopClassification:
             if candidate.value == value:
                 return candidate
-        raise RuntimeError(f'Failed to match {value} to a LoopClassification class')
+        raise RuntimeError(f"Failed to match {value} to a LoopClassification class")
 
 
 class LoopType(Enum):
-    diagonal = 'diagonal'
-    propeller_plus = 'propeller+'
-    propeller_minus = 'propeller-'
-    lateral_plus = 'lateral+'
-    lateral_minus = 'lateral-'
+    diagonal = "diagonal"
+    propeller_plus = "propeller+"
+    propeller_minus = "propeller-"
+    lateral_plus = "lateral+"
+    lateral_minus = "lateral-"
 
     @staticmethod
     def from_value(value: str):
         for loop_type in LoopType:
             if loop_type.value == value:
                 return loop_type
-        raise RuntimeError(f'Failed to match {value} to a LoopType class')
+        raise RuntimeError(f"Failed to match {value} to a LoopType class")
 
 
 class Direction(Enum):
-    parallel = 'parallel'
-    antiparallel = 'antiparallel'
-    hybrid = 'hybrid'
+    parallel = "parallel"
+    antiparallel = "antiparallel"
+    hybrid = "hybrid"
 
 
 @dataclass
@@ -474,6 +485,8 @@ class BasePairDTO:
     nt1: str
     nt2: str
     lw: str
+    in_tetrad: bool
+    canonical: bool
 
 
 @dataclass
@@ -520,8 +533,8 @@ class LoopClassificationDTO:
 @dataclass
 class QuadruplexDTO:
     tetrads: List[TetradDTO]
-    onzm: str
-    loopClassification: LoopClassificationDTO
+    onzm: Optional[str]
+    loopClassification: Optional[LoopClassificationDTO]
     gbaClassification: List[str]
     tracts: List[List[str]]
     loops: List[LoopDTO]
@@ -559,7 +572,7 @@ class Atom3D:
     y: float
     z: float
 
-    def coordinates(self) -> numpy.ndarray:
+    def coordinates(self) -> numpy.typing.NDArray[numpy.floating]:
         return numpy.array([self.x, self.y, self.z])
 
 
@@ -571,64 +584,78 @@ class Residue3D:
     model: int
     label: Optional[ResidueLabel]
     auth: Optional[ResidueAuth]
-    atoms: Tuple[Atom3D]
+    atoms: Tuple[Atom3D, ...]
 
     # Dict representing expected name of atom involved in glycosidic bond
-    outermost_atoms = {'A': 'N9', 'G': 'N9', 'C': 'N1', 'U': 'N1', 'T': 'N1'}
+    outermost_atoms = {"A": "N9", "G": "N9", "C": "N1", "U": "N1", "T": "N1"}
     # Dist representing expected name of atom closest to the tetrad center
-    innermost_atoms = {'A': 'N6', 'G': 'O6', 'C': 'N4', 'U': 'O4', 'T': 'O4'}
+    innermost_atoms = {"A": "N6", "G": "O6", "C": "N4", "U": "O4", "T": "O4"}
 
     def __hash__(self):
         return hash((self.name, self.model, self.label, self.auth, self.atoms))
+
+    def __repr__(self):
+        return f"{self.full_name}"
 
     @property
     def chain(self) -> str:
         if self.auth is not None:
             return self.auth.chain
-        return self.label.chain
+        if self.label is not None:
+            return self.label.chain
+        raise RuntimeError(
+            "Unknown chain name, both ResidueAuth and ResidueLabel are empty"
+        )
 
     @property
     def number(self) -> int:
         if self.auth is not None:
             return self.auth.number
-        return self.label.number
+        if self.label is not None:
+            return self.label.number
+        raise RuntimeError(
+            "Unknown residue number, both ResidueAuth and ResidueLabel are empty"
+        )
 
     @property
     def icode(self) -> Optional[str]:
         if self.auth is not None:
-            return self.auth.icode if self.auth.icode not in (' ', '?') else None
+            return self.auth.icode if self.auth.icode not in (" ", "?") else None
         return None
 
     @property
     def molecule_type(self) -> Molecule:
-        if self.name.upper() in ('A', 'C', 'G', 'U'):
+        if self.name.upper() in ("A", "C", "G", "U"):
             return Molecule.RNA
-        if self.name.upper() in ('DA', 'DC', 'DG', 'DT'):
+        if self.name.upper() in ("DA", "DC", "DG", "DT"):
             return Molecule.DNA
         return Molecule.Other
 
     @property
     def full_name(self) -> str:
-        if self.auth:
-            builder = f'{self.auth.chain}.{self.auth.name}'
+        if self.auth is not None:
+            builder = f"{self.auth.chain}.{self.auth.name}"
             if self.auth.name[-1] in string.digits:
-                builder += '/'
-            builder += f'{self.auth.number}'
+                builder += "/"
+            builder += f"{self.auth.number}"
             if self.auth.icode:
-                builder += f'^{self.auth.icode}'
+                builder += f"^{self.auth.icode}"
             return builder
-        else:
-            builder = f'{self.label.chain}.{self.label.name}'
+        elif self.label is not None:
+            builder = f"{self.label.chain}.{self.label.name}"
             if self.label.name[-1] in string.digits:
-                builder += '/'
-            builder += f'{self.label.number}'
+                builder += "/"
+            builder += f"{self.label.number}"
             return builder
+        raise RuntimeError(
+            "Unknown full residue name, both ResidueAuth and ResidueLabel are empty"
+        )
 
     @property
     def chi(self) -> float:
-        if self.one_letter_name.upper() in ('A', 'G'):
+        if self.one_letter_name.upper() in ("A", "G"):
             return self.__chi_purine()
-        elif self.one_letter_name.upper() in ('C', 'U', 'T'):
+        elif self.one_letter_name.upper() in ("C", "U", "T"):
             return self.__chi_pyrimidine()
         # if unknown, try purine first, then pyrimidine
         torsion = self.__chi_purine()
@@ -661,18 +688,30 @@ class Residue3D:
 
     @property
     def is_nucleotide(self) -> bool:
-        return len(self.atoms) > 1 and any([atom for atom in self.atoms if atom.atomName == "C1'"])
+        return len(self.atoms) > 1 and any(
+            [atom for atom in self.atoms if atom.atomName == "C1'"]
+        )
 
     def __chi_purine(self) -> float:
-        atoms = [self.find_atom("O4'"), self.find_atom("C1'"), self.find_atom("N9"), self.find_atom("C4")]
-        if all(atoms):
-            return Residue3D.__torsion_angle(atoms)
+        atoms = [
+            self.find_atom("O4'"),
+            self.find_atom("C1'"),
+            self.find_atom("N9"),
+            self.find_atom("C4"),
+        ]
+        if all([atom is not None for atom in atoms]):
+            return Residue3D.__torsion_angle(atoms)  # type: ignore
         return math.nan
 
     def __chi_pyrimidine(self) -> float:
-        atoms = [self.find_atom("O4'"), self.find_atom("C1'"), self.find_atom("N1"), self.find_atom("C2")]
-        if all(atoms):
-            return Residue3D.__torsion_angle(atoms)
+        atoms = [
+            self.find_atom("O4'"),
+            self.find_atom("C1'"),
+            self.find_atom("N1"),
+            self.find_atom("C2"),
+        ]
+        if all([atom is not None for atom in atoms]):
+            return Residue3D.__torsion_angle(atoms)  # type: ignore
         return math.nan
 
     @staticmethod
@@ -681,9 +720,9 @@ class Residue3D:
         v1 = atoms[1].coordinates() - atoms[0].coordinates()
         v2 = atoms[2].coordinates() - atoms[1].coordinates()
         v3 = atoms[3].coordinates() - atoms[2].coordinates()
-        t1 = numpy.cross(v1, v2)
-        t2 = numpy.cross(v2, v3)
-        t3 = v1 * numpy.linalg.norm(v2)
+        t1: numpy.typing.NDArray[numpy.floating] = numpy.cross(v1, v2)
+        t2: numpy.typing.NDArray[numpy.floating] = numpy.cross(v2, v3)
+        t3: numpy.typing.NDArray[numpy.floating] = v1 * numpy.linalg.norm(v2)
         return math.atan2(numpy.dot(t2, t3), numpy.dot(t1, t2))
 
     def __outer_generator(self):
@@ -693,8 +732,8 @@ class Residue3D:
             yield self.find_atom(self.outermost_atoms[upper])
 
         # try to get generic name for purine/pyrimidine
-        yield self.find_atom('N9')
-        yield self.find_atom('N1')
+        yield self.find_atom("N9")
+        yield self.find_atom("N1")
 
         # try to find at least C1' next to nucleobase
         yield self.find_atom("C1'")
@@ -705,8 +744,9 @@ class Residue3D:
 
         # last resort, create pseudoatom at (0, 0, 0)
         logging.error(
-            f'Failed to determine the outermost atom for nucleotide {self}, so an arbitrary atom will be used')
-        yield Atom3D(self.label, self.auth, self.model, 'UNK', 0.0, 0.0, 0.0)
+            f"Failed to determine the outermost atom for nucleotide {self}, so an arbitrary atom will be used"
+        )
+        yield Atom3D(self.label, self.auth, self.model, "UNK", 0.0, 0.0, 0.0)
 
     def __inner_generator(self):
         # try to find expected atom name
@@ -715,16 +755,16 @@ class Residue3D:
             yield self.find_atom(self.innermost_atoms[upper])
 
         # try to get generic name for purine/pyrimidine
-        yield self.find_atom('C6')
-        yield self.find_atom('C4')
+        yield self.find_atom("C6")
+        yield self.find_atom("C4")
 
         # try to find any atom at position 4 or 6 for purine/pyrimidine respectively
-        yield self.find_atom('O6')
-        yield self.find_atom('N6')
-        yield self.find_atom('S6')
-        yield self.find_atom('O4')
-        yield self.find_atom('N4')
-        yield self.find_atom('S4')
+        yield self.find_atom("O6")
+        yield self.find_atom("N6")
+        yield self.find_atom("S6")
+        yield self.find_atom("O4")
+        yield self.find_atom("N4")
+        yield self.find_atom("S4")
 
         # get any atom
         if self.atoms:
@@ -732,8 +772,9 @@ class Residue3D:
 
         # last resort, create pseudoatom at (0, 0, 0)
         logging.error(
-            f'Failed to determine the innermost atom for nucleotide {self}, so an arbitrary atom will be used')
-        yield Atom3D(self.label, self.auth, self.model, 'UNK', 0.0, 0.0, 0.0)
+            f"Failed to determine the innermost atom for nucleotide {self}, so an arbitrary atom will be used"
+        )
+        yield Atom3D(self.label, self.auth, self.model, "UNK", 0.0, 0.0, 0.0)
 
 
 @dataclass(frozen=True)
@@ -743,11 +784,24 @@ class BasePair3D:
     lw: LeontisWesthof
 
     score_table = {
-        LeontisWesthof.cWW: 1, LeontisWesthof.tWW: 2, LeontisWesthof.cWH: 3, LeontisWesthof.tWH: 4,
-        LeontisWesthof.cWS: 5, LeontisWesthof.tWS: 6, LeontisWesthof.cHW: 7, LeontisWesthof.tHW: 8,
-        LeontisWesthof.cHH: 9, LeontisWesthof.tHH: 10, LeontisWesthof.cHS: 11, LeontisWesthof.tHS: 12,
-        LeontisWesthof.cSW: 13, LeontisWesthof.tSW: 14, LeontisWesthof.cSH: 15, LeontisWesthof.tSH: 16,
-        LeontisWesthof.cSS: 17, LeontisWesthof.tSS: 18
+        LeontisWesthof.cWW: 1,
+        LeontisWesthof.tWW: 2,
+        LeontisWesthof.cWH: 3,
+        LeontisWesthof.tWH: 4,
+        LeontisWesthof.cWS: 5,
+        LeontisWesthof.tWS: 6,
+        LeontisWesthof.cHW: 7,
+        LeontisWesthof.tHW: 8,
+        LeontisWesthof.cHH: 9,
+        LeontisWesthof.tHH: 10,
+        LeontisWesthof.cHS: 11,
+        LeontisWesthof.tHS: 12,
+        LeontisWesthof.cSW: 13,
+        LeontisWesthof.tSW: 14,
+        LeontisWesthof.cSH: 15,
+        LeontisWesthof.tSH: 16,
+        LeontisWesthof.cSS: 17,
+        LeontisWesthof.tSS: 18,
     }
 
     def conflicts_with(self, other) -> bool:
@@ -756,15 +810,34 @@ class BasePair3D:
         return xi < xj < yi < yj or xj < xi < yj < yi
 
     def reverse(self):
-        lw = f'{self.lw.name[0]}{self.lw.name[2]}{self.lw.name[1]}'
+        lw = f"{self.lw.name[0]}{self.lw.name[2]}{self.lw.name[1]}"
         return BasePair3D(self.nt2, self.nt1, LeontisWesthof[lw])
 
+    @property
     def score(self) -> int:
         return self.score_table.get(self.lw, 20)
 
+    @property
     def is_canonical(self) -> bool:
-        nts = ''.join(sorted([self.nt1.one_letter_name.upper(), self.nt2.one_letter_name.upper()]))
-        return self.lw == 'cWW' and (nts == 'AU' or nts == 'CG' or nts == 'GU')
+        nts = "".join(
+            sorted([self.nt1.one_letter_name.upper(), self.nt2.one_letter_name.upper()])
+        )
+        return self.lw == "cWW" and (nts == "AU" or nts == "CG" or nts == "GU")
+
+    def in_tetrad(self, analysis) -> bool:
+        for tetrad in analysis.tetrads:
+            if self in (
+                tetrad.pair_12,
+                tetrad.pair_23,
+                tetrad.pair_34,
+                tetrad.pair_41,
+                tetrad.pair_12.reverse(),
+                tetrad.pair_23.reverse(),
+                tetrad.pair_34.reverse(),
+                tetrad.pair_41.reverse(),
+            ):
+                return True
+        return False
 
 
 @dataclass
@@ -776,13 +849,23 @@ class Stacking3D:
 @dataclass
 class Structure3D:
     residues: List[Residue3D]
+    residue_map: Dict[Union[ResidueLabel, ResidueAuth], Residue3D] = field(init=False)
 
-    def find_residue(self, label: Optional[ResidueLabel], auth: Optional[ResidueAuth]) -> Optional[Residue3D]:
+    def __post_init__(self):
+        self.residue_map = {}
         for residue in self.residues:
-            if label is not None and label == residue.label:
-                return residue
-            if auth is not None and auth == residue.auth:
-                return residue
+            if residue.label is not None:
+                self.residue_map[residue.label] = residue
+            if residue.auth is not None:
+                self.residue_map[residue.auth] = residue
+
+    def find_residue(
+        self, label: Optional[ResidueLabel], auth: Optional[ResidueAuth]
+    ) -> Optional[Residue3D]:
+        if label is not None and label in self.residue_map:
+            return self.residue_map.get(label)
+        if auth is not None and auth in self.residue_map:
+            return self.residue_map.get(auth)
         return None
 
     def base_pairs(self, structure2d: Structure2D) -> List[BasePair3D]:
@@ -790,19 +873,24 @@ class Structure3D:
         for base_pair in structure2d.basePairs:
             nt1 = self.find_residue(base_pair.nt1.label, base_pair.nt1.auth)
             nt2 = self.find_residue(base_pair.nt2.label, base_pair.nt2.auth)
-            result.append(BasePair3D(nt1, nt2, base_pair.lw))
+            if nt1 is not None and nt2 is not None:
+                result.append(BasePair3D(nt1, nt2, base_pair.lw))
         return result
 
-    def base_pair_graph(self, structure2d: Structure2D, strict: bool = False) -> Dict[Residue3D, List[Residue3D]]:
-        graph = defaultdict(list)
+    def base_pair_graph(
+        self, structure2d: Structure2D, strict: bool = False
+    ) -> Dict[Residue3D, Set[Residue3D]]:
+        graph = defaultdict(set)
         for pair in self.base_pairs(structure2d):
             if strict and pair.lw not in (LeontisWesthof.cWH, LeontisWesthof.cHW):
                 continue
-            graph[pair.nt1].append(pair.nt2)
+            graph[pair.nt1].add(pair.nt2)
+            graph[pair.nt2].add(pair.nt1)
         return graph
 
-    def base_pair_dict(self, structure2d: Structure2D, strict: bool = False) \
-            -> Dict[Tuple[Residue3D, Residue3D], BasePair3D]:
+    def base_pair_dict(
+        self, structure2d: Structure2D, strict: bool = False
+    ) -> Dict[Tuple[Residue3D, Residue3D], BasePair3D]:
         result = {}
         for pair in self.base_pairs(structure2d):
             if strict and pair.lw not in (LeontisWesthof.cWH, LeontisWesthof.cHW):
@@ -815,16 +903,22 @@ class Structure3D:
         for stacking in structure2d.stackings:
             nt1 = self.find_residue(stacking.nt1.label, stacking.nt1.auth)
             nt2 = self.find_residue(stacking.nt2.label, stacking.nt2.auth)
-            result.append(Stacking3D(nt1, nt2))
+            if nt1 is not None and nt2 is not None:
+                result.append(Stacking3D(nt1, nt2))
         return result
 
-    def stacking_graph(self, structure2d: Structure2D) -> Dict[Residue3D, List[Residue3D]]:
-        graph = defaultdict(list)
+    def stacking_graph(
+        self, structure2d: Structure2D
+    ) -> Dict[Residue3D, Set[Residue3D]]:
+        graph = defaultdict(set)
         for pair in self.stackings(structure2d):
-            graph[pair.nt1].append(pair.nt2)
+            graph[pair.nt1].add(pair.nt2)
+            graph[pair.nt2].add(pair.nt1)
         return graph
 
-    def stacking_dict(self, structure2d: Structure2D) -> Dict[Tuple[Residue3D, Residue3D], Stacking3D]:
+    def stacking_dict(
+        self, structure2d: Structure2D
+    ) -> Dict[Tuple[Residue3D, Residue3D], Stacking3D]:
         result = {}
         for pair in self.stackings(structure2d):
             result[(pair.nt1, pair.nt2)] = pair
@@ -838,33 +932,74 @@ def convert_metals(analysis) -> List[MetalDTO]:
 
 def convert_nucleotides(analysis) -> List[NucleotideDTO]:
     return [
-        NucleotideDTO(nt.index, nt.chain, nt.number, nt.icode, nt.molecule_type.value, nt.full_name,
-                      nt.one_letter_name, math.degrees(nt.chi), nt.chi_class.value if nt.chi_class else None)
+        NucleotideDTO(
+            nt.index,
+            nt.chain,
+            nt.number,
+            nt.icode,
+            nt.molecule_type.value,
+            nt.full_name,
+            nt.one_letter_name,
+            math.degrees(nt.chi),
+            nt.chi_class.value if nt.chi_class else None,
+        )
         for nt in analysis.structure3d.residues
+        if nt.is_nucleotide
     ]
 
 
 def convert_base_pairs(analysis) -> List[BasePairDTO]:
-    return [BasePairDTO(bp.nt1.full_name, bp.nt2.full_name, bp.lw.value) for bp in analysis.base_pairs]
+    return [
+        BasePairDTO(
+            bp.nt1.full_name,
+            bp.nt2.full_name,
+            bp.lw.value,
+            bp.in_tetrad(analysis),
+            bp.is_canonical,
+        )
+        for bp in analysis.base_pairs
+    ]
 
 
 def convert_tetrads(quadruplex) -> List[TetradDTO]:
-    id_ = lambda tetrad: f'{tetrad.nt1.full_name}-{tetrad.nt2.full_name}-{tetrad.nt3.full_name}-{tetrad.nt4.full_name}'
+    id_ = (
+        lambda tetrad: f"{tetrad.nt1.full_name}-{tetrad.nt2.full_name}-{tetrad.nt3.full_name}-{tetrad.nt4.full_name}"
+    )
     ions_channel = lambda tetrad: [atom.atomName for atom in tetrad.ions_channel]
-    ions_outside = lambda tetrad: [IonOutsideDTO(nt.full_name, atom.atomName)
-                                   for nt, atoms in tetrad.ions_outside.items() for atom in atoms]
+    ions_outside = lambda tetrad: [
+        IonOutsideDTO(nt.full_name, atom.atomName)
+        for nt, atoms in tetrad.ions_outside.items()
+        for atom in atoms
+    ]
     return [
-        TetradDTO(id_(tetrad), tetrad.nt1.full_name, tetrad.nt2.full_name, tetrad.nt3.full_name, tetrad.nt4.full_name,
-                  tetrad.onz.value, tetrad.gba_class.value, float(tetrad.planarity_deviation), ions_channel(tetrad),
-                  ions_outside(tetrad))
+        TetradDTO(
+            id_(tetrad),
+            tetrad.nt1.full_name,
+            tetrad.nt2.full_name,
+            tetrad.nt3.full_name,
+            tetrad.nt4.full_name,
+            tetrad.onz.value,
+            tetrad.gba_class.value,
+            float(tetrad.planarity_deviation),
+            ions_channel(tetrad),
+            ions_outside(tetrad),
+        )
         for tetrad in quadruplex.tetrads
     ]
 
 
 def convert_tetrad_pairs(helix) -> List[TetradPairDTO]:
-    id_ = lambda tetrad: f'{tetrad.nt1.full_name}-{tetrad.nt2.full_name}-{tetrad.nt3.full_name}-{tetrad.nt4.full_name}'
+    id_ = (
+        lambda tetrad: f"{tetrad.nt1.full_name}-{tetrad.nt2.full_name}-{tetrad.nt3.full_name}-{tetrad.nt4.full_name}"
+    )
     return [
-        TetradPairDTO(id_(tp.tetrad1), id_(tp.tetrad2), tp.direction.value, float(tp.rise), float(tp.twist))
+        TetradPairDTO(
+            id_(tp.tetrad1),
+            id_(tp.tetrad2),
+            tp.direction.value,
+            float(tp.rise),
+            float(tp.twist),
+        )
         for tp in helix.tetrad_pairs
     ]
 
@@ -872,20 +1007,29 @@ def convert_tetrad_pairs(helix) -> List[TetradPairDTO]:
 def convert_quadruplexes(helix) -> List[QuadruplexDTO]:
     nts_ = lambda nts: [nt.full_name for nt in nts]
     return [
-        QuadruplexDTO(convert_tetrads(q), q.onzm.value if q.onzm else None,
-                      LoopClassificationDTO(q.loop_class.value,
-                                            q.loop_class.loop_progression()) if q.loop_class else None,
-                      [g.value for g in q.gba_classes],
-                      [nts_(q.tracts[0].nucleotides), nts_(q.tracts[1].nucleotides),
-                       nts_(q.tracts[2].nucleotides), nts_(q.tracts[3].nucleotides)],
-                      [LoopDTO(l.loop_type.value, nts_(l.nucleotides)) for l in q.loops])
+        QuadruplexDTO(
+            convert_tetrads(q),
+            q.onzm.value if q.onzm else None,
+            LoopClassificationDTO(q.loop_class.value, q.loop_class.loop_progression())
+            if q.loop_class
+            else None,
+            [g.value for g in q.gba_classes],
+            [
+                nts_(q.tracts[0].nucleotides),
+                nts_(q.tracts[1].nucleotides),
+                nts_(q.tracts[2].nucleotides),
+                nts_(q.tracts[3].nucleotides),
+            ],
+            [LoopDTO(l.loop_type.value, nts_(l.nucleotides)) for l in q.loops],
+        )
         for q in helix.quadruplexes
     ]
 
 
 def convert_helices(analysis) -> List[HelixDTO]:
     return [
-        HelixDTO(convert_quadruplexes(h), convert_tetrad_pairs(h)) for h in analysis.helices
+        HelixDTO(convert_quadruplexes(h), convert_tetrad_pairs(h))
+        for h in analysis.helices
     ]
 
 

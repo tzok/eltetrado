@@ -448,142 +448,198 @@ Click to see the output JSON
     {
       "nt1": "1.DA3",
       "nt2": "1.DA9",
-      "lw": "tSW"
+      "lw": "tSW",
+      "in_tetrad": false,
+      "canonical": false
     },
     {
       "nt1": "1.DG4",
       "nt2": "1.DG10",
-      "lw": "cHW"
+      "lw": "cHW",
+      "in_tetrad": true,
+      "canonical": false
     },
     {
       "nt1": "1.DG4",
       "nt2": "1.DG22",
-      "lw": "cWH"
+      "lw": "cWH",
+      "in_tetrad": true,
+      "canonical": false
     },
     {
       "nt1": "1.DG5",
       "nt2": "1.DG11",
-      "lw": "cWH"
+      "lw": "cWH",
+      "in_tetrad": true,
+      "canonical": false
     },
     {
       "nt1": "1.DG5",
       "nt2": "1.DG23",
-      "lw": "cHW"
+      "lw": "cHW",
+      "in_tetrad": true,
+      "canonical": false
     },
     {
       "nt1": "1.DG6",
       "nt2": "1.DG12",
-      "lw": "cWH"
+      "lw": "cWH",
+      "in_tetrad": true,
+      "canonical": false
     },
     {
       "nt1": "1.DG6",
       "nt2": "1.DG24",
-      "lw": "cHW"
+      "lw": "cHW",
+      "in_tetrad": true,
+      "canonical": false
     },
     {
       "nt1": "1.DA9",
       "nt2": "1.DA3",
-      "lw": "tWS"
+      "lw": "tWS",
+      "in_tetrad": false,
+      "canonical": false
     },
     {
       "nt1": "1.DG10",
       "nt2": "1.DG4",
-      "lw": "cWH"
+      "lw": "cWH",
+      "in_tetrad": true,
+      "canonical": false
     },
     {
       "nt1": "1.DG10",
       "nt2": "1.DG18",
-      "lw": "cHW"
+      "lw": "cHW",
+      "in_tetrad": true,
+      "canonical": false
     },
     {
       "nt1": "1.DG11",
       "nt2": "1.DG5",
-      "lw": "cHW"
+      "lw": "cHW",
+      "in_tetrad": true,
+      "canonical": false
     },
     {
       "nt1": "1.DG11",
       "nt2": "1.DG17",
-      "lw": "cWH"
+      "lw": "cWH",
+      "in_tetrad": true,
+      "canonical": false
     },
     {
       "nt1": "1.DG12",
       "nt2": "1.DG6",
-      "lw": "cHW"
+      "lw": "cHW",
+      "in_tetrad": true,
+      "canonical": false
     },
     {
       "nt1": "1.DG12",
       "nt2": "1.DG16",
-      "lw": "cWH"
+      "lw": "cWH",
+      "in_tetrad": true,
+      "canonical": false
     },
     {
       "nt1": "1.DT14",
       "nt2": "1.DA25",
-      "lw": "tWW"
+      "lw": "tWW",
+      "in_tetrad": false,
+      "canonical": false
     },
     {
       "nt1": "1.DG16",
       "nt2": "1.DG12",
-      "lw": "cHW"
+      "lw": "cHW",
+      "in_tetrad": true,
+      "canonical": false
     },
     {
       "nt1": "1.DG16",
       "nt2": "1.DG24",
-      "lw": "cWH"
+      "lw": "cWH",
+      "in_tetrad": true,
+      "canonical": false
     },
     {
       "nt1": "1.DG17",
       "nt2": "1.DG11",
-      "lw": "cHW"
+      "lw": "cHW",
+      "in_tetrad": true,
+      "canonical": false
     },
     {
       "nt1": "1.DG17",
       "nt2": "1.DG23",
-      "lw": "cWH"
+      "lw": "cWH",
+      "in_tetrad": true,
+      "canonical": false
     },
     {
       "nt1": "1.DG18",
       "nt2": "1.DG10",
-      "lw": "cWH"
+      "lw": "cWH",
+      "in_tetrad": true,
+      "canonical": false
     },
     {
       "nt1": "1.DG18",
       "nt2": "1.DG22",
-      "lw": "cHW"
+      "lw": "cHW",
+      "in_tetrad": true,
+      "canonical": false
     },
     {
       "nt1": "1.DG22",
       "nt2": "1.DG4",
-      "lw": "cHW"
+      "lw": "cHW",
+      "in_tetrad": true,
+      "canonical": false
     },
     {
       "nt1": "1.DG22",
       "nt2": "1.DG18",
-      "lw": "cWH"
+      "lw": "cWH",
+      "in_tetrad": true,
+      "canonical": false
     },
     {
       "nt1": "1.DG23",
       "nt2": "1.DG5",
-      "lw": "cWH"
+      "lw": "cWH",
+      "in_tetrad": true,
+      "canonical": false
     },
     {
       "nt1": "1.DG23",
       "nt2": "1.DG17",
-      "lw": "cHW"
+      "lw": "cHW",
+      "in_tetrad": true,
+      "canonical": false
     },
     {
       "nt1": "1.DG24",
       "nt2": "1.DG6",
-      "lw": "cWH"
+      "lw": "cWH",
+      "in_tetrad": true,
+      "canonical": false
     },
     {
       "nt1": "1.DG24",
       "nt2": "1.DG16",
-      "lw": "cHW"
+      "lw": "cHW",
+      "in_tetrad": true,
+      "canonical": false
     },
     {
       "nt1": "1.DA25",
       "nt2": "1.DT14",
-      "lw": "tWW"
+      "lw": "tWW",
+      "in_tetrad": false,
+      "canonical": false
     }
   ],
   "helices": [
@@ -1311,3752 +1367,568 @@ Click to see the output JSON
       "shortName": "U",
       "chi": -159.43730655241544,
       "glycosidicBond": "anti"
-    },
-    {
-      "index": 49,
-      "chain": "C",
-      "number": 9001,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "C.SR9001",
-      "shortName": "R",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 50,
-      "chain": "CA",
-      "number": 9001,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "CA.SR9001",
-      "shortName": "R",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 51,
-      "chain": "CB",
-      "number": 9001,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "CB.SR9001",
-      "shortName": "R",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 52,
-      "chain": "CC",
-      "number": 9001,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "CC.SR9001",
-      "shortName": "R",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 53,
-      "chain": "D",
-      "number": 9002,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "D.SR9002",
-      "shortName": "R",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 54,
-      "chain": "DA",
-      "number": 9002,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "DA.SR9002",
-      "shortName": "R",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 55,
-      "chain": "DB",
-      "number": 9002,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "DB.SR9002",
-      "shortName": "R",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 56,
-      "chain": "DC",
-      "number": 9002,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "DC.SR9002",
-      "shortName": "R",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 57,
-      "chain": "E",
-      "number": 9003,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "E.NA9003",
-      "shortName": "A",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 58,
-      "chain": "EA",
-      "number": 9003,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "EA.NA9003",
-      "shortName": "A",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 59,
-      "chain": "EB",
-      "number": 9003,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "EB.NA9003",
-      "shortName": "A",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 60,
-      "chain": "EC",
-      "number": 9003,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "EC.NA9003",
-      "shortName": "A",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 61,
-      "chain": "F",
-      "number": 9004,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "F.SR9004",
-      "shortName": "R",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 62,
-      "chain": "FA",
-      "number": 9004,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "FA.SR9004",
-      "shortName": "R",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 63,
-      "chain": "FB",
-      "number": 9004,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "FB.SR9004",
-      "shortName": "R",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 64,
-      "chain": "FC",
-      "number": 9004,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "FC.SR9004",
-      "shortName": "R",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 65,
-      "chain": "G",
-      "number": 2101,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "G.SR2101",
-      "shortName": "R",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 66,
-      "chain": "GA",
-      "number": 2101,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "GA.SR2101",
-      "shortName": "R",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 67,
-      "chain": "GB",
-      "number": 2101,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "GB.SR2101",
-      "shortName": "R",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 68,
-      "chain": "GC",
-      "number": 2101,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "GC.SR2101",
-      "shortName": "R",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 69,
-      "chain": "H",
-      "number": 2102,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "H.SR2102",
-      "shortName": "R",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 70,
-      "chain": "HA",
-      "number": 2102,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "HA.SR2102",
-      "shortName": "R",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 71,
-      "chain": "HB",
-      "number": 2102,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "HB.SR2102",
-      "shortName": "R",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 72,
-      "chain": "HC",
-      "number": 2102,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "HC.SR2102",
-      "shortName": "R",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 73,
-      "chain": "I",
-      "number": 2103,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "I.NA2103",
-      "shortName": "A",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 74,
-      "chain": "IA",
-      "number": 2103,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "IA.NA2103",
-      "shortName": "A",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 75,
-      "chain": "IB",
-      "number": 2103,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "IB.NA2103",
-      "shortName": "A",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 76,
-      "chain": "IC",
-      "number": 2103,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "IC.NA2103",
-      "shortName": "A",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 77,
-      "chain": "J",
-      "number": 2104,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "J.CA2104",
-      "shortName": "A",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 78,
-      "chain": "JA",
-      "number": 2104,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "JA.CA2104",
-      "shortName": "A",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 79,
-      "chain": "JB",
-      "number": 2104,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "JB.CA2104",
-      "shortName": "A",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 80,
-      "chain": "JC",
-      "number": 2104,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "JC.CA2104",
-      "shortName": "A",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 81,
-      "chain": "K",
-      "number": 2105,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "K.CA2105",
-      "shortName": "A",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 82,
-      "chain": "KA",
-      "number": 2105,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "KA.CA2105",
-      "shortName": "A",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 83,
-      "chain": "KB",
-      "number": 2105,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "KB.CA2105",
-      "shortName": "A",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 84,
-      "chain": "KC",
-      "number": 2105,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "KC.CA2105",
-      "shortName": "A",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 85,
-      "chain": "L",
-      "number": 2106,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "L.CA2106",
-      "shortName": "A",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 86,
-      "chain": "LA",
-      "number": 2106,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "LA.CA2106",
-      "shortName": "A",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 87,
-      "chain": "LB",
-      "number": 2106,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "LB.CA2106",
-      "shortName": "A",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 88,
-      "chain": "LC",
-      "number": 2106,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "LC.CA2106",
-      "shortName": "A",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 89,
-      "chain": "M",
-      "number": 9101,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "M.HOH9101",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 90,
-      "chain": "M",
-      "number": 9102,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "M.HOH9102",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 91,
-      "chain": "M",
-      "number": 9103,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "M.HOH9103",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 92,
-      "chain": "M",
-      "number": 9104,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "M.HOH9104",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 93,
-      "chain": "M",
-      "number": 9105,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "M.HOH9105",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 94,
-      "chain": "M",
-      "number": 9106,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "M.HOH9106",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 95,
-      "chain": "M",
-      "number": 9107,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "M.HOH9107",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 96,
-      "chain": "M",
-      "number": 9108,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "M.HOH9108",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 97,
-      "chain": "M",
-      "number": 9109,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "M.HOH9109",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 98,
-      "chain": "M",
-      "number": 9110,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "M.HOH9110",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 99,
-      "chain": "M",
-      "number": 9111,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "M.HOH9111",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 100,
-      "chain": "M",
-      "number": 9112,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "M.HOH9112",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 101,
-      "chain": "M",
-      "number": 9113,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "M.HOH9113",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 102,
-      "chain": "M",
-      "number": 9114,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "M.HOH9114",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 103,
-      "chain": "M",
-      "number": 9115,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "M.HOH9115",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 104,
-      "chain": "M",
-      "number": 9116,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "M.HOH9116",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 105,
-      "chain": "M",
-      "number": 9117,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "M.HOH9117",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 106,
-      "chain": "M",
-      "number": 9118,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "M.HOH9118",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 107,
-      "chain": "M",
-      "number": 9119,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "M.HOH9119",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 108,
-      "chain": "M",
-      "number": 9120,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "M.HOH9120",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 109,
-      "chain": "M",
-      "number": 9121,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "M.HOH9121",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 110,
-      "chain": "M",
-      "number": 9122,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "M.HOH9122",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 111,
-      "chain": "M",
-      "number": 9123,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "M.HOH9123",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 112,
-      "chain": "M",
-      "number": 9124,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "M.HOH9124",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 113,
-      "chain": "M",
-      "number": 9125,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "M.HOH9125",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 114,
-      "chain": "M",
-      "number": 9126,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "M.HOH9126",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 115,
-      "chain": "M",
-      "number": 9127,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "M.HOH9127",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 116,
-      "chain": "M",
-      "number": 9128,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "M.HOH9128",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 117,
-      "chain": "M",
-      "number": 9129,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "M.HOH9129",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 118,
-      "chain": "M",
-      "number": 9130,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "M.HOH9130",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 119,
-      "chain": "M",
-      "number": 9131,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "M.HOH9131",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 120,
-      "chain": "M",
-      "number": 9132,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "M.HOH9132",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 121,
-      "chain": "M",
-      "number": 9133,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "M.HOH9133",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 122,
-      "chain": "MA",
-      "number": 9101,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "MA.HOH9101",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 123,
-      "chain": "MA",
-      "number": 9102,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "MA.HOH9102",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 124,
-      "chain": "MA",
-      "number": 9103,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "MA.HOH9103",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 125,
-      "chain": "MA",
-      "number": 9104,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "MA.HOH9104",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 126,
-      "chain": "MA",
-      "number": 9105,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "MA.HOH9105",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 127,
-      "chain": "MA",
-      "number": 9106,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "MA.HOH9106",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 128,
-      "chain": "MA",
-      "number": 9107,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "MA.HOH9107",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 129,
-      "chain": "MA",
-      "number": 9108,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "MA.HOH9108",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 130,
-      "chain": "MA",
-      "number": 9109,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "MA.HOH9109",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 131,
-      "chain": "MA",
-      "number": 9110,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "MA.HOH9110",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 132,
-      "chain": "MA",
-      "number": 9111,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "MA.HOH9111",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 133,
-      "chain": "MA",
-      "number": 9112,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "MA.HOH9112",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 134,
-      "chain": "MA",
-      "number": 9113,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "MA.HOH9113",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 135,
-      "chain": "MA",
-      "number": 9114,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "MA.HOH9114",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 136,
-      "chain": "MA",
-      "number": 9115,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "MA.HOH9115",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 137,
-      "chain": "MA",
-      "number": 9116,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "MA.HOH9116",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 138,
-      "chain": "MA",
-      "number": 9117,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "MA.HOH9117",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 139,
-      "chain": "MA",
-      "number": 9118,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "MA.HOH9118",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 140,
-      "chain": "MA",
-      "number": 9119,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "MA.HOH9119",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 141,
-      "chain": "MA",
-      "number": 9120,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "MA.HOH9120",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 142,
-      "chain": "MA",
-      "number": 9121,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "MA.HOH9121",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 143,
-      "chain": "MA",
-      "number": 9122,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "MA.HOH9122",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 144,
-      "chain": "MA",
-      "number": 9123,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "MA.HOH9123",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 145,
-      "chain": "MA",
-      "number": 9124,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "MA.HOH9124",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 146,
-      "chain": "MA",
-      "number": 9125,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "MA.HOH9125",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 147,
-      "chain": "MA",
-      "number": 9126,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "MA.HOH9126",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 148,
-      "chain": "MA",
-      "number": 9127,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "MA.HOH9127",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 149,
-      "chain": "MA",
-      "number": 9128,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "MA.HOH9128",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 150,
-      "chain": "MA",
-      "number": 9129,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "MA.HOH9129",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 151,
-      "chain": "MA",
-      "number": 9130,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "MA.HOH9130",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 152,
-      "chain": "MA",
-      "number": 9131,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "MA.HOH9131",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 153,
-      "chain": "MA",
-      "number": 9132,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "MA.HOH9132",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 154,
-      "chain": "MA",
-      "number": 9133,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "MA.HOH9133",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 155,
-      "chain": "MB",
-      "number": 9101,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "MB.HOH9101",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 156,
-      "chain": "MB",
-      "number": 9102,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "MB.HOH9102",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 157,
-      "chain": "MB",
-      "number": 9103,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "MB.HOH9103",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 158,
-      "chain": "MB",
-      "number": 9104,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "MB.HOH9104",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 159,
-      "chain": "MB",
-      "number": 9105,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "MB.HOH9105",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 160,
-      "chain": "MB",
-      "number": 9106,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "MB.HOH9106",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 161,
-      "chain": "MB",
-      "number": 9107,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "MB.HOH9107",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 162,
-      "chain": "MB",
-      "number": 9108,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "MB.HOH9108",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 163,
-      "chain": "MB",
-      "number": 9109,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "MB.HOH9109",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 164,
-      "chain": "MB",
-      "number": 9110,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "MB.HOH9110",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 165,
-      "chain": "MB",
-      "number": 9111,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "MB.HOH9111",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 166,
-      "chain": "MB",
-      "number": 9112,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "MB.HOH9112",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 167,
-      "chain": "MB",
-      "number": 9113,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "MB.HOH9113",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 168,
-      "chain": "MB",
-      "number": 9114,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "MB.HOH9114",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 169,
-      "chain": "MB",
-      "number": 9115,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "MB.HOH9115",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 170,
-      "chain": "MB",
-      "number": 9116,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "MB.HOH9116",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 171,
-      "chain": "MB",
-      "number": 9117,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "MB.HOH9117",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 172,
-      "chain": "MB",
-      "number": 9118,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "MB.HOH9118",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 173,
-      "chain": "MB",
-      "number": 9119,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "MB.HOH9119",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 174,
-      "chain": "MB",
-      "number": 9120,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "MB.HOH9120",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 175,
-      "chain": "MB",
-      "number": 9121,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "MB.HOH9121",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 176,
-      "chain": "MB",
-      "number": 9122,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "MB.HOH9122",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 177,
-      "chain": "MB",
-      "number": 9123,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "MB.HOH9123",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 178,
-      "chain": "MB",
-      "number": 9124,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "MB.HOH9124",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 179,
-      "chain": "MB",
-      "number": 9125,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "MB.HOH9125",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 180,
-      "chain": "MB",
-      "number": 9126,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "MB.HOH9126",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 181,
-      "chain": "MB",
-      "number": 9127,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "MB.HOH9127",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 182,
-      "chain": "MB",
-      "number": 9128,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "MB.HOH9128",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 183,
-      "chain": "MB",
-      "number": 9129,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "MB.HOH9129",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 184,
-      "chain": "MB",
-      "number": 9130,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "MB.HOH9130",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 185,
-      "chain": "MB",
-      "number": 9131,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "MB.HOH9131",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 186,
-      "chain": "MB",
-      "number": 9132,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "MB.HOH9132",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 187,
-      "chain": "MB",
-      "number": 9133,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "MB.HOH9133",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 188,
-      "chain": "MC",
-      "number": 9101,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "MC.HOH9101",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 189,
-      "chain": "MC",
-      "number": 9102,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "MC.HOH9102",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 190,
-      "chain": "MC",
-      "number": 9103,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "MC.HOH9103",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 191,
-      "chain": "MC",
-      "number": 9104,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "MC.HOH9104",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 192,
-      "chain": "MC",
-      "number": 9105,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "MC.HOH9105",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 193,
-      "chain": "MC",
-      "number": 9106,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "MC.HOH9106",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 194,
-      "chain": "MC",
-      "number": 9107,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "MC.HOH9107",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 195,
-      "chain": "MC",
-      "number": 9108,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "MC.HOH9108",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 196,
-      "chain": "MC",
-      "number": 9109,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "MC.HOH9109",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 197,
-      "chain": "MC",
-      "number": 9110,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "MC.HOH9110",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 198,
-      "chain": "MC",
-      "number": 9111,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "MC.HOH9111",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 199,
-      "chain": "MC",
-      "number": 9112,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "MC.HOH9112",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 200,
-      "chain": "MC",
-      "number": 9113,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "MC.HOH9113",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 201,
-      "chain": "MC",
-      "number": 9114,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "MC.HOH9114",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 202,
-      "chain": "MC",
-      "number": 9115,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "MC.HOH9115",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 203,
-      "chain": "MC",
-      "number": 9116,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "MC.HOH9116",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 204,
-      "chain": "MC",
-      "number": 9117,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "MC.HOH9117",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 205,
-      "chain": "MC",
-      "number": 9118,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "MC.HOH9118",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 206,
-      "chain": "MC",
-      "number": 9119,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "MC.HOH9119",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 207,
-      "chain": "MC",
-      "number": 9120,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "MC.HOH9120",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 208,
-      "chain": "MC",
-      "number": 9121,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "MC.HOH9121",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 209,
-      "chain": "MC",
-      "number": 9122,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "MC.HOH9122",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 210,
-      "chain": "MC",
-      "number": 9123,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "MC.HOH9123",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 211,
-      "chain": "MC",
-      "number": 9124,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "MC.HOH9124",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 212,
-      "chain": "MC",
-      "number": 9125,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "MC.HOH9125",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 213,
-      "chain": "MC",
-      "number": 9126,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "MC.HOH9126",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 214,
-      "chain": "MC",
-      "number": 9127,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "MC.HOH9127",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 215,
-      "chain": "MC",
-      "number": 9128,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "MC.HOH9128",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 216,
-      "chain": "MC",
-      "number": 9129,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "MC.HOH9129",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 217,
-      "chain": "MC",
-      "number": 9130,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "MC.HOH9130",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 218,
-      "chain": "MC",
-      "number": 9131,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "MC.HOH9131",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 219,
-      "chain": "MC",
-      "number": 9132,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "MC.HOH9132",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 220,
-      "chain": "MC",
-      "number": 9133,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "MC.HOH9133",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 221,
-      "chain": "N",
-      "number": 2201,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "N.HOH2201",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 222,
-      "chain": "N",
-      "number": 2202,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "N.HOH2202",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 223,
-      "chain": "N",
-      "number": 2203,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "N.HOH2203",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 224,
-      "chain": "N",
-      "number": 2204,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "N.HOH2204",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 225,
-      "chain": "N",
-      "number": 2205,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "N.HOH2205",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 226,
-      "chain": "N",
-      "number": 2206,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "N.HOH2206",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 227,
-      "chain": "N",
-      "number": 2207,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "N.HOH2207",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 228,
-      "chain": "N",
-      "number": 2208,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "N.HOH2208",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 229,
-      "chain": "N",
-      "number": 2209,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "N.HOH2209",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 230,
-      "chain": "N",
-      "number": 2210,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "N.HOH2210",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 231,
-      "chain": "N",
-      "number": 2211,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "N.HOH2211",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 232,
-      "chain": "N",
-      "number": 2212,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "N.HOH2212",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 233,
-      "chain": "N",
-      "number": 2213,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "N.HOH2213",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 234,
-      "chain": "N",
-      "number": 2214,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "N.HOH2214",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 235,
-      "chain": "N",
-      "number": 2215,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "N.HOH2215",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 236,
-      "chain": "N",
-      "number": 2216,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "N.HOH2216",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 237,
-      "chain": "N",
-      "number": 2217,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "N.HOH2217",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 238,
-      "chain": "N",
-      "number": 2218,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "N.HOH2218",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 239,
-      "chain": "N",
-      "number": 2219,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "N.HOH2219",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 240,
-      "chain": "N",
-      "number": 2220,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "N.HOH2220",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 241,
-      "chain": "N",
-      "number": 2221,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "N.HOH2221",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 242,
-      "chain": "N",
-      "number": 2222,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "N.HOH2222",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 243,
-      "chain": "N",
-      "number": 2223,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "N.HOH2223",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 244,
-      "chain": "N",
-      "number": 2224,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "N.HOH2224",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 245,
-      "chain": "N",
-      "number": 2225,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "N.HOH2225",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 246,
-      "chain": "N",
-      "number": 2226,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "N.HOH2226",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 247,
-      "chain": "N",
-      "number": 2227,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "N.HOH2227",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 248,
-      "chain": "N",
-      "number": 2228,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "N.HOH2228",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 249,
-      "chain": "N",
-      "number": 2229,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "N.HOH2229",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 250,
-      "chain": "N",
-      "number": 2230,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "N.HOH2230",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 251,
-      "chain": "N",
-      "number": 2231,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "N.HOH2231",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 252,
-      "chain": "N",
-      "number": 2232,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "N.HOH2232",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 253,
-      "chain": "N",
-      "number": 2233,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "N.HOH2233",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 254,
-      "chain": "NA",
-      "number": 2201,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "NA.HOH2201",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 255,
-      "chain": "NA",
-      "number": 2202,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "NA.HOH2202",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 256,
-      "chain": "NA",
-      "number": 2203,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "NA.HOH2203",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 257,
-      "chain": "NA",
-      "number": 2204,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "NA.HOH2204",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 258,
-      "chain": "NA",
-      "number": 2205,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "NA.HOH2205",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 259,
-      "chain": "NA",
-      "number": 2206,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "NA.HOH2206",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 260,
-      "chain": "NA",
-      "number": 2207,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "NA.HOH2207",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 261,
-      "chain": "NA",
-      "number": 2208,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "NA.HOH2208",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 262,
-      "chain": "NA",
-      "number": 2209,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "NA.HOH2209",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 263,
-      "chain": "NA",
-      "number": 2210,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "NA.HOH2210",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 264,
-      "chain": "NA",
-      "number": 2211,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "NA.HOH2211",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 265,
-      "chain": "NA",
-      "number": 2212,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "NA.HOH2212",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 266,
-      "chain": "NA",
-      "number": 2213,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "NA.HOH2213",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 267,
-      "chain": "NA",
-      "number": 2214,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "NA.HOH2214",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 268,
-      "chain": "NA",
-      "number": 2215,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "NA.HOH2215",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 269,
-      "chain": "NA",
-      "number": 2216,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "NA.HOH2216",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 270,
-      "chain": "NA",
-      "number": 2217,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "NA.HOH2217",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 271,
-      "chain": "NA",
-      "number": 2218,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "NA.HOH2218",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 272,
-      "chain": "NA",
-      "number": 2219,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "NA.HOH2219",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 273,
-      "chain": "NA",
-      "number": 2220,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "NA.HOH2220",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 274,
-      "chain": "NA",
-      "number": 2221,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "NA.HOH2221",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 275,
-      "chain": "NA",
-      "number": 2222,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "NA.HOH2222",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 276,
-      "chain": "NA",
-      "number": 2223,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "NA.HOH2223",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 277,
-      "chain": "NA",
-      "number": 2224,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "NA.HOH2224",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 278,
-      "chain": "NA",
-      "number": 2225,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "NA.HOH2225",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 279,
-      "chain": "NA",
-      "number": 2226,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "NA.HOH2226",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 280,
-      "chain": "NA",
-      "number": 2227,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "NA.HOH2227",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 281,
-      "chain": "NA",
-      "number": 2228,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "NA.HOH2228",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 282,
-      "chain": "NA",
-      "number": 2229,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "NA.HOH2229",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 283,
-      "chain": "NA",
-      "number": 2230,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "NA.HOH2230",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 284,
-      "chain": "NA",
-      "number": 2231,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "NA.HOH2231",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 285,
-      "chain": "NA",
-      "number": 2232,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "NA.HOH2232",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 286,
-      "chain": "NA",
-      "number": 2233,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "NA.HOH2233",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 287,
-      "chain": "NB",
-      "number": 2201,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "NB.HOH2201",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 288,
-      "chain": "NB",
-      "number": 2202,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "NB.HOH2202",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 289,
-      "chain": "NB",
-      "number": 2203,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "NB.HOH2203",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 290,
-      "chain": "NB",
-      "number": 2204,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "NB.HOH2204",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 291,
-      "chain": "NB",
-      "number": 2205,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "NB.HOH2205",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 292,
-      "chain": "NB",
-      "number": 2206,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "NB.HOH2206",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 293,
-      "chain": "NB",
-      "number": 2207,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "NB.HOH2207",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 294,
-      "chain": "NB",
-      "number": 2208,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "NB.HOH2208",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 295,
-      "chain": "NB",
-      "number": 2209,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "NB.HOH2209",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 296,
-      "chain": "NB",
-      "number": 2210,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "NB.HOH2210",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 297,
-      "chain": "NB",
-      "number": 2211,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "NB.HOH2211",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 298,
-      "chain": "NB",
-      "number": 2212,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "NB.HOH2212",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 299,
-      "chain": "NB",
-      "number": 2213,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "NB.HOH2213",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 300,
-      "chain": "NB",
-      "number": 2214,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "NB.HOH2214",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 301,
-      "chain": "NB",
-      "number": 2215,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "NB.HOH2215",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 302,
-      "chain": "NB",
-      "number": 2216,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "NB.HOH2216",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 303,
-      "chain": "NB",
-      "number": 2217,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "NB.HOH2217",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 304,
-      "chain": "NB",
-      "number": 2218,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "NB.HOH2218",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 305,
-      "chain": "NB",
-      "number": 2219,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "NB.HOH2219",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 306,
-      "chain": "NB",
-      "number": 2220,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "NB.HOH2220",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 307,
-      "chain": "NB",
-      "number": 2221,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "NB.HOH2221",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 308,
-      "chain": "NB",
-      "number": 2222,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "NB.HOH2222",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 309,
-      "chain": "NB",
-      "number": 2223,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "NB.HOH2223",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 310,
-      "chain": "NB",
-      "number": 2224,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "NB.HOH2224",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 311,
-      "chain": "NB",
-      "number": 2225,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "NB.HOH2225",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 312,
-      "chain": "NB",
-      "number": 2226,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "NB.HOH2226",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 313,
-      "chain": "NB",
-      "number": 2227,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "NB.HOH2227",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 314,
-      "chain": "NB",
-      "number": 2228,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "NB.HOH2228",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 315,
-      "chain": "NB",
-      "number": 2229,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "NB.HOH2229",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 316,
-      "chain": "NB",
-      "number": 2230,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "NB.HOH2230",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 317,
-      "chain": "NB",
-      "number": 2231,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "NB.HOH2231",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 318,
-      "chain": "NB",
-      "number": 2232,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "NB.HOH2232",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 319,
-      "chain": "NB",
-      "number": 2233,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "NB.HOH2233",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 320,
-      "chain": "NC",
-      "number": 2201,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "NC.HOH2201",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 321,
-      "chain": "NC",
-      "number": 2202,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "NC.HOH2202",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 322,
-      "chain": "NC",
-      "number": 2203,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "NC.HOH2203",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 323,
-      "chain": "NC",
-      "number": 2204,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "NC.HOH2204",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 324,
-      "chain": "NC",
-      "number": 2205,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "NC.HOH2205",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 325,
-      "chain": "NC",
-      "number": 2206,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "NC.HOH2206",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 326,
-      "chain": "NC",
-      "number": 2207,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "NC.HOH2207",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 327,
-      "chain": "NC",
-      "number": 2208,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "NC.HOH2208",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 328,
-      "chain": "NC",
-      "number": 2209,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "NC.HOH2209",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 329,
-      "chain": "NC",
-      "number": 2210,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "NC.HOH2210",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 330,
-      "chain": "NC",
-      "number": 2211,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "NC.HOH2211",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 331,
-      "chain": "NC",
-      "number": 2212,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "NC.HOH2212",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 332,
-      "chain": "NC",
-      "number": 2213,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "NC.HOH2213",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 333,
-      "chain": "NC",
-      "number": 2214,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "NC.HOH2214",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 334,
-      "chain": "NC",
-      "number": 2215,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "NC.HOH2215",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 335,
-      "chain": "NC",
-      "number": 2216,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "NC.HOH2216",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 336,
-      "chain": "NC",
-      "number": 2217,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "NC.HOH2217",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 337,
-      "chain": "NC",
-      "number": 2218,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "NC.HOH2218",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 338,
-      "chain": "NC",
-      "number": 2219,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "NC.HOH2219",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 339,
-      "chain": "NC",
-      "number": 2220,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "NC.HOH2220",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 340,
-      "chain": "NC",
-      "number": 2221,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "NC.HOH2221",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 341,
-      "chain": "NC",
-      "number": 2222,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "NC.HOH2222",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 342,
-      "chain": "NC",
-      "number": 2223,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "NC.HOH2223",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 343,
-      "chain": "NC",
-      "number": 2224,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "NC.HOH2224",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 344,
-      "chain": "NC",
-      "number": 2225,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "NC.HOH2225",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 345,
-      "chain": "NC",
-      "number": 2226,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "NC.HOH2226",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 346,
-      "chain": "NC",
-      "number": 2227,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "NC.HOH2227",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 347,
-      "chain": "NC",
-      "number": 2228,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "NC.HOH2228",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 348,
-      "chain": "NC",
-      "number": 2229,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "NC.HOH2229",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 349,
-      "chain": "NC",
-      "number": 2230,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "NC.HOH2230",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 350,
-      "chain": "NC",
-      "number": 2231,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "NC.HOH2231",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 351,
-      "chain": "NC",
-      "number": 2232,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "NC.HOH2232",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
-    },
-    {
-      "index": 352,
-      "chain": "NC",
-      "number": 2233,
-      "icode": null,
-      "molecule": "Other",
-      "fullName": "NC.HOH2233",
-      "shortName": "H",
-      "chi": null,
-      "glycosidicBond": null
     }
   ],
   "basePairs": [
     {
       "nt1": "A.G1002",
       "nt2": "AB.G1002",
-      "lw": "cWH"
+      "lw": "cWH",
+      "in_tetrad": true,
+      "canonical": false
     },
     {
       "nt1": "A.G1002",
       "nt2": "AC.G1002",
-      "lw": "cHW"
+      "lw": "cHW",
+      "in_tetrad": true,
+      "canonical": false
     },
     {
       "nt1": "A.G1003",
       "nt2": "AB.G1003",
-      "lw": "cWH"
+      "lw": "cWH",
+      "in_tetrad": true,
+      "canonical": false
     },
     {
       "nt1": "A.G1003",
       "nt2": "AC.G1003",
-      "lw": "cHW"
+      "lw": "cHW",
+      "in_tetrad": true,
+      "canonical": false
     },
     {
       "nt1": "A.G1004",
       "nt2": "AB.G1004",
-      "lw": "cWH"
+      "lw": "cWH",
+      "in_tetrad": true,
+      "canonical": false
     },
     {
       "nt1": "A.G1004",
       "nt2": "AC.G1004",
-      "lw": "cHW"
+      "lw": "cHW",
+      "in_tetrad": true,
+      "canonical": false
     },
     {
       "nt1": "A.G1005",
       "nt2": "AB.G1005",
-      "lw": "cWH"
+      "lw": "cWH",
+      "in_tetrad": true,
+      "canonical": false
     },
     {
       "nt1": "A.G1005",
       "nt2": "AC.G1005",
-      "lw": "cHW"
+      "lw": "cHW",
+      "in_tetrad": true,
+      "canonical": false
     },
     {
       "nt1": "A.U1006",
       "nt2": "AB.U1006",
-      "lw": "cHW"
+      "lw": "cHW",
+      "in_tetrad": true,
+      "canonical": false
     },
     {
       "nt1": "A.U1006",
       "nt2": "AC.U1006",
-      "lw": "cWH"
+      "lw": "cWH",
+      "in_tetrad": true,
+      "canonical": false
     },
     {
       "nt1": "AA.G1002",
       "nt2": "AC.G1002",
-      "lw": "cWH"
+      "lw": "cWH",
+      "in_tetrad": true,
+      "canonical": false
     },
     {
       "nt1": "AA.G1002",
       "nt2": "AB.G1002",
-      "lw": "cHW"
+      "lw": "cHW",
+      "in_tetrad": true,
+      "canonical": false
     },
     {
       "nt1": "AA.G1003",
       "nt2": "AC.G1003",
-      "lw": "cWH"
+      "lw": "cWH",
+      "in_tetrad": true,
+      "canonical": false
     },
     {
       "nt1": "AA.G1003",
       "nt2": "AB.G1003",
-      "lw": "cHW"
+      "lw": "cHW",
+      "in_tetrad": true,
+      "canonical": false
     },
     {
       "nt1": "AA.G1004",
       "nt2": "AC.G1004",
-      "lw": "cWH"
+      "lw": "cWH",
+      "in_tetrad": true,
+      "canonical": false
     },
     {
       "nt1": "AA.G1004",
       "nt2": "AB.G1004",
-      "lw": "cHW"
+      "lw": "cHW",
+      "in_tetrad": true,
+      "canonical": false
     },
     {
       "nt1": "AA.G1005",
       "nt2": "AC.G1005",
-      "lw": "cWH"
+      "lw": "cWH",
+      "in_tetrad": true,
+      "canonical": false
     },
     {
       "nt1": "AA.G1005",
       "nt2": "AB.G1005",
-      "lw": "cHW"
+      "lw": "cHW",
+      "in_tetrad": true,
+      "canonical": false
     },
     {
       "nt1": "AA.U1006",
       "nt2": "AC.U1006",
-      "lw": "cHW"
+      "lw": "cHW",
+      "in_tetrad": true,
+      "canonical": false
     },
     {
       "nt1": "AA.U1006",
       "nt2": "AB.U1006",
-      "lw": "cWH"
+      "lw": "cWH",
+      "in_tetrad": true,
+      "canonical": false
     },
     {
       "nt1": "AB.G1002",
       "nt2": "A.G1002",
-      "lw": "cHW"
+      "lw": "cHW",
+      "in_tetrad": true,
+      "canonical": false
     },
     {
       "nt1": "AB.G1002",
       "nt2": "AA.G1002",
-      "lw": "cWH"
+      "lw": "cWH",
+      "in_tetrad": true,
+      "canonical": false
     },
     {
       "nt1": "AB.G1003",
       "nt2": "A.G1003",
-      "lw": "cHW"
+      "lw": "cHW",
+      "in_tetrad": true,
+      "canonical": false
     },
     {
       "nt1": "AB.G1003",
       "nt2": "AA.G1003",
-      "lw": "cWH"
+      "lw": "cWH",
+      "in_tetrad": true,
+      "canonical": false
     },
     {
       "nt1": "AB.G1004",
       "nt2": "A.G1004",
-      "lw": "cHW"
+      "lw": "cHW",
+      "in_tetrad": true,
+      "canonical": false
     },
     {
       "nt1": "AB.G1004",
       "nt2": "AA.G1004",
-      "lw": "cWH"
+      "lw": "cWH",
+      "in_tetrad": true,
+      "canonical": false
     },
     {
       "nt1": "AB.G1005",
       "nt2": "A.G1005",
-      "lw": "cHW"
+      "lw": "cHW",
+      "in_tetrad": true,
+      "canonical": false
     },
     {
       "nt1": "AB.G1005",
       "nt2": "AA.G1005",
-      "lw": "cWH"
+      "lw": "cWH",
+      "in_tetrad": true,
+      "canonical": false
     },
     {
       "nt1": "AB.U1006",
       "nt2": "A.U1006",
-      "lw": "cWH"
+      "lw": "cWH",
+      "in_tetrad": true,
+      "canonical": false
     },
     {
       "nt1": "AB.U1006",
       "nt2": "AA.U1006",
-      "lw": "cHW"
+      "lw": "cHW",
+      "in_tetrad": true,
+      "canonical": false
     },
     {
       "nt1": "AC.G1002",
       "nt2": "AA.G1002",
-      "lw": "cHW"
+      "lw": "cHW",
+      "in_tetrad": true,
+      "canonical": false
     },
     {
       "nt1": "AC.G1002",
       "nt2": "A.G1002",
-      "lw": "cWH"
+      "lw": "cWH",
+      "in_tetrad": true,
+      "canonical": false
     },
     {
       "nt1": "AC.G1003",
       "nt2": "AA.G1003",
-      "lw": "cHW"
+      "lw": "cHW",
+      "in_tetrad": true,
+      "canonical": false
     },
     {
       "nt1": "AC.G1003",
       "nt2": "A.G1003",
-      "lw": "cWH"
+      "lw": "cWH",
+      "in_tetrad": true,
+      "canonical": false
     },
     {
       "nt1": "AC.G1004",
       "nt2": "AA.G1004",
-      "lw": "cHW"
+      "lw": "cHW",
+      "in_tetrad": true,
+      "canonical": false
     },
     {
       "nt1": "AC.G1004",
       "nt2": "A.G1004",
-      "lw": "cWH"
+      "lw": "cWH",
+      "in_tetrad": true,
+      "canonical": false
     },
     {
       "nt1": "AC.G1005",
       "nt2": "AA.G1005",
-      "lw": "cHW"
+      "lw": "cHW",
+      "in_tetrad": true,
+      "canonical": false
     },
     {
       "nt1": "AC.G1005",
       "nt2": "A.G1005",
-      "lw": "cWH"
+      "lw": "cWH",
+      "in_tetrad": true,
+      "canonical": false
     },
     {
       "nt1": "AC.U1006",
       "nt2": "AA.U1006",
-      "lw": "cWH"
+      "lw": "cWH",
+      "in_tetrad": true,
+      "canonical": false
     },
     {
       "nt1": "AC.U1006",
       "nt2": "A.U1006",
-      "lw": "cHW"
+      "lw": "cHW",
+      "in_tetrad": true,
+      "canonical": false
     },
     {
       "nt1": "B.G2002",
       "nt2": "BC.G2002",
-      "lw": "cWH"
+      "lw": "cWH",
+      "in_tetrad": true,
+      "canonical": false
     },
     {
       "nt1": "B.G2002",
       "nt2": "BB.G2002",
-      "lw": "cHW"
+      "lw": "cHW",
+      "in_tetrad": true,
+      "canonical": false
     },
     {
       "nt1": "B.G2003",
       "nt2": "BC.G2003",
-      "lw": "cWH"
+      "lw": "cWH",
+      "in_tetrad": true,
+      "canonical": false
     },
     {
       "nt1": "B.G2003",
       "nt2": "BB.G2003",
-      "lw": "cHW"
+      "lw": "cHW",
+      "in_tetrad": true,
+      "canonical": false
     },
     {
       "nt1": "B.G2004",
       "nt2": "BC.G2004",
-      "lw": "cWH"
+      "lw": "cWH",
+      "in_tetrad": true,
+      "canonical": false
     },
     {
       "nt1": "B.G2004",
       "nt2": "BB.G2004",
-      "lw": "cHW"
+      "lw": "cHW",
+      "in_tetrad": true,
+      "canonical": false
     },
     {
       "nt1": "B.G2005",
       "nt2": "BC.G2005",
-      "lw": "cWH"
+      "lw": "cWH",
+      "in_tetrad": true,
+      "canonical": false
     },
     {
       "nt1": "B.G2005",
       "nt2": "BB.G2005",
-      "lw": "cHW"
+      "lw": "cHW",
+      "in_tetrad": true,
+      "canonical": false
     },
     {
       "nt1": "B.U2006",
       "nt2": "BC.U2006",
-      "lw": "cHW"
+      "lw": "cHW",
+      "in_tetrad": true,
+      "canonical": false
     },
     {
       "nt1": "B.U2006",
       "nt2": "BB.U2006",
-      "lw": "cWH"
+      "lw": "cWH",
+      "in_tetrad": true,
+      "canonical": false
     },
     {
       "nt1": "BA.G2002",
       "nt2": "BB.G2002",
-      "lw": "cWH"
+      "lw": "cWH",
+      "in_tetrad": true,
+      "canonical": false
     },
     {
       "nt1": "BA.G2002",
       "nt2": "BC.G2002",
-      "lw": "cHW"
+      "lw": "cHW",
+      "in_tetrad": true,
+      "canonical": false
     },
     {
       "nt1": "BA.G2003",
       "nt2": "BB.G2003",
-      "lw": "cWH"
+      "lw": "cWH",
+      "in_tetrad": true,
+      "canonical": false
     },
     {
       "nt1": "BA.G2003",
       "nt2": "BC.G2003",
-      "lw": "cHW"
+      "lw": "cHW",
+      "in_tetrad": true,
+      "canonical": false
     },
     {
       "nt1": "BA.G2004",
       "nt2": "BB.G2004",
-      "lw": "cWH"
+      "lw": "cWH",
+      "in_tetrad": true,
+      "canonical": false
     },
     {
       "nt1": "BA.G2004",
       "nt2": "BC.G2004",
-      "lw": "cHW"
+      "lw": "cHW",
+      "in_tetrad": true,
+      "canonical": false
     },
     {
       "nt1": "BA.G2005",
       "nt2": "BB.G2005",
-      "lw": "cWH"
+      "lw": "cWH",
+      "in_tetrad": true,
+      "canonical": false
     },
     {
       "nt1": "BA.G2005",
       "nt2": "BC.G2005",
-      "lw": "cHW"
+      "lw": "cHW",
+      "in_tetrad": true,
+      "canonical": false
     },
     {
       "nt1": "BA.U2006",
       "nt2": "BB.U2006",
-      "lw": "cHW"
+      "lw": "cHW",
+      "in_tetrad": true,
+      "canonical": false
     },
     {
       "nt1": "BA.U2006",
       "nt2": "BC.U2006",
-      "lw": "cWH"
+      "lw": "cWH",
+      "in_tetrad": true,
+      "canonical": false
     },
     {
       "nt1": "BB.G2002",
       "nt2": "BA.G2002",
-      "lw": "cHW"
+      "lw": "cHW",
+      "in_tetrad": true,
+      "canonical": false
     },
     {
       "nt1": "BB.G2002",
       "nt2": "B.G2002",
-      "lw": "cWH"
+      "lw": "cWH",
+      "in_tetrad": true,
+      "canonical": false
     },
     {
       "nt1": "BB.G2003",
       "nt2": "BA.G2003",
-      "lw": "cHW"
+      "lw": "cHW",
+      "in_tetrad": true,
+      "canonical": false
     },
     {
       "nt1": "BB.G2003",
       "nt2": "B.G2003",
-      "lw": "cWH"
+      "lw": "cWH",
+      "in_tetrad": true,
+      "canonical": false
     },
     {
       "nt1": "BB.G2004",
       "nt2": "BA.G2004",
-      "lw": "cHW"
+      "lw": "cHW",
+      "in_tetrad": true,
+      "canonical": false
     },
     {
       "nt1": "BB.G2004",
       "nt2": "B.G2004",
-      "lw": "cWH"
+      "lw": "cWH",
+      "in_tetrad": true,
+      "canonical": false
     },
     {
       "nt1": "BB.G2005",
       "nt2": "BA.G2005",
-      "lw": "cHW"
+      "lw": "cHW",
+      "in_tetrad": true,
+      "canonical": false
     },
     {
       "nt1": "BB.G2005",
       "nt2": "B.G2005",
-      "lw": "cWH"
+      "lw": "cWH",
+      "in_tetrad": true,
+      "canonical": false
     },
     {
       "nt1": "BB.U2006",
       "nt2": "BA.U2006",
-      "lw": "cWH"
+      "lw": "cWH",
+      "in_tetrad": true,
+      "canonical": false
     },
     {
       "nt1": "BB.U2006",
       "nt2": "B.U2006",
-      "lw": "cHW"
+      "lw": "cHW",
+      "in_tetrad": true,
+      "canonical": false
     },
     {
       "nt1": "BC.G2002",
       "nt2": "B.G2002",
-      "lw": "cHW"
+      "lw": "cHW",
+      "in_tetrad": true,
+      "canonical": false
     },
     {
       "nt1": "BC.G2002",
       "nt2": "BA.G2002",
-      "lw": "cWH"
+      "lw": "cWH",
+      "in_tetrad": true,
+      "canonical": false
     },
     {
       "nt1": "BC.G2003",
       "nt2": "B.G2003",
-      "lw": "cHW"
+      "lw": "cHW",
+      "in_tetrad": true,
+      "canonical": false
     },
     {
       "nt1": "BC.G2003",
       "nt2": "BA.G2003",
-      "lw": "cWH"
+      "lw": "cWH",
+      "in_tetrad": true,
+      "canonical": false
     },
     {
       "nt1": "BC.G2004",
       "nt2": "B.G2004",
-      "lw": "cHW"
+      "lw": "cHW",
+      "in_tetrad": true,
+      "canonical": false
     },
     {
       "nt1": "BC.G2004",
       "nt2": "BA.G2004",
-      "lw": "cWH"
+      "lw": "cWH",
+      "in_tetrad": true,
+      "canonical": false
     },
     {
       "nt1": "BC.G2005",
       "nt2": "B.G2005",
-      "lw": "cHW"
+      "lw": "cHW",
+      "in_tetrad": true,
+      "canonical": false
     },
     {
       "nt1": "BC.G2005",
       "nt2": "BA.G2005",
-      "lw": "cWH"
+      "lw": "cWH",
+      "in_tetrad": true,
+      "canonical": false
     },
     {
       "nt1": "BC.U2006",
       "nt2": "B.U2006",
-      "lw": "cWH"
+      "lw": "cWH",
+      "in_tetrad": true,
+      "canonical": false
     },
     {
       "nt1": "BC.U2006",
       "nt2": "BA.U2006",
-      "lw": "cHW"
+      "lw": "cHW",
+      "in_tetrad": true,
+      "canonical": false
     }
   ],
   "helices": [
