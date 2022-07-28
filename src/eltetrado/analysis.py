@@ -279,6 +279,9 @@ class Tetrad:
     def __hash__(self):
         return hash(frozenset([self.nt1, self.nt2, self.nt3, self.nt4]))
 
+    def __repr__(self):
+        return f"{repr(self.nt1)}-{repr(self.nt2)}-{repr(self.nt3)}-{repr(self.nt4)}"
+
     def __str__(self):
         return (
             f"    "
@@ -715,9 +718,9 @@ class Analysis:
     no_reorder: bool
     stacking_mismatch: int
     base_pairs: List[BasePair3D] = field(init=False)
-    base_pair_graph: Dict[Residue3D, List[Residue3D]] = field(init=False)
+    base_pair_graph: Dict[Residue3D, Set[Residue3D]] = field(init=False)
     base_pair_dict: Dict[Tuple[Residue3D, Residue3D], BasePair3D] = field(init=False)
-    stacking_graph: Dict[Residue3D, List[Residue3D]] = field(init=False)
+    stacking_graph: Dict[Residue3D, Set[Residue3D]] = field(init=False)
     tetrads: List[Tetrad] = field(init=False)
     tetrad_scores: Dict[Tetrad, Dict[Tetrad, Tuple[int, Tuple, Tuple]]] = field(
         init=False
@@ -861,9 +864,26 @@ class Analysis:
             tetrad_scores[ti][tj] = (best_score, nts1, best_order)
             tetrad_scores[tj][ti] = (best_score, best_order, nts1)
 
+        # log information about tetrad scores
+        logging.debug("Tetrad scores:")
+        for ti in self.tetrads:
+            logging.debug(f"{repr(ti)}")
+            for tj in self.tetrads:
+                if ti != tj:
+                    logging.debug(f"\t{repr(tj)}\t{tetrad_scores[ti][tj]}")
+
         return tetrad_scores
 
     def __find_tetrad_pairs(self, stacking_mismatch: int) -> List[TetradPair]:
+        def next_tetrad_scoring(
+            ti: Tetrad, tj: Tetrad, candidates: Iterable[Tetrad]
+        ) -> Tuple[int, int, int]:
+            return (
+                self.tetrad_scores[ti].get(tj, (0,))[0],
+                -sum([self.tetrad_scores[tj].get(tk, (0,))[0] for tk in candidates]),
+                -self.tetrads.index(tj),
+            )
+
         tetrads = list(self.tetrads)
         best_score = 0
         best_order = tetrads
@@ -875,8 +895,7 @@ class Analysis:
 
             while candidates:
                 tj = max(
-                    [tj for tj in candidates],
-                    key=lambda tk: self.tetrad_scores[ti][tk][0],
+                    candidates, key=lambda tk: next_tetrad_scoring(ti, tk, candidates)
                 )
                 score += self.tetrad_scores[ti][tj][0]
                 order.append(tj)
@@ -1291,7 +1310,7 @@ class Visualizer:
 class AnalysisSimple:
     def __init__(self, structure2d: Structure2D, structure3d: Structure3D):
         self.pairs: List[BasePair3D] = structure3d.base_pairs(structure2d)
-        self.graph: Dict[Residue3D, List[Residue3D]] = structure3d.base_pair_graph(
+        self.graph: Dict[Residue3D, Set[Residue3D]] = structure3d.base_pair_graph(
             structure2d
         )
         self.pair_dict: Dict[
