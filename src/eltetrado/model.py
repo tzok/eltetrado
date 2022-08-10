@@ -527,7 +527,7 @@ class LoopDTO:
 @dataclass
 class LoopClassificationDTO:
     classification: str
-    loop_progression: str
+    loopProgression: str
 
 
 @dataclass
