@@ -485,7 +485,7 @@ class BasePairDTO:
     nt1: str
     nt2: str
     lw: str
-    in_tetrad: bool
+    inTetrad: bool
     canonical: bool
 
 
