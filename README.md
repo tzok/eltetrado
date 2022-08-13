@@ -59,7 +59,7 @@ it.
 
     usage: eltetrado [-h] [-i INPUT] [-o OUTPUT] [-m MODEL]
                      [--stacking-mismatch STACKING_MISMATCH] [--strict]
-                     [--no-reorder] [--complete-2d] [--no-image] [--version]
+                     [--no-reorder] [--complete-2d] [--no-image] [-v]
 
     options:
       -h, --help            show this help message and exit
@@ -84,7 +84,7 @@ it.
       --complete-2d         when set, the visualization will also show canonical
                             base pairs to provide context for the quadruplex
       --no-image            when set, the visualization will not be created at all
-      --version             show program's version number and exit
+      -v, --version         show program's version number and exit
 
 # Chains reorder
 
@@ -449,196 +449,196 @@ Click to see the output JSON
       "nt1": "1.DA3",
       "nt2": "1.DA9",
       "lw": "tSW",
-      "in_tetrad": false,
+      "inTetrad": false,
       "canonical": false
     },
     {
       "nt1": "1.DG4",
       "nt2": "1.DG10",
       "lw": "cHW",
-      "in_tetrad": true,
+      "inTetrad": true,
       "canonical": false
     },
     {
       "nt1": "1.DG4",
       "nt2": "1.DG22",
       "lw": "cWH",
-      "in_tetrad": true,
+      "inTetrad": true,
       "canonical": false
     },
     {
       "nt1": "1.DG5",
       "nt2": "1.DG11",
       "lw": "cWH",
-      "in_tetrad": true,
+      "inTetrad": true,
       "canonical": false
     },
     {
       "nt1": "1.DG5",
       "nt2": "1.DG23",
       "lw": "cHW",
-      "in_tetrad": true,
+      "inTetrad": true,
       "canonical": false
     },
     {
       "nt1": "1.DG6",
       "nt2": "1.DG12",
       "lw": "cWH",
-      "in_tetrad": true,
+      "inTetrad": true,
       "canonical": false
     },
     {
       "nt1": "1.DG6",
       "nt2": "1.DG24",
       "lw": "cHW",
-      "in_tetrad": true,
+      "inTetrad": true,
       "canonical": false
     },
     {
       "nt1": "1.DA9",
       "nt2": "1.DA3",
       "lw": "tWS",
-      "in_tetrad": false,
+      "inTetrad": false,
       "canonical": false
     },
     {
       "nt1": "1.DG10",
       "nt2": "1.DG4",
       "lw": "cWH",
-      "in_tetrad": true,
+      "inTetrad": true,
       "canonical": false
     },
     {
       "nt1": "1.DG10",
       "nt2": "1.DG18",
       "lw": "cHW",
-      "in_tetrad": true,
+      "inTetrad": true,
       "canonical": false
     },
     {
       "nt1": "1.DG11",
       "nt2": "1.DG5",
       "lw": "cHW",
-      "in_tetrad": true,
+      "inTetrad": true,
       "canonical": false
     },
     {
       "nt1": "1.DG11",
       "nt2": "1.DG17",
       "lw": "cWH",
-      "in_tetrad": true,
+      "inTetrad": true,
       "canonical": false
     },
     {
       "nt1": "1.DG12",
       "nt2": "1.DG6",
       "lw": "cHW",
-      "in_tetrad": true,
+      "inTetrad": true,
       "canonical": false
     },
     {
       "nt1": "1.DG12",
       "nt2": "1.DG16",
       "lw": "cWH",
-      "in_tetrad": true,
+      "inTetrad": true,
       "canonical": false
     },
     {
       "nt1": "1.DT14",
       "nt2": "1.DA25",
       "lw": "tWW",
-      "in_tetrad": false,
+      "inTetrad": false,
       "canonical": false
     },
     {
       "nt1": "1.DG16",
       "nt2": "1.DG12",
       "lw": "cHW",
-      "in_tetrad": true,
+      "inTetrad": true,
       "canonical": false
     },
     {
       "nt1": "1.DG16",
       "nt2": "1.DG24",
       "lw": "cWH",
-      "in_tetrad": true,
+      "inTetrad": true,
       "canonical": false
     },
     {
       "nt1": "1.DG17",
       "nt2": "1.DG11",
       "lw": "cHW",
-      "in_tetrad": true,
+      "inTetrad": true,
       "canonical": false
     },
     {
       "nt1": "1.DG17",
       "nt2": "1.DG23",
       "lw": "cWH",
-      "in_tetrad": true,
+      "inTetrad": true,
       "canonical": false
     },
     {
       "nt1": "1.DG18",
       "nt2": "1.DG10",
       "lw": "cWH",
-      "in_tetrad": true,
+      "inTetrad": true,
       "canonical": false
     },
     {
       "nt1": "1.DG18",
       "nt2": "1.DG22",
       "lw": "cHW",
-      "in_tetrad": true,
+      "inTetrad": true,
       "canonical": false
     },
     {
       "nt1": "1.DG22",
       "nt2": "1.DG4",
       "lw": "cHW",
-      "in_tetrad": true,
+      "inTetrad": true,
       "canonical": false
     },
     {
       "nt1": "1.DG22",
       "nt2": "1.DG18",
       "lw": "cWH",
-      "in_tetrad": true,
+      "inTetrad": true,
       "canonical": false
     },
     {
       "nt1": "1.DG23",
       "nt2": "1.DG5",
       "lw": "cWH",
-      "in_tetrad": true,
+      "inTetrad": true,
       "canonical": false
     },
     {
       "nt1": "1.DG23",
       "nt2": "1.DG17",
       "lw": "cHW",
-      "in_tetrad": true,
+      "inTetrad": true,
       "canonical": false
     },
     {
       "nt1": "1.DG24",
       "nt2": "1.DG6",
       "lw": "cWH",
-      "in_tetrad": true,
+      "inTetrad": true,
       "canonical": false
     },
     {
       "nt1": "1.DG24",
       "nt2": "1.DG16",
       "lw": "cHW",
-      "in_tetrad": true,
+      "inTetrad": true,
       "canonical": false
     },
     {
       "nt1": "1.DA25",
       "nt2": "1.DT14",
       "lw": "tWW",
-      "in_tetrad": false,
+      "inTetrad": false,
       "canonical": false
     }
   ],
@@ -687,7 +687,7 @@ Click to see the output JSON
           "onzm": "Oh*",
           "loopClassification": {
             "classification": "9a",
-            "loop_progression": "-(pll)"
+            "loopProgression": "-(pll)"
           },
           "gbaClassification": [
             "V",
@@ -1374,560 +1374,560 @@ Click to see the output JSON
       "nt1": "A.G1002",
       "nt2": "AB.G1002",
       "lw": "cWH",
-      "in_tetrad": true,
+      "inTetrad": true,
       "canonical": false
     },
     {
       "nt1": "A.G1002",
       "nt2": "AC.G1002",
       "lw": "cHW",
-      "in_tetrad": true,
+      "inTetrad": true,
       "canonical": false
     },
     {
       "nt1": "A.G1003",
       "nt2": "AB.G1003",
       "lw": "cWH",
-      "in_tetrad": true,
+      "inTetrad": true,
       "canonical": false
     },
     {
       "nt1": "A.G1003",
       "nt2": "AC.G1003",
       "lw": "cHW",
-      "in_tetrad": true,
+      "inTetrad": true,
       "canonical": false
     },
     {
       "nt1": "A.G1004",
       "nt2": "AB.G1004",
       "lw": "cWH",
-      "in_tetrad": true,
+      "inTetrad": true,
       "canonical": false
     },
     {
       "nt1": "A.G1004",
       "nt2": "AC.G1004",
       "lw": "cHW",
-      "in_tetrad": true,
+      "inTetrad": true,
       "canonical": false
     },
     {
       "nt1": "A.G1005",
       "nt2": "AB.G1005",
       "lw": "cWH",
-      "in_tetrad": true,
+      "inTetrad": true,
       "canonical": false
     },
     {
       "nt1": "A.G1005",
       "nt2": "AC.G1005",
       "lw": "cHW",
-      "in_tetrad": true,
+      "inTetrad": true,
       "canonical": false
     },
     {
       "nt1": "A.U1006",
       "nt2": "AB.U1006",
       "lw": "cHW",
-      "in_tetrad": true,
+      "inTetrad": true,
       "canonical": false
     },
     {
       "nt1": "A.U1006",
       "nt2": "AC.U1006",
       "lw": "cWH",
-      "in_tetrad": true,
+      "inTetrad": true,
       "canonical": false
     },
     {
       "nt1": "AA.G1002",
       "nt2": "AC.G1002",
       "lw": "cWH",
-      "in_tetrad": true,
+      "inTetrad": true,
       "canonical": false
     },
     {
       "nt1": "AA.G1002",
       "nt2": "AB.G1002",
       "lw": "cHW",
-      "in_tetrad": true,
+      "inTetrad": true,
       "canonical": false
     },
     {
       "nt1": "AA.G1003",
       "nt2": "AC.G1003",
       "lw": "cWH",
-      "in_tetrad": true,
+      "inTetrad": true,
       "canonical": false
     },
     {
       "nt1": "AA.G1003",
       "nt2": "AB.G1003",
       "lw": "cHW",
-      "in_tetrad": true,
+      "inTetrad": true,
       "canonical": false
     },
     {
       "nt1": "AA.G1004",
       "nt2": "AC.G1004",
       "lw": "cWH",
-      "in_tetrad": true,
+      "inTetrad": true,
       "canonical": false
     },
     {
       "nt1": "AA.G1004",
       "nt2": "AB.G1004",
       "lw": "cHW",
-      "in_tetrad": true,
+      "inTetrad": true,
       "canonical": false
     },
     {
       "nt1": "AA.G1005",
       "nt2": "AC.G1005",
       "lw": "cWH",
-      "in_tetrad": true,
+      "inTetrad": true,
       "canonical": false
     },
     {
       "nt1": "AA.G1005",
       "nt2": "AB.G1005",
       "lw": "cHW",
-      "in_tetrad": true,
+      "inTetrad": true,
       "canonical": false
     },
     {
       "nt1": "AA.U1006",
       "nt2": "AC.U1006",
       "lw": "cHW",
-      "in_tetrad": true,
+      "inTetrad": true,
       "canonical": false
     },
     {
       "nt1": "AA.U1006",
       "nt2": "AB.U1006",
       "lw": "cWH",
-      "in_tetrad": true,
+      "inTetrad": true,
       "canonical": false
     },
     {
       "nt1": "AB.G1002",
       "nt2": "A.G1002",
       "lw": "cHW",
-      "in_tetrad": true,
+      "inTetrad": true,
       "canonical": false
     },
     {
       "nt1": "AB.G1002",
       "nt2": "AA.G1002",
       "lw": "cWH",
-      "in_tetrad": true,
+      "inTetrad": true,
       "canonical": false
     },
     {
       "nt1": "AB.G1003",
       "nt2": "A.G1003",
       "lw": "cHW",
-      "in_tetrad": true,
+      "inTetrad": true,
       "canonical": false
     },
     {
       "nt1": "AB.G1003",
       "nt2": "AA.G1003",
       "lw": "cWH",
-      "in_tetrad": true,
+      "inTetrad": true,
       "canonical": false
     },
     {
       "nt1": "AB.G1004",
       "nt2": "A.G1004",
       "lw": "cHW",
-      "in_tetrad": true,
+      "inTetrad": true,
       "canonical": false
     },
     {
       "nt1": "AB.G1004",
       "nt2": "AA.G1004",
       "lw": "cWH",
-      "in_tetrad": true,
+      "inTetrad": true,
       "canonical": false
     },
     {
       "nt1": "AB.G1005",
       "nt2": "A.G1005",
       "lw": "cHW",
-      "in_tetrad": true,
+      "inTetrad": true,
       "canonical": false
     },
     {
       "nt1": "AB.G1005",
       "nt2": "AA.G1005",
       "lw": "cWH",
-      "in_tetrad": true,
+      "inTetrad": true,
       "canonical": false
     },
     {
       "nt1": "AB.U1006",
       "nt2": "A.U1006",
       "lw": "cWH",
-      "in_tetrad": true,
+      "inTetrad": true,
       "canonical": false
     },
     {
       "nt1": "AB.U1006",
       "nt2": "AA.U1006",
       "lw": "cHW",
-      "in_tetrad": true,
+      "inTetrad": true,
       "canonical": false
     },
     {
       "nt1": "AC.G1002",
       "nt2": "AA.G1002",
       "lw": "cHW",
-      "in_tetrad": true,
+      "inTetrad": true,
       "canonical": false
     },
     {
       "nt1": "AC.G1002",
       "nt2": "A.G1002",
       "lw": "cWH",
-      "in_tetrad": true,
+      "inTetrad": true,
       "canonical": false
     },
     {
       "nt1": "AC.G1003",
       "nt2": "AA.G1003",
       "lw": "cHW",
-      "in_tetrad": true,
+      "inTetrad": true,
       "canonical": false
     },
     {
       "nt1": "AC.G1003",
       "nt2": "A.G1003",
       "lw": "cWH",
-      "in_tetrad": true,
+      "inTetrad": true,
       "canonical": false
     },
     {
       "nt1": "AC.G1004",
       "nt2": "AA.G1004",
       "lw": "cHW",
-      "in_tetrad": true,
+      "inTetrad": true,
       "canonical": false
     },
     {
       "nt1": "AC.G1004",
       "nt2": "A.G1004",
       "lw": "cWH",
-      "in_tetrad": true,
+      "inTetrad": true,
       "canonical": false
     },
     {
       "nt1": "AC.G1005",
       "nt2": "AA.G1005",
       "lw": "cHW",
-      "in_tetrad": true,
+      "inTetrad": true,
       "canonical": false
     },
     {
       "nt1": "AC.G1005",
       "nt2": "A.G1005",
       "lw": "cWH",
-      "in_tetrad": true,
+      "inTetrad": true,
       "canonical": false
     },
     {
       "nt1": "AC.U1006",
       "nt2": "AA.U1006",
       "lw": "cWH",
-      "in_tetrad": true,
+      "inTetrad": true,
       "canonical": false
     },
     {
       "nt1": "AC.U1006",
       "nt2": "A.U1006",
       "lw": "cHW",
-      "in_tetrad": true,
+      "inTetrad": true,
       "canonical": false
     },
     {
       "nt1": "B.G2002",
       "nt2": "BC.G2002",
       "lw": "cWH",
-      "in_tetrad": true,
+      "inTetrad": true,
       "canonical": false
     },
     {
       "nt1": "B.G2002",
       "nt2": "BB.G2002",
       "lw": "cHW",
-      "in_tetrad": true,
+      "inTetrad": true,
       "canonical": false
     },
     {
       "nt1": "B.G2003",
       "nt2": "BC.G2003",
       "lw": "cWH",
-      "in_tetrad": true,
+      "inTetrad": true,
       "canonical": false
     },
     {
       "nt1": "B.G2003",
       "nt2": "BB.G2003",
       "lw": "cHW",
-      "in_tetrad": true,
+      "inTetrad": true,
       "canonical": false
     },
     {
       "nt1": "B.G2004",
       "nt2": "BC.G2004",
       "lw": "cWH",
-      "in_tetrad": true,
+      "inTetrad": true,
       "canonical": false
     },
     {
       "nt1": "B.G2004",
       "nt2": "BB.G2004",
       "lw": "cHW",
-      "in_tetrad": true,
+      "inTetrad": true,
       "canonical": false
     },
     {
       "nt1": "B.G2005",
       "nt2": "BC.G2005",
       "lw": "cWH",
-      "in_tetrad": true,
+      "inTetrad": true,
       "canonical": false
     },
     {
       "nt1": "B.G2005",
       "nt2": "BB.G2005",
       "lw": "cHW",
-      "in_tetrad": true,
+      "inTetrad": true,
       "canonical": false
     },
     {
       "nt1": "B.U2006",
       "nt2": "BC.U2006",
       "lw": "cHW",
-      "in_tetrad": true,
+      "inTetrad": true,
       "canonical": false
     },
     {
       "nt1": "B.U2006",
       "nt2": "BB.U2006",
       "lw": "cWH",
-      "in_tetrad": true,
+      "inTetrad": true,
       "canonical": false
     },
     {
       "nt1": "BA.G2002",
       "nt2": "BB.G2002",
       "lw": "cWH",
-      "in_tetrad": true,
+      "inTetrad": true,
       "canonical": false
     },
     {
       "nt1": "BA.G2002",
       "nt2": "BC.G2002",
       "lw": "cHW",
-      "in_tetrad": true,
+      "inTetrad": true,
       "canonical": false
     },
     {
       "nt1": "BA.G2003",
       "nt2": "BB.G2003",
       "lw": "cWH",
-      "in_tetrad": true,
+      "inTetrad": true,
       "canonical": false
     },
     {
       "nt1": "BA.G2003",
       "nt2": "BC.G2003",
       "lw": "cHW",
-      "in_tetrad": true,
+      "inTetrad": true,
       "canonical": false
     },
     {
       "nt1": "BA.G2004",
       "nt2": "BB.G2004",
       "lw": "cWH",
-      "in_tetrad": true,
+      "inTetrad": true,
       "canonical": false
     },
     {
       "nt1": "BA.G2004",
       "nt2": "BC.G2004",
       "lw": "cHW",
-      "in_tetrad": true,
+      "inTetrad": true,
       "canonical": false
     },
     {
       "nt1": "BA.G2005",
       "nt2": "BB.G2005",
       "lw": "cWH",
-      "in_tetrad": true,
+      "inTetrad": true,
       "canonical": false
     },
     {
       "nt1": "BA.G2005",
       "nt2": "BC.G2005",
       "lw": "cHW",
-      "in_tetrad": true,
+      "inTetrad": true,
       "canonical": false
     },
     {
       "nt1": "BA.U2006",
       "nt2": "BB.U2006",
       "lw": "cHW",
-      "in_tetrad": true,
+      "inTetrad": true,
       "canonical": false
     },
     {
       "nt1": "BA.U2006",
       "nt2": "BC.U2006",
       "lw": "cWH",
-      "in_tetrad": true,
+      "inTetrad": true,
       "canonical": false
     },
     {
       "nt1": "BB.G2002",
       "nt2": "BA.G2002",
       "lw": "cHW",
-      "in_tetrad": true,
+      "inTetrad": true,
       "canonical": false
     },
     {
       "nt1": "BB.G2002",
       "nt2": "B.G2002",
       "lw": "cWH",
-      "in_tetrad": true,
+      "inTetrad": true,
       "canonical": false
     },
     {
       "nt1": "BB.G2003",
       "nt2": "BA.G2003",
       "lw": "cHW",
-      "in_tetrad": true,
+      "inTetrad": true,
       "canonical": false
     },
     {
       "nt1": "BB.G2003",
       "nt2": "B.G2003",
       "lw": "cWH",
-      "in_tetrad": true,
+      "inTetrad": true,
       "canonical": false
     },
     {
       "nt1": "BB.G2004",
       "nt2": "BA.G2004",
       "lw": "cHW",
-      "in_tetrad": true,
+      "inTetrad": true,
       "canonical": false
     },
     {
       "nt1": "BB.G2004",
       "nt2": "B.G2004",
       "lw": "cWH",
-      "in_tetrad": true,
+      "inTetrad": true,
       "canonical": false
     },
     {
       "nt1": "BB.G2005",
       "nt2": "BA.G2005",
       "lw": "cHW",
-      "in_tetrad": true,
+      "inTetrad": true,
       "canonical": false
     },
     {
       "nt1": "BB.G2005",
       "nt2": "B.G2005",
       "lw": "cWH",
-      "in_tetrad": true,
+      "inTetrad": true,
       "canonical": false
     },
     {
       "nt1": "BB.U2006",
       "nt2": "BA.U2006",
       "lw": "cWH",
-      "in_tetrad": true,
+      "inTetrad": true,
       "canonical": false
     },
     {
       "nt1": "BB.U2006",
       "nt2": "B.U2006",
       "lw": "cHW",
-      "in_tetrad": true,
+      "inTetrad": true,
       "canonical": false
     },
     {
       "nt1": "BC.G2002",
       "nt2": "B.G2002",
       "lw": "cHW",
-      "in_tetrad": true,
+      "inTetrad": true,
       "canonical": false
     },
     {
       "nt1": "BC.G2002",
       "nt2": "BA.G2002",
       "lw": "cWH",
-      "in_tetrad": true,
+      "inTetrad": true,
       "canonical": false
     },
     {
       "nt1": "BC.G2003",
       "nt2": "B.G2003",
       "lw": "cHW",
-      "in_tetrad": true,
+      "inTetrad": true,
       "canonical": false
     },
     {
       "nt1": "BC.G2003",
       "nt2": "BA.G2003",
       "lw": "cWH",
-      "in_tetrad": true,
+      "inTetrad": true,
       "canonical": false
     },
     {
       "nt1": "BC.G2004",
       "nt2": "B.G2004",
       "lw": "cHW",
-      "in_tetrad": true,
+      "inTetrad": true,
       "canonical": false
     },
     {
       "nt1": "BC.G2004",
       "nt2": "BA.G2004",
       "lw": "cWH",
-      "in_tetrad": true,
+      "inTetrad": true,
       "canonical": false
     },
     {
       "nt1": "BC.G2005",
       "nt2": "B.G2005",
       "lw": "cHW",
-      "in_tetrad": true,
+      "inTetrad": true,
       "canonical": false
     },
     {
       "nt1": "BC.G2005",
       "nt2": "BA.G2005",
       "lw": "cWH",
-      "in_tetrad": true,
+      "inTetrad": true,
       "canonical": false
     },
     {
       "nt1": "BC.U2006",
       "nt2": "B.U2006",
       "lw": "cWH",
-      "in_tetrad": true,
+      "inTetrad": true,
       "canonical": false
     },
     {
       "nt1": "BC.U2006",
       "nt2": "BA.U2006",
       "lw": "cHW",
-      "in_tetrad": true,
+      "inTetrad": true,
       "canonical": false
     }
   ],
