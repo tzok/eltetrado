@@ -822,7 +822,9 @@ class BasePair3D:
         nts = "".join(
             sorted([self.nt1.one_letter_name.upper(), self.nt2.one_letter_name.upper()])
         )
-        return self.lw == "cWW" and (nts == "AU" or nts == "CG" or nts == "GU")
+        return self.lw == LeontisWesthof.cWW and (
+            nts == "AU" or nts == "AT" or nts == "CG" or nts == "GU"
+        )
 
     def in_tetrad(self, analysis) -> bool:
         for tetrad in analysis.tetrads:
