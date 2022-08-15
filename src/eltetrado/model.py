@@ -430,6 +430,8 @@ class LoopClassification(Enum):
             return "(-ld+p)"
         elif self == LoopClassification._13b:
             return "(+ld-p)"
+        elif self == LoopClassification.invalid:
+            return "n/a"
         raise RuntimeError(f"Failed to get string representation of {self}")
 
     @staticmethod
