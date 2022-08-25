@@ -6,10 +6,11 @@ import tempfile
 from typing import IO
 
 import orjson
+from rnapolis.annotator import extract_secondary_structure
+from rnapolis.parser import read_3d_structure
 
 from eltetrado.analysis import Visualizer, eltetrado, has_tetrad
-from eltetrado.model import generate_dto
-from eltetrado.structure import read_2d_structure, read_3d_structure
+from eltetrado.dto import generate_dto
 
 
 def eltetrado_cli():
@@ -64,7 +65,7 @@ def eltetrado_cli():
 
     cif_or_pdb = handle_input_file(args.input)
     structure3d = read_3d_structure(cif_or_pdb, args.model)
-    structure2d = read_2d_structure(cif_or_pdb, args.model)
+    structure2d = extract_secondary_structure(structure3d, args.model)
 
     analysis = eltetrado(
         structure2d, structure3d, args.strict, args.no_reorder, args.stacking_mismatch
@@ -72,7 +73,9 @@ def eltetrado_cli():
     print(analysis)
 
     if not args.no_image:
-        visualizer = Visualizer(analysis, analysis.tetrads, args.complete_2d)
+        visualizer = Visualizer(
+            analysis, analysis.tetrads, args.complete_2d, analysis.global_index
+        )
 
         basename = os.path.basename(args.input)
         root, ext = os.path.splitext(basename)
@@ -83,16 +86,25 @@ def eltetrado_cli():
         visualizer.visualize(prefix, suffix)
 
         for i, helix in enumerate(analysis.helices):
-            hv = Visualizer(analysis, helix.tetrads, args.complete_2d)
+            hv = Visualizer(
+                analysis, helix.tetrads, args.complete_2d, analysis.global_index
+            )
             suffix = "h{}".format(i + 1)
             hv.visualize(prefix, suffix)
 
             for j, quadruplex in enumerate(helix.quadruplexes):
-                qv = Visualizer(analysis, quadruplex.tetrads, args.complete_2d)
+                qv = Visualizer(
+                    analysis,
+                    quadruplex.tetrads,
+                    args.complete_2d,
+                    analysis.global_index,
+                )
                 qv.visualize(prefix, "{}-q{}".format(suffix, j + 1))
 
                 for k, tetrad in enumerate(quadruplex.tetrads):
-                    tv = Visualizer(analysis, [tetrad], args.complete_2d)
+                    tv = Visualizer(
+                        analysis, [tetrad], args.complete_2d, analysis.global_index
+                    )
                     tv.visualize(prefix, "{}-q{}-t{}".format(suffix, j + 1, k + 1))
 
     if args.output:
@@ -121,8 +133,8 @@ def has_tetrad_cli():
         sys.exit(1)
 
     cif_or_pdb = handle_input_file(args.input)
-    structure2d = read_2d_structure(cif_or_pdb, args.model)
     structure3d = read_3d_structure(cif_or_pdb, args.model)
+    structure2d = extract_secondary_structure(structure3d, args.model)
     flag = has_tetrad(structure2d, structure3d)
     sys.exit(0 if flag else 1)
 
