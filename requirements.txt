@@ -1,4 +1,4 @@
 mmcif
 numpy
 orjson
-requests
+rnapolis

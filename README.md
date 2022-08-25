@@ -448,7 +448,14 @@ Click to see the output JSON
     {
       "nt1": "1.DA3",
       "nt2": "1.DA9",
-      "lw": "tSW",
+      "lw": "tWW",
+      "inTetrad": false,
+      "canonical": false
+    },
+    {
+      "nt1": "1.DA3",
+      "nt2": "1.DA21",
+      "lw": "cHW",
       "inTetrad": false,
       "canonical": false
     },
@@ -495,17 +502,17 @@ Click to see the output JSON
       "canonical": false
     },
     {
-      "nt1": "1.DA9",
-      "nt2": "1.DA3",
-      "lw": "tWS",
+      "nt1": "1.DT7",
+      "nt2": "1.DA9",
+      "lw": "cWH",
       "inTetrad": false,
       "canonical": false
     },
     {
-      "nt1": "1.DG10",
-      "nt2": "1.DG4",
-      "lw": "cWH",
-      "inTetrad": true,
+      "nt1": "1.DT7",
+      "nt2": "1.DG10",
+      "lw": "cHS",
+      "inTetrad": false,
       "canonical": false
     },
     {
@@ -517,22 +524,8 @@ Click to see the output JSON
     },
     {
       "nt1": "1.DG11",
-      "nt2": "1.DG5",
-      "lw": "cHW",
-      "inTetrad": true,
-      "canonical": false
-    },
-    {
-      "nt1": "1.DG11",
       "nt2": "1.DG17",
       "lw": "cWH",
-      "inTetrad": true,
-      "canonical": false
-    },
-    {
-      "nt1": "1.DG12",
-      "nt2": "1.DG6",
-      "lw": "cHW",
       "inTetrad": true,
       "canonical": false
     },
@@ -552,22 +545,8 @@ Click to see the output JSON
     },
     {
       "nt1": "1.DG16",
-      "nt2": "1.DG12",
-      "lw": "cHW",
-      "inTetrad": true,
-      "canonical": false
-    },
-    {
-      "nt1": "1.DG16",
       "nt2": "1.DG24",
       "lw": "cWH",
-      "inTetrad": true,
-      "canonical": false
-    },
-    {
-      "nt1": "1.DG17",
-      "nt2": "1.DG11",
-      "lw": "cHW",
       "inTetrad": true,
       "canonical": false
     },
@@ -580,65 +559,9 @@ Click to see the output JSON
     },
     {
       "nt1": "1.DG18",
-      "nt2": "1.DG10",
-      "lw": "cWH",
-      "inTetrad": true,
-      "canonical": false
-    },
-    {
-      "nt1": "1.DG18",
       "nt2": "1.DG22",
       "lw": "cHW",
       "inTetrad": true,
-      "canonical": false
-    },
-    {
-      "nt1": "1.DG22",
-      "nt2": "1.DG4",
-      "lw": "cHW",
-      "inTetrad": true,
-      "canonical": false
-    },
-    {
-      "nt1": "1.DG22",
-      "nt2": "1.DG18",
-      "lw": "cWH",
-      "inTetrad": true,
-      "canonical": false
-    },
-    {
-      "nt1": "1.DG23",
-      "nt2": "1.DG5",
-      "lw": "cWH",
-      "inTetrad": true,
-      "canonical": false
-    },
-    {
-      "nt1": "1.DG23",
-      "nt2": "1.DG17",
-      "lw": "cHW",
-      "inTetrad": true,
-      "canonical": false
-    },
-    {
-      "nt1": "1.DG24",
-      "nt2": "1.DG6",
-      "lw": "cWH",
-      "inTetrad": true,
-      "canonical": false
-    },
-    {
-      "nt1": "1.DG24",
-      "nt2": "1.DG16",
-      "lw": "cHW",
-      "inTetrad": true,
-      "canonical": false
-    },
-    {
-      "nt1": "1.DA25",
-      "nt2": "1.DT14",
-      "lw": "tWW",
-      "inTetrad": false,
       "canonical": false
     }
   ],
@@ -1441,6 +1364,13 @@ Click to see the output JSON
       "canonical": false
     },
     {
+      "nt1": "AB.G1002",
+      "nt2": "AA.G1002",
+      "lw": "cWH",
+      "inTetrad": true,
+      "canonical": false
+    },
+    {
       "nt1": "AA.G1002",
       "nt2": "AC.G1002",
       "lw": "cWH",
@@ -1448,9 +1378,9 @@ Click to see the output JSON
       "canonical": false
     },
     {
-      "nt1": "AA.G1002",
-      "nt2": "AB.G1002",
-      "lw": "cHW",
+      "nt1": "AB.G1003",
+      "nt2": "AA.G1003",
+      "lw": "cWH",
       "inTetrad": true,
       "canonical": false
     },
@@ -1462,9 +1392,9 @@ Click to see the output JSON
       "canonical": false
     },
     {
-      "nt1": "AA.G1003",
-      "nt2": "AB.G1003",
-      "lw": "cHW",
+      "nt1": "AB.G1004",
+      "nt2": "AA.G1004",
+      "lw": "cWH",
       "inTetrad": true,
       "canonical": false
     },
@@ -1476,9 +1406,9 @@ Click to see the output JSON
       "canonical": false
     },
     {
-      "nt1": "AA.G1004",
-      "nt2": "AB.G1004",
-      "lw": "cHW",
+      "nt1": "AB.G1005",
+      "nt2": "AA.G1005",
+      "lw": "cWH",
       "inTetrad": true,
       "canonical": false
     },
@@ -1490,8 +1420,8 @@ Click to see the output JSON
       "canonical": false
     },
     {
-      "nt1": "AA.G1005",
-      "nt2": "AB.G1005",
+      "nt1": "AB.U1006",
+      "nt2": "AA.U1006",
       "lw": "cHW",
       "inTetrad": true,
       "canonical": false
@@ -1504,148 +1434,8 @@ Click to see the output JSON
       "canonical": false
     },
     {
-      "nt1": "AA.U1006",
-      "nt2": "AB.U1006",
-      "lw": "cWH",
-      "inTetrad": true,
-      "canonical": false
-    },
-    {
-      "nt1": "AB.G1002",
-      "nt2": "A.G1002",
-      "lw": "cHW",
-      "inTetrad": true,
-      "canonical": false
-    },
-    {
-      "nt1": "AB.G1002",
-      "nt2": "AA.G1002",
-      "lw": "cWH",
-      "inTetrad": true,
-      "canonical": false
-    },
-    {
-      "nt1": "AB.G1003",
-      "nt2": "A.G1003",
-      "lw": "cHW",
-      "inTetrad": true,
-      "canonical": false
-    },
-    {
-      "nt1": "AB.G1003",
-      "nt2": "AA.G1003",
-      "lw": "cWH",
-      "inTetrad": true,
-      "canonical": false
-    },
-    {
-      "nt1": "AB.G1004",
-      "nt2": "A.G1004",
-      "lw": "cHW",
-      "inTetrad": true,
-      "canonical": false
-    },
-    {
-      "nt1": "AB.G1004",
-      "nt2": "AA.G1004",
-      "lw": "cWH",
-      "inTetrad": true,
-      "canonical": false
-    },
-    {
-      "nt1": "AB.G1005",
-      "nt2": "A.G1005",
-      "lw": "cHW",
-      "inTetrad": true,
-      "canonical": false
-    },
-    {
-      "nt1": "AB.G1005",
-      "nt2": "AA.G1005",
-      "lw": "cWH",
-      "inTetrad": true,
-      "canonical": false
-    },
-    {
-      "nt1": "AB.U1006",
-      "nt2": "A.U1006",
-      "lw": "cWH",
-      "inTetrad": true,
-      "canonical": false
-    },
-    {
-      "nt1": "AB.U1006",
-      "nt2": "AA.U1006",
-      "lw": "cHW",
-      "inTetrad": true,
-      "canonical": false
-    },
-    {
-      "nt1": "AC.G1002",
-      "nt2": "AA.G1002",
-      "lw": "cHW",
-      "inTetrad": true,
-      "canonical": false
-    },
-    {
-      "nt1": "AC.G1002",
-      "nt2": "A.G1002",
-      "lw": "cWH",
-      "inTetrad": true,
-      "canonical": false
-    },
-    {
-      "nt1": "AC.G1003",
-      "nt2": "AA.G1003",
-      "lw": "cHW",
-      "inTetrad": true,
-      "canonical": false
-    },
-    {
-      "nt1": "AC.G1003",
-      "nt2": "A.G1003",
-      "lw": "cWH",
-      "inTetrad": true,
-      "canonical": false
-    },
-    {
-      "nt1": "AC.G1004",
-      "nt2": "AA.G1004",
-      "lw": "cHW",
-      "inTetrad": true,
-      "canonical": false
-    },
-    {
-      "nt1": "AC.G1004",
-      "nt2": "A.G1004",
-      "lw": "cWH",
-      "inTetrad": true,
-      "canonical": false
-    },
-    {
-      "nt1": "AC.G1005",
-      "nt2": "AA.G1005",
-      "lw": "cHW",
-      "inTetrad": true,
-      "canonical": false
-    },
-    {
-      "nt1": "AC.G1005",
-      "nt2": "A.G1005",
-      "lw": "cWH",
-      "inTetrad": true,
-      "canonical": false
-    },
-    {
-      "nt1": "AC.U1006",
-      "nt2": "AA.U1006",
-      "lw": "cWH",
-      "inTetrad": true,
-      "canonical": false
-    },
-    {
-      "nt1": "AC.U1006",
-      "nt2": "A.U1006",
+      "nt1": "B.G2002",
+      "nt2": "BB.G2002",
       "lw": "cHW",
       "inTetrad": true,
       "canonical": false
@@ -1658,8 +1448,8 @@ Click to see the output JSON
       "canonical": false
     },
     {
-      "nt1": "B.G2002",
-      "nt2": "BB.G2002",
+      "nt1": "B.G2003",
+      "nt2": "BB.G2003",
       "lw": "cHW",
       "inTetrad": true,
       "canonical": false
@@ -1672,8 +1462,8 @@ Click to see the output JSON
       "canonical": false
     },
     {
-      "nt1": "B.G2003",
-      "nt2": "BB.G2003",
+      "nt1": "B.G2004",
+      "nt2": "BB.G2004",
       "lw": "cHW",
       "inTetrad": true,
       "canonical": false
@@ -1686,8 +1476,8 @@ Click to see the output JSON
       "canonical": false
     },
     {
-      "nt1": "B.G2004",
-      "nt2": "BB.G2004",
+      "nt1": "B.G2005",
+      "nt2": "BB.G2005",
       "lw": "cHW",
       "inTetrad": true,
       "canonical": false
@@ -1700,9 +1490,9 @@ Click to see the output JSON
       "canonical": false
     },
     {
-      "nt1": "B.G2005",
-      "nt2": "BB.G2005",
-      "lw": "cHW",
+      "nt1": "B.U2006",
+      "nt2": "BB.U2006",
+      "lw": "cWH",
       "inTetrad": true,
       "canonical": false
     },
@@ -1710,13 +1500,6 @@ Click to see the output JSON
       "nt1": "B.U2006",
       "nt2": "BC.U2006",
       "lw": "cHW",
-      "inTetrad": true,
-      "canonical": false
-    },
-    {
-      "nt1": "B.U2006",
-      "nt2": "BB.U2006",
-      "lw": "cWH",
       "inTetrad": true,
       "canonical": false
     },
@@ -1728,9 +1511,9 @@ Click to see the output JSON
       "canonical": false
     },
     {
-      "nt1": "BA.G2002",
-      "nt2": "BC.G2002",
-      "lw": "cHW",
+      "nt1": "BC.G2002",
+      "nt2": "BA.G2002",
+      "lw": "cWH",
       "inTetrad": true,
       "canonical": false
     },
@@ -1742,9 +1525,9 @@ Click to see the output JSON
       "canonical": false
     },
     {
-      "nt1": "BA.G2003",
-      "nt2": "BC.G2003",
-      "lw": "cHW",
+      "nt1": "BC.G2003",
+      "nt2": "BA.G2003",
+      "lw": "cWH",
       "inTetrad": true,
       "canonical": false
     },
@@ -1756,9 +1539,9 @@ Click to see the output JSON
       "canonical": false
     },
     {
-      "nt1": "BA.G2004",
-      "nt2": "BC.G2004",
-      "lw": "cHW",
+      "nt1": "BC.G2004",
+      "nt2": "BA.G2004",
+      "lw": "cWH",
       "inTetrad": true,
       "canonical": false
     },
@@ -1770,9 +1553,9 @@ Click to see the output JSON
       "canonical": false
     },
     {
-      "nt1": "BA.G2005",
-      "nt2": "BC.G2005",
-      "lw": "cHW",
+      "nt1": "BC.G2005",
+      "nt2": "BA.G2005",
+      "lw": "cWH",
       "inTetrad": true,
       "canonical": false
     },
@@ -1780,146 +1563,6 @@ Click to see the output JSON
       "nt1": "BA.U2006",
       "nt2": "BB.U2006",
       "lw": "cHW",
-      "inTetrad": true,
-      "canonical": false
-    },
-    {
-      "nt1": "BA.U2006",
-      "nt2": "BC.U2006",
-      "lw": "cWH",
-      "inTetrad": true,
-      "canonical": false
-    },
-    {
-      "nt1": "BB.G2002",
-      "nt2": "BA.G2002",
-      "lw": "cHW",
-      "inTetrad": true,
-      "canonical": false
-    },
-    {
-      "nt1": "BB.G2002",
-      "nt2": "B.G2002",
-      "lw": "cWH",
-      "inTetrad": true,
-      "canonical": false
-    },
-    {
-      "nt1": "BB.G2003",
-      "nt2": "BA.G2003",
-      "lw": "cHW",
-      "inTetrad": true,
-      "canonical": false
-    },
-    {
-      "nt1": "BB.G2003",
-      "nt2": "B.G2003",
-      "lw": "cWH",
-      "inTetrad": true,
-      "canonical": false
-    },
-    {
-      "nt1": "BB.G2004",
-      "nt2": "BA.G2004",
-      "lw": "cHW",
-      "inTetrad": true,
-      "canonical": false
-    },
-    {
-      "nt1": "BB.G2004",
-      "nt2": "B.G2004",
-      "lw": "cWH",
-      "inTetrad": true,
-      "canonical": false
-    },
-    {
-      "nt1": "BB.G2005",
-      "nt2": "BA.G2005",
-      "lw": "cHW",
-      "inTetrad": true,
-      "canonical": false
-    },
-    {
-      "nt1": "BB.G2005",
-      "nt2": "B.G2005",
-      "lw": "cWH",
-      "inTetrad": true,
-      "canonical": false
-    },
-    {
-      "nt1": "BB.U2006",
-      "nt2": "BA.U2006",
-      "lw": "cWH",
-      "inTetrad": true,
-      "canonical": false
-    },
-    {
-      "nt1": "BB.U2006",
-      "nt2": "B.U2006",
-      "lw": "cHW",
-      "inTetrad": true,
-      "canonical": false
-    },
-    {
-      "nt1": "BC.G2002",
-      "nt2": "B.G2002",
-      "lw": "cHW",
-      "inTetrad": true,
-      "canonical": false
-    },
-    {
-      "nt1": "BC.G2002",
-      "nt2": "BA.G2002",
-      "lw": "cWH",
-      "inTetrad": true,
-      "canonical": false
-    },
-    {
-      "nt1": "BC.G2003",
-      "nt2": "B.G2003",
-      "lw": "cHW",
-      "inTetrad": true,
-      "canonical": false
-    },
-    {
-      "nt1": "BC.G2003",
-      "nt2": "BA.G2003",
-      "lw": "cWH",
-      "inTetrad": true,
-      "canonical": false
-    },
-    {
-      "nt1": "BC.G2004",
-      "nt2": "B.G2004",
-      "lw": "cHW",
-      "inTetrad": true,
-      "canonical": false
-    },
-    {
-      "nt1": "BC.G2004",
-      "nt2": "BA.G2004",
-      "lw": "cWH",
-      "inTetrad": true,
-      "canonical": false
-    },
-    {
-      "nt1": "BC.G2005",
-      "nt2": "B.G2005",
-      "lw": "cHW",
-      "inTetrad": true,
-      "canonical": false
-    },
-    {
-      "nt1": "BC.G2005",
-      "nt2": "BA.G2005",
-      "lw": "cWH",
-      "inTetrad": true,
-      "canonical": false
-    },
-    {
-      "nt1": "BC.U2006",
-      "nt2": "B.U2006",
-      "lw": "cWH",
       "inTetrad": true,
       "canonical": false
     },

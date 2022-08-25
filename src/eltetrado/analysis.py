@@ -11,22 +11,18 @@ from typing import IO, Dict, FrozenSet, Iterable, List, Optional, Set, Tuple
 
 import numpy
 import numpy.typing
+from rnapolis.common import GlycosidicBond, Structure2D
+from rnapolis.tertiary import Atom, BasePair3D, Mapping2D3D, Residue3D, Structure3D
 
 from eltetrado.model import (
     ONZ,
     ONZM,
-    Atom3D,
-    BasePair3D,
     Direction,
     GbaQuadruplexClassification,
     GbaTetradClassification,
-    GlycosidicBond,
     Ion,
     LoopClassification,
     LoopType,
-    Residue3D,
-    Structure2D,
-    Structure3D,
 )
 
 logging.basicConfig(level=os.environ.get("LOGLEVEL", "INFO"))
@@ -59,11 +55,12 @@ class Tetrad:
     pair_23: BasePair3D
     pair_34: BasePair3D
     pair_41: BasePair3D
+    global_index: Dict[Residue3D, int]
     onz: ONZ = field(init=False)
     gba_class: Optional[GbaTetradClassification] = field(init=False)
     planarity_deviation: float = field(init=False)
-    ions_channel: List[Atom3D] = field(default_factory=list)
-    ions_outside: Dict[Residue3D, List[Atom3D]] = field(default_factory=dict)
+    ions_channel: List[Atom] = field(default_factory=list)
+    ions_outside: Dict[Residue3D, List[Atom]] = field(default_factory=dict)
 
     def __post_init__(self):
         self.reorder_to_match_5p_3p()
@@ -71,7 +68,7 @@ class Tetrad:
 
     def reorder_to_match_5p_3p(self):
         # transform into (0, 1, 2, 3)
-        ni, nj, nk, nl = map(lambda nt: nt.index, self.nucleotides)
+        ni, nj, nk, nl = map(lambda nt: self.global_index[nt], self.nucleotides)
         indices = sorted((ni, nj, nk, nl))
         ni, nj, nk, nl = (indices.index(x) for x in (ni, nj, nk, nl))
 
@@ -119,7 +116,7 @@ class Tetrad:
             )
 
         # flip order if necessary
-        if self.pair_12.score > self.pair_41.reverse().score:
+        if self.pair_12.score > self.pair_41.reverse.score:
             self.nt1, self.nt2, self.nt3, self.nt4 = (
                 self.nt1,
                 self.nt4,
@@ -127,10 +124,10 @@ class Tetrad:
                 self.nt2,
             )
             self.pair_12, self.pair_23, self.pair_34, self.pair_41 = (
-                self.pair_41.reverse(),
-                self.pair_34.reverse(),
-                self.pair_23.reverse(),
-                self.pair_12.reverse(),
+                self.pair_41.reverse,
+                self.pair_34.reverse,
+                self.pair_23.reverse,
+                self.pair_12.reverse,
             )
 
         # ONZ and da Silva's classification are valid in 5'-3' order
@@ -165,31 +162,31 @@ class Tetrad:
             )
         elif order == (self.nt4, self.nt3, self.nt2, self.nt1):
             self.pair_12, self.pair_23, self.pair_34, self.pair_41 = (
-                self.pair_34.reverse(),
-                self.pair_23.reverse(),
-                self.pair_12.reverse(),
-                self.pair_41.reverse(),
+                self.pair_34.reverse,
+                self.pair_23.reverse,
+                self.pair_12.reverse,
+                self.pair_41.reverse,
             )
         elif order == (self.nt3, self.nt2, self.nt1, self.nt4):
             self.pair_12, self.pair_23, self.pair_34, self.pair_41 = (
-                self.pair_23.reverse(),
-                self.pair_12.reverse(),
-                self.pair_41.reverse(),
-                self.pair_34.reverse(),
+                self.pair_23.reverse,
+                self.pair_12.reverse,
+                self.pair_41.reverse,
+                self.pair_34.reverse,
             )
         elif order == (self.nt2, self.nt1, self.nt4, self.nt3):
             self.pair_12, self.pair_23, self.pair_34, self.pair_41 = (
-                self.pair_12.reverse(),
-                self.pair_41.reverse(),
-                self.pair_34.reverse(),
-                self.pair_23.reverse(),
+                self.pair_12.reverse,
+                self.pair_41.reverse,
+                self.pair_34.reverse,
+                self.pair_23.reverse,
             )
         elif order == (self.nt1, self.nt4, self.nt3, self.nt2):
             self.pair_12, self.pair_23, self.pair_34, self.pair_41 = (
-                self.pair_41.reverse(),
-                self.pair_34.reverse(),
-                self.pair_23.reverse(),
-                self.pair_12.reverse(),
+                self.pair_41.reverse,
+                self.pair_34.reverse,
+                self.pair_23.reverse,
+                self.pair_12.reverse,
             )
         else:
             raise RuntimeError(f"Cannot apply order: {order}")
@@ -198,7 +195,7 @@ class Tetrad:
 
     def __classify_onz(self) -> ONZ:
         # transform into (0, 1, 2, 3)
-        ni, nj, nk, nl = (nt.index for nt in self.nucleotides)
+        ni, nj, nk, nl = (self.global_index[nt] for nt in self.nucleotides)
         indices = sorted((ni, nj, nk, nl))
         ni, nj, nk, nl = (indices.index(x) for x in (ni, nj, nk, nl))
 
@@ -302,16 +299,14 @@ class Tetrad:
     def center(self) -> numpy.ndarray:
         return center_of_mass(self.outer_and_inner_atoms())
 
-    def outer_and_inner_atoms(self) -> List[Atom3D]:
+    def outer_and_inner_atoms(self) -> List[Atom]:
         return list(
             map(lambda residue: residue.outermost_atom, self.nucleotides)
         ) + list(map(lambda residue: residue.innermost_atom, self.nucleotides))
 
     def __ions_channel_str(self) -> str:
         if self.ions_channel:
-            return "ions_channel=" + ",".join(
-                [atom.atomName for atom in self.ions_channel]
-            )
+            return "ions_channel=" + ",".join([atom.name for atom in self.ions_channel])
         return ""
 
     def __ions_outside_str(self) -> str:
@@ -319,7 +314,7 @@ class Tetrad:
             result = []
             for residue, ions in self.ions_outside.items():
                 result.append(
-                    f'{residue.full_name}: [{",".join([ion.atomName for ion in ions])}]'
+                    f'{residue.full_name}: [{",".join([ion.name for ion in ions])}]'
                 )
             return "ions_outside=" + " ".join(result)
         return ""
@@ -330,6 +325,7 @@ class TetradPair:
     tetrad1: Tetrad
     tetrad2: Tetrad
     stacked: Dict[Residue3D, Residue3D]
+    global_index: Dict[Residue3D, int]
     tetrad2_nts_best_order: Tuple[Residue3D, Residue3D, Residue3D, Residue3D] = field(
         init=False
     )
@@ -349,8 +345,13 @@ class TetradPair:
         self.twist = self.__calculate_twist()
 
     def __determine_direction(self) -> Direction:
-        indices1 = list(map(lambda nt: nt.index, self.tetrad1.nucleotides))
-        indices2 = list(map(lambda nt: nt.index, self.tetrad2_nts_best_order))
+        indices1 = list(map(lambda nt: self.global_index[nt], self.tetrad1.nucleotides))
+        indices2 = list(
+            map(
+                lambda nt: self.global_index[nt],
+                self.tetrad2_nts_best_order,
+            )
+        )
 
         # count directions 5' -> 3' as +1 or -1
         counter = Counter(1 if j - i > 0 else -1 for i, j in zip(indices1, indices2))
@@ -385,9 +386,9 @@ class TetradPair:
             and atom3 is not None
             and atom4 is not None
         ):
-            v1 = atom1.coordinates() - atom2.coordinates()
+            v1 = atom1.coordinates - atom2.coordinates
             v1 = v1 / numpy.linalg.norm(v1)
-            v2 = atom3.coordinates() - atom4.coordinates()
+            v2 = atom3.coordinates - atom4.coordinates
             v2 = v2 / numpy.linalg.norm(v2)
             return math.degrees(numpy.arccos(numpy.clip(numpy.dot(v1, v2), -1.0, 1.0)))
 
@@ -422,6 +423,7 @@ class Quadruplex:
     tetrads: List[Tetrad]
     tetrad_pairs: List[TetradPair]
     structure3d: Structure3D
+    global_index: Dict[Residue3D, int]
     onzm: Optional[ONZM] = field(init=False)
     gba_classes: List[GbaQuadruplexClassification] = field(init=False)
     tracts: List[Tract] = field(init=False)
@@ -507,20 +509,25 @@ class Quadruplex:
         loops = []
         tetrad_nucleotides = sorted(
             [nt for tetrad in self.tetrads for nt in tetrad.nucleotides],
-            key=lambda nt: nt.index,
+            key=lambda nt: self.global_index[nt],
         )
 
         for i in range(1, len(tetrad_nucleotides)):
             nprev = tetrad_nucleotides[i - 1]
             ncur = tetrad_nucleotides[i]
-            if ncur.index - nprev.index > 1 and ncur.chain == nprev.chain:
+            if (
+                self.global_index[ncur] - self.global_index[nprev] > 1
+                and ncur.chain == nprev.chain
+            ):
                 for tract in self.tracts:
                     if nprev in tract.nucleotides and ncur in tract.nucleotides:
                         break
                 else:
                     nts = list(
                         filter(
-                            lambda nt: nprev.index < nt.index < ncur.index,
+                            lambda nt: self.global_index[nprev]
+                            < self.global_index[nt]
+                            < self.global_index[ncur],
                             self.structure3d.residues,
                         )
                     )
@@ -575,13 +582,13 @@ class Quadruplex:
     ) -> Optional[str]:
         for pair in [tetrad.pair_12, tetrad.pair_23, tetrad.pair_34, tetrad.pair_41]:
             # main check
-            if pair.nt1 == first and pair.nt2 == last:
-                if pair.score < pair.reverse().score:
+            if pair.nt1_3d == first and pair.nt2_3d == last:
+                if pair.score < pair.reverse.score:
                     return "-"
                 return "+"
             # reverse check
-            if pair.nt1 == last and pair.nt2 == first:
-                if pair.score < pair.reverse().score:
+            if pair.nt1_3d == last and pair.nt2_3d == first:
+                if pair.score < pair.reverse.score:
                     return "+"
                 return "-"
         return None
@@ -652,6 +659,7 @@ class Helix:
     tetrads: List[Tetrad]
     tetrad_pairs: List[TetradPair]
     structure3d: Structure3D
+    global_index: Dict[Residue3D, int]
     quadruplexes: List[Quadruplex] = field(init=False)
 
     def __post_init__(self):
@@ -659,7 +667,7 @@ class Helix:
 
     def __find_quadruplexes(self):
         if len(self.tetrad_pairs) == 0:
-            return [Quadruplex(self.tetrads, [], self.structure3d)]
+            return [Quadruplex(self.tetrads, [], self.structure3d, self.global_index)]
 
         quadruplexes = list()
         tetrads = list()
@@ -674,13 +682,19 @@ class Helix:
                             tetrads,
                             self.__filter_tetrad_pairs(tetrads),
                             self.structure3d,
+                            self.global_index,
                         )
                     )
                     tetrads = list()
             tetrads.append(tetrad)
 
         quadruplexes.append(
-            Quadruplex(tetrads, self.__filter_tetrad_pairs(tetrads), self.structure3d)
+            Quadruplex(
+                tetrads,
+                self.__filter_tetrad_pairs(tetrads),
+                self.structure3d,
+                self.global_index,
+            )
         )
 
         return quadruplexes
@@ -717,31 +731,23 @@ class Analysis:
     strict: bool
     no_reorder: bool
     stacking_mismatch: int
-    base_pairs: List[BasePair3D] = field(init=False)
-    base_pair_graph: Dict[Residue3D, Set[Residue3D]] = field(init=False)
-    base_pair_dict: Dict[Tuple[Residue3D, Residue3D], BasePair3D] = field(init=False)
-    stacking_graph: Dict[Residue3D, Set[Residue3D]] = field(init=False)
+    global_index: Dict[Residue3D, int] = field(init=False)
+    mapping: Mapping2D3D = field(init=False)
     tetrads: List[Tetrad] = field(init=False)
     tetrad_scores: Dict[Tetrad, Dict[Tetrad, Tuple[int, Tuple, Tuple]]] = field(
         init=False
     )
     tetrad_pairs: List[TetradPair] = field(init=False)
     helices: List[Helix] = field(init=False)
-    ions: List[Atom3D] = field(init=False)
+    ions: List[Atom] = field(init=False)
     sequence: str = field(init=False)
     line1: str = field(init=False)
     line2: str = field(init=False)
     shifts: Dict[Residue3D, int] = field(init=False)
 
     def __post_init__(self):
-        self.base_pairs = self.structure3d.base_pairs(self.structure2d)
-        self.base_pair_graph = self.structure3d.base_pair_graph(
-            self.structure2d, self.strict
-        )
-        self.base_pair_dict = self.structure3d.base_pair_dict(
-            self.structure2d, self.strict
-        )
-        self.stacking_graph = self.structure3d.stacking_graph(self.structure2d)
+        self.global_index = self.__prepare_global_index()
+        self.mapping = Mapping2D3D(self.structure3d, self.structure2d)
         self.tetrads = self.__find_tetrads(self.no_reorder)
         self.tetrad_scores = self.__calculate_tetrad_scores()
         self.tetrad_pairs = self.__find_tetrad_pairs(self.stacking_mismatch)
@@ -759,24 +765,45 @@ class Analysis:
         self.ions = self.__find_ions()
         self.__assign_ions_to_tetrads()
 
+    def __prepare_global_index(self) -> Dict[Residue3D, int]:
+        result = {}
+        i = 1
+        for residue in self.structure3d.residues:
+            result[residue] = i
+            i += 1
+        return result
+
     def __find_tetrads(self, no_reorder=False) -> List[Tetrad]:
         # search for a tetrad: i -> j -> k -> l
         #                      ^--------------^
         tetrads = []
-        for i in self.base_pair_graph:
-            for j in filter(lambda x: x != i, self.base_pair_graph[i]):
-                for k in filter(lambda x: x not in (i, j), self.base_pair_graph[j]):
-                    for l in filter(
-                        lambda x: x not in (i, j, k) and i in self.base_pair_graph[x],
-                        self.base_pair_graph[k],
-                    ):
-                        if Tetrad.is_valid(i, j, k, l, self.base_pair_dict):
-                            pair_12 = self.base_pair_dict[(i, j)]
-                            pair_23 = self.base_pair_dict[(j, k)]
-                            pair_34 = self.base_pair_dict[(k, l)]
-                            pair_41 = self.base_pair_dict[(l, i)]
+        for i in self.mapping.base_pair_graph:
+            for j in self.mapping.base_pair_graph[i]:
+                if j == i:
+                    continue
+                for k in self.mapping.base_pair_graph[j]:
+                    if k in (i, j):
+                        continue
+                    for l in self.mapping.base_pair_graph[k]:
+                        if l in (i, j, k) or i not in self.mapping.base_pair_graph[l]:
+                            continue
+                        if Tetrad.is_valid(i, j, k, l, self.mapping.base_pair_dict):
+                            pair_12 = self.mapping.base_pair_dict[(i, j)]
+                            pair_23 = self.mapping.base_pair_dict[(j, k)]
+                            pair_34 = self.mapping.base_pair_dict[(k, l)]
+                            pair_41 = self.mapping.base_pair_dict[(l, i)]
                             tetrads.append(
-                                Tetrad(i, j, k, l, pair_12, pair_23, pair_34, pair_41)
+                                Tetrad(
+                                    i,
+                                    j,
+                                    k,
+                                    l,
+                                    pair_12,
+                                    pair_23,
+                                    pair_34,
+                                    pair_41,
+                                    self.global_index,
+                                )
                             )
 
         # build graph of tetrads
@@ -800,17 +827,25 @@ class Analysis:
                 break
 
         return sorted(
-            tetrads, key=lambda t: min(map(lambda nt: nt.index, t.nucleotides))
+            tetrads,
+            key=lambda t: min(map(lambda nt: self.global_index[nt], t.nucleotides)),
         )
 
     def __calculate_tetrad_scores(
         self,
     ) -> Dict[Tetrad, Dict[Tetrad, Tuple[int, Tuple, Tuple]]]:
         def is_next_by_stacking(nt1: Residue3D, nt2: Residue3D) -> bool:
-            return nt2 in self.stacking_graph.get(nt1, [])
+            return nt2 in self.mapping.stacking_graph.get(nt1, [])
 
         def is_next_sequentially(nt1: Residue3D, nt2: Residue3D) -> bool:
-            return nt1.chain == nt2.chain and abs(nt1.index - nt2.index) == 1
+            return (
+                nt1.chain == nt2.chain
+                and abs(
+                    self.global_index.get(nt1, math.inf)
+                    - self.global_index.get(nt2, math.inf)
+                )
+                == 1
+            )
 
         tetrad_scores: Dict[
             Tetrad,
@@ -919,7 +954,7 @@ class Analysis:
                 nts1, nts2 = self.tetrad_scores[ti][tj][1:]
                 stacked = {nts1[i]: nts2[i] for i in range(4)}
                 stacked.update({v: k for k, v in stacked.items()})
-                tetrad_pairs.append(TetradPair(ti, tj, stacked))
+                tetrad_pairs.append(TetradPair(ti, tj, stacked, self.global_index))
                 stacked_order = (
                     stacked[ti.nt1],
                     stacked[ti.nt2],
@@ -945,17 +980,29 @@ class Analysis:
                 helix_tetrad_pairs.append(tp)
             else:
                 helices.append(
-                    Helix(helix_tetrads, helix_tetrad_pairs, self.structure3d)
+                    Helix(
+                        helix_tetrads,
+                        helix_tetrad_pairs,
+                        self.structure3d,
+                        self.global_index,
+                    )
                 )
                 helix_tetrads = [ti, tj]
                 helix_tetrad_pairs = [tp]
 
         if helix_tetrads:
-            helices.append(Helix(helix_tetrads, helix_tetrad_pairs, self.structure3d))
+            helices.append(
+                Helix(
+                    helix_tetrads,
+                    helix_tetrad_pairs,
+                    self.structure3d,
+                    self.global_index,
+                )
+            )
 
         for tetrad in self.tetrads:
             if not any([tetrad in helix.tetrads for helix in helices]):
-                helices.append(Helix([tetrad], [], self.structure3d))
+                helices.append(Helix([tetrad], [], self.structure3d, self.global_index))
 
         return helices
 
@@ -1040,11 +1087,11 @@ class Analysis:
         for chain in chain_order:
             for nt in self.structure3d.residues:
                 if nt.chain == chain:
-                    nt.index = i
+                    self.global_index[nt] = i
                     i += 1
         for nt in self.structure3d.residues:
             if nt.chain not in chain_order:
-                nt.index = i
+                self.global_index[nt] = i
                 i += 1
 
         if len(self.tetrad_pairs) > 0:
@@ -1073,14 +1120,14 @@ class Analysis:
             sum_sq += (chain_order.index(c1) - chain_order.index(c2)) ** 2
         return sum_sq
 
-    def __find_ions(self) -> List[Atom3D]:
+    def __find_ions(self) -> List[Atom]:
         metal_atom_names = set([ion.value.upper() for ion in Ion])
         ions = []
         used = set()
         for residue in self.structure3d.residues:
             for atom in residue.atoms:
-                if atom.atomName.upper() in metal_atom_names:
-                    coordinates = tuple(atom.coordinates())
+                if atom.name.upper() in metal_atom_names:
+                    coordinates = tuple(atom.coordinates)
                     if coordinates not in used:
                         ions.append(atom)
                         used.add(coordinates)
@@ -1098,7 +1145,7 @@ class Analysis:
             min_tetrad = self.tetrads[0]
 
             for tetrad in self.tetrads:
-                distance = numpy.linalg.norm(ion.coordinates() - tetrad.center()).item()
+                distance = numpy.linalg.norm(ion.coordinates - tetrad.center()).item()
                 if distance < min_distance:
                     min_distance = distance
                     min_tetrad = tetrad
@@ -1116,7 +1163,7 @@ class Analysis:
                 for nt in tetrad.nucleotides:
                     for atom in nt.atoms:
                         distance = numpy.linalg.norm(
-                            ion.coordinates() - atom.coordinates()
+                            ion.coordinates - atom.coordinates
                         ).item()
                         if distance < min_distance:
                             min_distance = distance
@@ -1152,7 +1199,7 @@ class Analysis:
     def __elimination_conflicts(
         self, pairs: List[BasePair3D]
     ) -> Tuple[str, str, Dict[Residue3D, int]]:
-        orders = dict()
+        orders: Dict[BasePair3D, int] = {}
         order = 0
         queue = list(pairs)
         removed = []
@@ -1160,7 +1207,7 @@ class Analysis:
         while queue:
             conflicts = defaultdict(list)
             for pi, pj in itertools.combinations(queue, 2):
-                if pi.conflicts_with(pj):
+                if self.__is_conflicted(pi, pj):
                     conflicts[pi].append(pj)
                     conflicts[pj].append(pi)
             if conflicts:
@@ -1172,11 +1219,13 @@ class Analysis:
                 queue, removed = removed, []
                 order += 1
 
-        opening = "([{<" + string.ascii_uppercase
-        closing = ")]}>" + string.ascii_lowercase
-        dotbracket = dict()
+        opening = list("([{<" + string.ascii_uppercase)
+        closing = list(")]}>" + string.ascii_lowercase)
+        dotbracket: Dict[Residue3D, str] = {}
         for pair, order in orders.items():
-            nt1, nt2 = sorted([pair.nt1, pair.nt2])
+            nt1, nt2 = sorted(
+                [pair.nt1_3d, pair.nt2_3d], key=lambda nt: self.global_index[nt]
+            )
             dotbracket[nt1] = opening[order]
             dotbracket[nt2] = closing[order]
 
@@ -1187,7 +1236,7 @@ class Analysis:
         chain = None
         for nt in sorted(
             filter(lambda nt: nt.is_nucleotide, self.structure3d.residues),
-            key=lambda nt: nt.index,
+            key=lambda nt: self.global_index[nt],
         ):
             if chain and chain != nt.chain:
                 sequence += "-"
@@ -1213,12 +1262,47 @@ class Analysis:
         return list(
             {
                 nt.chain: 0
-                for nt in sorted(only_nucleic_acids, key=lambda nt: nt.index)
+                for nt in sorted(
+                    only_nucleic_acids,
+                    key=lambda nt: self.global_index[nt],
+                )
             }.keys()
         )
 
+    def __is_conflicted(self, bp1: BasePair3D, bp2: BasePair3D) -> bool:
+        xi, yi = sorted(
+            [
+                self.global_index.get(bp1.nt1_3d, math.inf),
+                self.global_index.get(bp1.nt2_3d, math.inf),
+            ]
+        )
+        xj, yj = sorted(
+            [
+                self.global_index.get(bp2.nt1_3d, math.inf),
+                self.global_index.get(bp2.nt2_3d, math.inf),
+            ]
+        )
+        return xi < xj < yi < yj or xj < xi < yj < yi
+
     def canonical(self) -> List[BasePair3D]:
-        return [base_pair for base_pair in self.base_pairs if base_pair.is_canonical]
+        return [
+            base_pair for base_pair in self.mapping.base_pairs if base_pair.is_canonical
+        ]
+
+    def is_basepair_in_tetrad(self, base_pair: BasePair3D) -> bool:
+        for tetrad in self.tetrads:
+            if base_pair in (
+                tetrad.pair_12,
+                tetrad.pair_23,
+                tetrad.pair_34,
+                tetrad.pair_41,
+                tetrad.pair_12.reverse,
+                tetrad.pair_23.reverse,
+                tetrad.pair_34.reverse,
+                tetrad.pair_41.reverse,
+            ):
+                return True
+        return False
 
 
 @dataclass
@@ -1226,6 +1310,7 @@ class Visualizer:
     analysis: Analysis
     tetrads: List[Tetrad]
     complete2d: bool
+    global_index: Dict[Residue3D, int]
     onz_dict: Dict[BasePair3D, ONZ] = field(init=False)
 
     def __post_init__(self):
@@ -1243,8 +1328,16 @@ class Visualizer:
 
         layer1, layer2 = [], []
         for tetrad in self.tetrads:
-            layer1.extend([tetrad.pair_12, tetrad.pair_34])
-            layer2.extend([tetrad.pair_23, tetrad.pair_41])
+            plus_ordered = self.global_index[tetrad.nt2] < self.global_index[tetrad.nt4]
+            plus_assigned = tetrad.onz in (ONZ.O_PLUS, ONZ.N_PLUS, ONZ.Z_PLUS)
+            if (plus_ordered and not plus_assigned) or (
+                not plus_ordered and plus_assigned
+            ):
+                layer1.extend([tetrad.pair_41, tetrad.pair_23])
+                layer2.extend([tetrad.pair_12, tetrad.pair_34])
+            else:
+                layer1.extend([tetrad.pair_12, tetrad.pair_34])
+                layer2.extend([tetrad.pair_23, tetrad.pair_41])
         helix1 = self.__to_helix(
             layer1, self.analysis.canonical() if self.complete2d else []
         )
@@ -1290,16 +1383,16 @@ class Visualizer:
 
         for pair in layer:
             x, y = (
-                nucleotides.index(pair.nt1) + 1 + shifts[pair.nt1],
-                nucleotides.index(pair.nt2) + 1 + shifts[pair.nt2],
+                nucleotides.index(pair.nt1_3d) + 1 + shifts[pair.nt1_3d],
+                nucleotides.index(pair.nt2_3d) + 1 + shifts[pair.nt2_3d],
             )
             onz = self.onz_dict[pair]
             helix.write(f"{x}\t{y}\t1\t{onz_value.get(onz, 7)}\n")
         if canonical:
             for pair in canonical:
                 x, y = (
-                    nucleotides.index(pair.nt1) + 1 + shifts[pair.nt1],
-                    nucleotides.index(pair.nt2) + 1 + shifts[pair.nt2],
+                    nucleotides.index(pair.nt1_3d) + 1 + shifts[pair.nt1_3d],
+                    nucleotides.index(pair.nt2_3d) + 1 + shifts[pair.nt2_3d],
                 )
                 helix.write(f"{x}\t{y}\t1\t8\n")
 
@@ -1309,32 +1402,29 @@ class Visualizer:
 
 class AnalysisSimple:
     def __init__(self, structure2d: Structure2D, structure3d: Structure3D):
-        self.pairs: List[BasePair3D] = structure3d.base_pairs(structure2d)
-        self.graph: Dict[Residue3D, Set[Residue3D]] = structure3d.base_pair_graph(
-            structure2d
-        )
-        self.pair_dict: Dict[
-            Tuple[Residue3D, Residue3D], BasePair3D
-        ] = structure3d.base_pair_dict(structure2d)
+        self.mapping = Mapping2D3D(structure3d, structure2d)
 
     def has_tetrads(self):
         tetrads = set()
-        for i in self.graph:
-            for j in filter(lambda x: x != i, self.graph[i]):
-                for k in filter(lambda x: x not in (i, j), self.graph[j]):
-                    for l in filter(
-                        lambda x: x not in (i, j, k) and x in self.graph[i],
-                        self.graph[k],
-                    ):
-                        if Tetrad.is_valid(i, j, k, l, self.pair_dict):
+        for i in self.mapping.base_pair_graph:
+            for j in self.mapping.base_pair_graph[i]:
+                if j == i:
+                    continue
+                for k in self.mapping.base_pair_graph[j]:
+                    if k in (i, j):
+                        continue
+                    for l in self.mapping.base_pair_graph[k]:
+                        if l in (i, j, k) or i not in self.mapping.base_pair_graph[l]:
+                            continue
+                        if Tetrad.is_valid(i, j, k, l, self.mapping.base_pair_dict):
                             tetrads.add(frozenset([i, j, k, l]))
                         if len(tetrads) > 1:
                             return True
         return False
 
 
-def center_of_mass(atoms) -> numpy.typing.NDArray[numpy.floating]:
-    coords = [atom.coordinates() for atom in atoms]
+def center_of_mass(atoms: List[Atom]) -> numpy.typing.NDArray[numpy.floating]:
+    coords = [atom.coordinates for atom in atoms]
     xs = (coord[0] for coord in coords)
     ys = (coord[1] for coord in coords)
     zs = (coord[2] for coord in coords)
