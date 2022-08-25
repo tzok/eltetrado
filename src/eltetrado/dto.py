@@ -141,6 +141,7 @@ def convert_base_pairs(analysis: Analysis) -> List[BasePairDTO]:
             bp.is_canonical,
         )
         for bp in analysis.mapping.base_pairs
+        if analysis.global_index[bp.nt1_3d] < analysis.global_index[bp.nt2_3d]
     ]
 
 
