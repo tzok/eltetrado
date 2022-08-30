@@ -33,4 +33,4 @@ jobs:
         black --check src/
     - name: Test with pytest
       run: |
-        pytest
+        PYTHONPATH=src/ pytest
