@@ -72,7 +72,9 @@ def eltetrado_cli():
         sys.exit(1)
 
     cif_or_pdb = handle_input_file(args.input)
-    structure3d = rnapolis.parser.read_3d_structure(cif_or_pdb, args.model)
+    structure3d = rnapolis.parser.read_3d_structure(
+        cif_or_pdb, args.model, nucleic_acid_only=True
+    )
     structure2d = (
         rnapolis.annotator.extract_secondary_structure(structure3d, args.model)
         if args.dssr_json is None
@@ -149,7 +151,9 @@ def has_tetrad_cli():
         sys.exit(1)
 
     cif_or_pdb = handle_input_file(args.input)
-    structure3d = rnapolis.parser.read_3d_structure(cif_or_pdb, args.model)
+    structure3d = rnapolis.parser.read_3d_structure(
+        cif_or_pdb, args.model, nucleic_acid_only=True
+    )
     structure2d = (
         rnapolis.annotator.extract_secondary_structure(structure3d, args.model)
         if args.dssr_json is None

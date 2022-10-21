@@ -127,7 +127,6 @@ def convert_nucleotides(analysis: Analysis) -> List[NucleotideDTO]:
             nt.chi_class.value if nt.chi_class else None,
         )
         for nt in analysis.structure3d.residues
-        if nt.is_nucleotide
     ]
 
 
