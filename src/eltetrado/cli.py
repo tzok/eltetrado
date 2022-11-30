@@ -73,7 +73,7 @@ def eltetrado_cli():
 
     cif_or_pdb = handle_input_file(args.input)
     structure3d = rnapolis.parser.read_3d_structure(
-        cif_or_pdb, args.model, nucleic_acid_only=True
+        cif_or_pdb, args.model, nucleic_acid_only=False
     )
     structure2d = (
         rnapolis.annotator.extract_secondary_structure(structure3d, args.model)
@@ -152,7 +152,7 @@ def has_tetrad_cli():
 
     cif_or_pdb = handle_input_file(args.input)
     structure3d = rnapolis.parser.read_3d_structure(
-        cif_or_pdb, args.model, nucleic_acid_only=True
+        cif_or_pdb, args.model, nucleic_acid_only=False
     )
     structure2d = (
         rnapolis.annotator.extract_secondary_structure(structure3d, args.model)
