@@ -22,10 +22,10 @@ def test_convert_nucleotides():
 
 def test_ions():
     """
-    Load structure in nucleic_acid_only=True mode, but still get the ions analysis
+    Load structure in nucleic_acid_only=False mode and get the ions analysis
     """
     cif = handle_input_file("tests/files/7dju-assembly-1.cif.gz")
-    structure3d = rnapolis.parser.read_3d_structure(cif, nucleic_acid_only=True)
+    structure3d = rnapolis.parser.read_3d_structure(cif, nucleic_acid_only=False)
     structure2d = rnapolis.annotator.extract_secondary_structure(structure3d)
     analysis = eltetrado(structure2d, structure3d, False, False, 2)
     tetrads = convert_tetrads(analysis.helices[0].quadruplexes[0])
