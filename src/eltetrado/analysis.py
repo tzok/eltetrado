@@ -4,6 +4,7 @@ import math
 import os
 import string
 import subprocess
+import sys
 import tempfile
 from collections import Counter, defaultdict
 from dataclasses import dataclass, field
@@ -841,8 +842,8 @@ class Analysis:
             return (
                 nt1.chain == nt2.chain
                 and abs(
-                    self.global_index.get(nt1, math.inf)
-                    - self.global_index.get(nt2, math.inf)
+                    self.global_index.get(nt1, sys.maxsize)
+                    - self.global_index.get(nt2, sys.maxsize)
                 )
                 == 1
             )
@@ -1272,14 +1273,14 @@ class Analysis:
     def __is_conflicted(self, bp1: BasePair3D, bp2: BasePair3D) -> bool:
         xi, yi = sorted(
             [
-                self.global_index.get(bp1.nt1_3d, math.inf),
-                self.global_index.get(bp1.nt2_3d, math.inf),
+                self.global_index.get(bp1.nt1_3d, sys.maxsize),
+                self.global_index.get(bp1.nt2_3d, sys.maxsize),
             ]
         )
         xj, yj = sorted(
             [
-                self.global_index.get(bp2.nt1_3d, math.inf),
-                self.global_index.get(bp2.nt2_3d, math.inf),
+                self.global_index.get(bp2.nt1_3d, sys.maxsize),
+                self.global_index.get(bp2.nt2_3d, sys.maxsize),
             ]
         )
         return xi < xj < yi < yj or xj < xi < yj < yi
