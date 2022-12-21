@@ -4,6 +4,7 @@ import math
 import os
 import string
 import subprocess
+import sys
 import tempfile
 from collections import Counter, defaultdict
 from dataclasses import dataclass, field
@@ -747,7 +748,7 @@ class Analysis:
 
     def __post_init__(self):
         self.global_index = self.__prepare_global_index()
-        self.mapping = Mapping2D3D(self.structure3d, self.structure2d)
+        self.mapping = Mapping2D3D(self.structure3d, self.structure2d, False)
         self.tetrads = self.__find_tetrads(self.no_reorder)
         self.tetrad_scores = self.__calculate_tetrad_scores()
         self.tetrad_pairs = self.__find_tetrad_pairs(self.stacking_mismatch)
@@ -841,8 +842,8 @@ class Analysis:
             return (
                 nt1.chain == nt2.chain
                 and abs(
-                    self.global_index.get(nt1, math.inf)
-                    - self.global_index.get(nt2, math.inf)
+                    self.global_index.get(nt1, sys.maxsize)
+                    - self.global_index.get(nt2, sys.maxsize)
                 )
                 == 1
             )
@@ -1272,14 +1273,14 @@ class Analysis:
     def __is_conflicted(self, bp1: BasePair3D, bp2: BasePair3D) -> bool:
         xi, yi = sorted(
             [
-                self.global_index.get(bp1.nt1_3d, math.inf),
-                self.global_index.get(bp1.nt2_3d, math.inf),
+                self.global_index.get(bp1.nt1_3d, sys.maxsize),
+                self.global_index.get(bp1.nt2_3d, sys.maxsize),
             ]
         )
         xj, yj = sorted(
             [
-                self.global_index.get(bp2.nt1_3d, math.inf),
-                self.global_index.get(bp2.nt2_3d, math.inf),
+                self.global_index.get(bp2.nt1_3d, sys.maxsize),
+                self.global_index.get(bp2.nt2_3d, sys.maxsize),
             ]
         )
         return xi < xj < yi < yj or xj < xi < yj < yi
@@ -1402,7 +1403,7 @@ class Visualizer:
 
 class AnalysisSimple:
     def __init__(self, structure2d: Structure2D, structure3d: Structure3D):
-        self.mapping = Mapping2D3D(structure3d, structure2d)
+        self.mapping = Mapping2D3D(structure3d, structure2d, False)
 
     def has_tetrads(self):
         tetrads = set()
