@@ -220,6 +220,7 @@ def convert_helices(analysis: Analysis) -> List[HelixDTO]:
     return [
         HelixDTO(convert_quadruplexes(h), convert_tetrad_pairs(h))
         for h in analysis.helices
+        if len(h.tetrads) > 1
     ]
 
 

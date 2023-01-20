@@ -11,7 +11,8 @@ from eltetrado.dto import generate_dto
 
 def test_7zko():
     """
-    In 7zko there are two helices, but the second one has only one tetrad so it should be omitted from the output
+    In 7zko there are two helices, but the second one has only one tetrad
+    so it should be omitted from the output
     """
     cif = handle_input_file("tests/files/7zko-assembly-1.cif.gz")
     structure3d = rnapolis.parser.read_3d_structure(cif, 1)
