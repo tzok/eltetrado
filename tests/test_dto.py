@@ -1,11 +1,11 @@
-import pytest
 from eltetrado.analysis import eltetrado
 
 from eltetrado.cli import handle_input_file
 import rnapolis.annotator
 import rnapolis.parser
 
-from eltetrado.dto import convert_nucleotides, convert_quadruplexes, convert_tetrads
+from eltetrado.cli import read_secondary_structure_from_dssr
+from eltetrado.dto import convert_nucleotides, convert_tetrads, generate_dto
 
 
 def test_convert_nucleotides():
@@ -32,3 +32,41 @@ def test_ions():
     assert len(tetrads) > 0
     assert len(tetrads[0].ionsChannel) > 0
     assert tetrads[0].ionsChannel[0] == "PT"
+
+
+def test_7zko():
+    """
+    In 7zko there are two helices, but the second one has only one tetrad
+    so it should be omitted from the output
+    """
+    cif = handle_input_file("tests/files/7zko-assembly-1.cif.gz")
+    structure3d = rnapolis.parser.read_3d_structure(cif, 1)
+    structure2d = read_secondary_structure_from_dssr(
+        structure3d, 1, "tests/files/7zko-assembly-1.json"
+    )
+    analysis = eltetrado(structure2d, structure3d, False, False, 2)
+    assert len(analysis.helices) == 2
+    assert len(analysis.helices[1].quadruplexes) == 1
+    assert len(analysis.helices[1].quadruplexes[0].tetrads) == 1
+    dto = generate_dto(analysis)
+    assert len(dto.helices) == 1
+
+
+def test_1v3p():
+    """
+    In 1v3p there is one helix with two quadruplexes, but each has only
+    one tetrad so altogether we do not want to serialize it
+    """
+    cif = handle_input_file("tests/files/1v3p-assembly-1.cif.gz")
+    structure3d = rnapolis.parser.read_3d_structure(cif, 1)
+    structure2d = read_secondary_structure_from_dssr(
+        structure3d, 1, "tests/files/1v3p-assembly-1.json"
+    )
+    analysis = eltetrado(structure2d, structure3d, False, False, 2)
+    assert len(analysis.helices) == 1
+    assert len(analysis.helices[0].quadruplexes) == 2
+    assert len(analysis.helices[0].quadruplexes[0].tetrads) == 1
+    assert len(analysis.helices[0].quadruplexes[1].tetrads) == 1
+
+    dto = generate_dto(analysis)
+    assert len(dto.helices) == 0
