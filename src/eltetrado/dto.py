@@ -217,6 +217,9 @@ def convert_quadruplexes(helix: Helix) -> List[QuadruplexDTO]:
 
 
 def convert_helices(analysis: Analysis) -> List[HelixDTO]:
+    """
+    NOTE: there is an "if" which will prevent single-tetrad helices from serialization; this is on purpose
+    """
     return [
         HelixDTO(convert_quadruplexes(h), convert_tetrad_pairs(h))
         for h in analysis.helices
