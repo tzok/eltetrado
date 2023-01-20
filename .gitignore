@@ -4,6 +4,7 @@ Makefile
 README.html
 __pycache__
 assets
+build
 dist
 src/eltetrado.egg-info
 typings
