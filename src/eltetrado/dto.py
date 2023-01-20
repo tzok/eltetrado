@@ -3,7 +3,7 @@ from collections import Counter
 from dataclasses import dataclass
 from typing import List, Optional
 
-from eltetrado.analysis import Analysis, Helix, Quadruplex
+from eltetrado.analysis import Analysis, Helix, Quadruplex, TetradPair
 from eltetrado.model import Ion
 
 
@@ -172,7 +172,7 @@ def convert_tetrads(quadruplex: Quadruplex) -> List[TetradDTO]:
     ]
 
 
-def convert_tetrad_pairs(helix: Helix) -> List[TetradPairDTO]:
+def convert_tetrad_pairs(tetrad_pairs: List[TetradPair]) -> List[TetradPairDTO]:
     id_ = (
         lambda tetrad: f"{tetrad.nt1.full_name}-{tetrad.nt2.full_name}-{tetrad.nt3.full_name}-{tetrad.nt4.full_name}"
     )
@@ -184,11 +184,11 @@ def convert_tetrad_pairs(helix: Helix) -> List[TetradPairDTO]:
             float(tp.rise),
             float(tp.twist),
         )
-        for tp in helix.tetrad_pairs
+        for tp in tetrad_pairs
     ]
 
 
-def convert_quadruplexes(helix: Helix) -> List[QuadruplexDTO]:
+def convert_quadruplexes(quadruplexes: List[Quadruplex]) -> List[QuadruplexDTO]:
     nts_ = lambda nts: [nt.full_name for nt in nts]
     return [
         QuadruplexDTO(
@@ -212,19 +212,32 @@ def convert_quadruplexes(helix: Helix) -> List[QuadruplexDTO]:
                 for l in q.loops
             ],
         )
-        for q in helix.quadruplexes
+        for q in quadruplexes
     ]
 
 
 def convert_helices(analysis: Analysis) -> List[HelixDTO]:
-    """
-    NOTE: there is an "if" which will prevent single-tetrad helices from serialization; this is on purpose
-    """
-    return [
-        HelixDTO(convert_quadruplexes(h), convert_tetrad_pairs(h))
-        for h in analysis.helices
-        if len(h.tetrads) > 1
-    ]
+    helices = []
+    for h in analysis.helices:
+        # take only quadruplexes with at least two tetrads
+        quadruplexes = [q for q in h.quadruplexes if len(q.tetrads) >= 2]
+        # gather tetrads from selected quadruplexes
+        tetrads = set([t for q in quadruplexes for t in q.tetrads])
+        # gather pairs among all selected tetrads
+        tetrad_pairs = [
+            tp
+            for tp in h.tetrad_pairs
+            if tp.tetrad1 in tetrads and tp.tetrad2 in tetrads
+        ]
+
+        if quadruplexes and tetrad_pairs:
+            helices.append(
+                HelixDTO(
+                    convert_quadruplexes(quadruplexes),
+                    convert_tetrad_pairs(tetrad_pairs),
+                )
+            )
+    return helices
 
 
 def convert_dot_bracket(analysis: Analysis) -> TwoLineDotBracketDTO:
