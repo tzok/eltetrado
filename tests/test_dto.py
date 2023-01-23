@@ -31,7 +31,7 @@ def test_ions():
     tetrads = convert_tetrads(analysis.helices[0].quadruplexes[0])
     assert len(tetrads) > 0
     assert len(tetrads[0].ionsChannel) > 0
-    assert tetrads[0].ionsChannel[0] == "PT"
+    assert tetrads[0].ionsChannel[0] == "Pt"
 
 
 def test_7zko():

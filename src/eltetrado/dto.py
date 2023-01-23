@@ -149,9 +149,11 @@ def convert_tetrads(quadruplex: Quadruplex) -> List[TetradDTO]:
     id_ = (
         lambda tetrad: f"{tetrad.nt1.full_name}-{tetrad.nt2.full_name}-{tetrad.nt3.full_name}-{tetrad.nt4.full_name}"
     )
-    ions_channel = lambda tetrad: [atom.name for atom in tetrad.ions_channel]
+    ions_channel = lambda tetrad: [
+        Ion[atom.name.title()].value for atom in tetrad.ions_channel
+    ]
     ions_outside = lambda tetrad: [
-        IonOutsideDTO(nt.full_name, atom.name)
+        IonOutsideDTO(nt.full_name, Ion[atom.name.title()].value)
         for nt, atoms in tetrad.ions_outside.items()
         for atom in atoms
     ]
