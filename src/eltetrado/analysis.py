@@ -526,14 +526,16 @@ class Quadruplex:
                 else:
                     nts = list(
                         filter(
-                            lambda nt: self.global_index[nprev]
+                            lambda nt: nt.is_nucleotide
+                            and self.global_index[nprev]
                             < self.global_index[nt]
                             < self.global_index[ncur],
                             self.structure3d.residues,
                         )
                     )
-                    loop_type = self.__detect_loop_type(nprev, ncur)
-                    loops.append(Loop(nts, loop_type))
+                    if len(nts) > 0:
+                        loop_type = self.__detect_loop_type(nprev, ncur)
+                        loops.append(Loop(nts, loop_type))
         return loops
 
     def __detect_loop_type(

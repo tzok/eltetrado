@@ -70,3 +70,21 @@ def test_1v3p():
 
     dto = generate_dto(analysis)
     assert len(dto.helices) == 0
+
+
+def test_2awe():
+    cif = handle_input_file("tests/files/2awe-assembly-1.cif.gz")
+    structure3d = rnapolis.parser.read_3d_structure(cif, 1)
+    structure2d = read_secondary_structure_from_dssr(
+        structure3d, 1, "tests/files/2awe-assembly-1.json"
+    )
+    analysis = eltetrado(structure2d, structure3d, False, False, 2)
+    dto = generate_dto(analysis)
+    assert "G.U4" not in [nt.fullName for nt in dto.nucleotides]
+    assert "G.U4" not in [
+        nt
+        for h in dto.helices
+        for q in h.quadruplexes
+        for l in q.loops
+        for nt in l.nucleotides
+    ]
