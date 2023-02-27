@@ -812,7 +812,7 @@ class Analysis:
         # build graph of tetrads
         while tetrads:
             graph = defaultdict(list)
-            for (ti, tj) in itertools.combinations(tetrads, 2):
+            for ti, tj in itertools.combinations(tetrads, 2):
                 if not ti.is_disjoint(tj):
                     graph[ti].append(tj)
                     graph[tj].append(ti)
