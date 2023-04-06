@@ -1414,7 +1414,7 @@ class AnalysisSimple:
             structure3d, structure2d.basePairs, structure2d.stackings, False
         )
 
-    def has_tetrads(self):
+    def has_tetrads(self) -> bool:
         tetrads = set()
         for i in self.mapping.base_pair_graph:
             for j in self.mapping.base_pair_graph[i]:
