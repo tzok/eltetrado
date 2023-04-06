@@ -17,7 +17,7 @@ from eltetrado.analysis import Visualizer, eltetrado, has_tetrad
 from eltetrado.dto import generate_dto
 
 
-def eltetrado_cli():
+def eltetrado_cli(args=sys.argv[1:]):
     with open(os.path.join(os.path.dirname(__file__), "VERSION")) as f:
         version = f.read().strip()
 
@@ -65,7 +65,7 @@ def eltetrado_cli():
     parser.add_argument(
         "-v", "--version", action="version", version="%(prog)s {}".format(version)
     )
-    args = parser.parse_args()
+    args = parser.parse_args(args)
 
     if not args.input:
         print(parser.print_help())
@@ -128,7 +128,7 @@ def eltetrado_cli():
             jsonfile.write(orjson.dumps(dto))
 
 
-def has_tetrad_cli():
+def has_tetrad_cli(args=sys.argv[1:]):
     with open(os.path.join(os.path.dirname(__file__), "VERSION")) as f:
         version = f.read().strip()
 
@@ -144,7 +144,7 @@ def has_tetrad_cli():
     parser.add_argument(
         "--version", action="version", version="%(prog)s {}".format(version)
     )
-    args = parser.parse_args()
+    args = parser.parse_args(args)
 
     if not args.input:
         print(parser.print_help())
@@ -159,8 +159,7 @@ def has_tetrad_cli():
         if args.dssr_json is None
         else read_secondary_structure_from_dssr(structure3d, args.model, args.dssr_json)
     )
-    flag = has_tetrad(structure2d, structure3d)
-    sys.exit(0 if flag else 1)
+    print(has_tetrad(structure2d, structure3d))
 
 
 def handle_input_file(path) -> IO[str]:

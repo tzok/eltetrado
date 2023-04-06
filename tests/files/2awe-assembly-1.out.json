@@ -1,0 +1,47 @@
+Chain order: A C B D E H F G
+n4-helix with 4 tetrads
+  Oh* VIII n/a quadruplex with 4 tetrads
+    A.BGM2 C.BGM2 B.BGM2 D.BGM2 cWH cWH cWH cWH O+ VIIIb planarity=0.34 ions_channel=K,K 
+      direction=parallel rise=3.57 twist=14.63
+    A.G3 C.G3 B.G3 D.G3 cHW cHW cHW cHW O- VIIIa planarity=0.68 ions_channel=K 
+      direction=hybrid rise=3.38 twist=36.89
+    C.G5 B.G5 D.G5 A.G5 cHW cHW cHW cHW O- VIIIa planarity=0.75 ions_channel=K 
+      direction=parallel rise=3.46 twist=38.6
+    C.U6 B.U6 D.U6 A.U6 cWH cWH cWH cWH O+ VIIIa planarity=1.15  ions_outside=A.U6: [SR] C.U6: [K]
+
+    Tracts:
+      A.BGM2, A.G3, C.G5, C.U6
+      C.BGM2, C.G3, B.G5, B.U6
+      B.BGM2, B.G3, D.G5, D.U6
+      D.BGM2, D.G3, A.G5, A.U6
+
+    Loops:
+      propeller- A.U4
+      propeller- C.U4
+      propeller- B.U4
+      propeller- D.U4
+
+n4-helix with 4 tetrads
+  Oh* VIII 1a -(ppp) quadruplex with 4 tetrads
+    E.BGM2 G.BGM2 F.BGM2 H.BGM2 cWH cWH cWH cWH O- VIIIb planarity=0.29 ions_channel=K,K 
+      direction=parallel rise=3.54 twist=13.64
+    E.G3 G.G3 F.G3 H.G3 cHW cHW cHW cHW O+ VIIIa planarity=0.67 ions_channel=K 
+      direction=hybrid rise=3.39 twist=36.63
+    G.G5 F.G5 H.G5 E.G5 cHW cHW cHW cHW O+ VIIIa planarity=0.81 ions_channel=K 
+      direction=parallel rise=3.47 twist=39.07
+    G.U6 F.U6 H.U6 E.U6 cWH cWH cWH cWH O- VIIIa planarity=1.21  ions_outside=F.U6: [K] G.U6: [K]
+
+    Tracts:
+      E.BGM2, E.G3, G.G5, G.U6
+      G.BGM2, G.G3, F.G5, F.U6
+      F.BGM2, F.G3, H.G5, H.U6
+      H.BGM2, H.G3, E.G5, E.U6
+
+    Loops:
+      propeller- E.U4
+      propeller- H.U4
+      propeller- F.U4
+
+UGGUGU-UGGUGU-UGGUGU-UGGUGU-UGGUGU-UGGUGU-UGGUGU-UGGGU
+.([.{<-.)].{<-.([.}>-.)].}>-.([.{<-.([.}>-.)].{<-.)]}>
+.{<.([-.{<.)]-.}>.([-.}>.)]-.{<.([-.}>.([-.{<.)]-.}>)]
