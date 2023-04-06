@@ -750,7 +750,12 @@ class Analysis:
 
     def __post_init__(self):
         self.global_index = self.__prepare_global_index()
-        self.mapping = Mapping2D3D(self.structure3d, self.structure2d, False)
+        self.mapping = Mapping2D3D(
+            self.structure3d,
+            self.structure2d.basePairs,
+            self.structure2d.stackings,
+            False,
+        )
         self.tetrads = self.__find_tetrads(self.no_reorder)
         self.tetrad_scores = self.__calculate_tetrad_scores()
         self.tetrad_pairs = self.__find_tetrad_pairs(self.stacking_mismatch)
@@ -1405,7 +1410,9 @@ class Visualizer:
 
 class AnalysisSimple:
     def __init__(self, structure2d: Structure2D, structure3d: Structure3D):
-        self.mapping = Mapping2D3D(structure3d, structure2d, False)
+        self.mapping = Mapping2D3D(
+            structure3d, structure2d.basePairs, structure2d.stackings, False
+        )
 
     def has_tetrads(self):
         tetrads = set()
