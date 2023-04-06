@@ -213,7 +213,7 @@ def read_secondary_structure_from_dssr(
             if nt1 is not None and nt2 is not None:
                 stackings.append(Stacking(nt1, nt2, None))
 
-    return Structure2D(base_pairs, stackings, [], [], [])
+    return Structure2D(base_pairs, stackings, [], [], [], "", "", "", [], [], [], [])
 
 
 def match_dssr_name_to_residue(

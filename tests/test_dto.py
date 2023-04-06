@@ -73,6 +73,11 @@ def test_1v3p():
 
 
 def test_2awe():
+    """
+    In 2awe there is a residue G.U4 which only has the phosphorus group
+    and is therefore not recognized as a nucleotide, but it was present in the
+    loop section of the output JSON
+    """
     cif = handle_input_file("tests/files/2awe-assembly-1.cif.gz")
     structure3d = rnapolis.parser.read_3d_structure(cif, 1)
     structure2d = read_secondary_structure_from_dssr(
