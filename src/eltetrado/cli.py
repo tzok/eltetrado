@@ -76,7 +76,7 @@ def eltetrado_cli(args=sys.argv[1:]):
         cif_or_pdb, args.model, nucleic_acid_only=False
     )
     structure2d = (
-        rnapolis.annotator.extract_secondary_structure(structure3d, args.model)
+        rnapolis.annotator.extract_base_interactions(structure3d, args.model)
         if args.dssr_json is None
         else read_secondary_structure_from_dssr(structure3d, args.model, args.dssr_json)
     )

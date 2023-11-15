@@ -2,7 +2,6 @@ import logging
 import os
 from enum import Enum
 
-
 logging.basicConfig(level=os.environ.get("LOGLEVEL", "INFO"))
 
 
