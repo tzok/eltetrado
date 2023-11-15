@@ -12,7 +12,7 @@ from typing import IO, Dict, FrozenSet, Iterable, List, Optional, Set, Tuple
 
 import numpy
 import numpy.typing
-from rnapolis.common import GlycosidicBond, Structure2D
+from rnapolis.common import BaseInteractions, GlycosidicBond
 from rnapolis.tertiary import Atom, BasePair3D, Mapping2D3D, Residue3D, Structure3D
 
 from eltetrado.model import (
@@ -729,7 +729,7 @@ class Helix:
 
 @dataclass
 class Analysis:
-    structure2d: Structure2D
+    structure2d: BaseInteractions
     structure3d: Structure3D
     strict: bool
     no_reorder: bool
@@ -1409,7 +1409,7 @@ class Visualizer:
 
 
 class AnalysisSimple:
-    def __init__(self, structure2d: Structure2D, structure3d: Structure3D):
+    def __init__(self, structure2d: BaseInteractions, structure3d: Structure3D):
         self.mapping = Mapping2D3D(
             structure3d, structure2d.basePairs, structure2d.stackings, False
         )
@@ -1444,7 +1444,7 @@ def center_of_mass(atoms: List[Atom]) -> numpy.typing.NDArray[numpy.floating]:
 
 
 def eltetrado(
-    structure2d: Structure2D,
+    structure2d: BaseInteractions,
     structure3d: Structure3D,
     strict: bool,
     no_reorder: bool,
@@ -1453,6 +1453,6 @@ def eltetrado(
     return Analysis(structure2d, structure3d, strict, no_reorder, stacking_mismatch)
 
 
-def has_tetrad(structure2d: Structure2D, structure3d: Structure3D) -> bool:
+def has_tetrad(structure2d: BaseInteractions, structure3d: Structure3D) -> bool:
     structure = AnalysisSimple(structure2d, structure3d)
     return structure.has_tetrads()

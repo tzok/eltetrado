@@ -9,7 +9,7 @@ from typing import IO, List, Optional
 import orjson
 import rnapolis.annotator
 import rnapolis.parser
-from rnapolis.annotator import LeontisWesthof, Structure2D
+from rnapolis.annotator import BaseInteractions, LeontisWesthof
 from rnapolis.common import BasePair, Residue, Stacking
 from rnapolis.tertiary import Structure3D
 
@@ -154,12 +154,12 @@ def has_tetrad_cli(args=sys.argv[1:]):
     structure3d = rnapolis.parser.read_3d_structure(
         cif_or_pdb, args.model, nucleic_acid_only=False
     )
-    structure2d = (
-        rnapolis.annotator.extract_secondary_structure(structure3d, args.model)
+    base_interactions = (
+        rnapolis.annotator.extract_base_interactions(structure3d, args.model)
         if args.dssr_json is None
         else read_secondary_structure_from_dssr(structure3d, args.model, args.dssr_json)
     )
-    print(has_tetrad(structure2d, structure3d))
+    print(has_tetrad(base_interactions, structure3d))
 
 
 def handle_input_file(path) -> IO[str]:
@@ -181,7 +181,7 @@ def handle_input_file(path) -> IO[str]:
 
 def read_secondary_structure_from_dssr(
     structure3d: Structure3D, model: int, dssr_json_path: str
-) -> Structure2D:
+) -> BaseInteractions:
     base_pairs: List[BasePair] = []
     stackings: List[Stacking] = []
 
@@ -212,7 +212,7 @@ def read_secondary_structure_from_dssr(
             if nt1 is not None and nt2 is not None:
                 stackings.append(Stacking(nt1, nt2, None))
 
-    return Structure2D(base_pairs, stackings, [], [], [], "", "", "", [], [], [], [])
+    return BaseInteractions(base_pairs, stackings, [], [], [])
 
 
 def match_dssr_name_to_residue(
