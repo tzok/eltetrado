@@ -3,7 +3,7 @@ from collections import Counter
 from dataclasses import dataclass
 from typing import List, Optional
 
-from eltetrado.analysis import Analysis, Helix, Quadruplex, TetradPair
+from eltetrado.analysis import Analysis, Quadruplex, TetradPair
 from eltetrado.model import Ion
 
 

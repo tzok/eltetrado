@@ -12,7 +12,7 @@ from typing import IO, Dict, FrozenSet, Iterable, List, Optional, Set, Tuple
 
 import numpy
 import numpy.typing
-from rnapolis.common import GlycosidicBond, Structure2D
+from rnapolis.common import BaseInteractions, GlycosidicBond
 from rnapolis.tertiary import Atom, BasePair3D, Mapping2D3D, Residue3D, Structure3D
 
 from eltetrado.model import (
@@ -729,7 +729,7 @@ class Helix:
 
 @dataclass
 class Analysis:
-    structure2d: Structure2D
+    base_interactions: BaseInteractions
     structure3d: Structure3D
     strict: bool
     no_reorder: bool
@@ -752,8 +752,8 @@ class Analysis:
         self.global_index = self.__prepare_global_index()
         self.mapping = Mapping2D3D(
             self.structure3d,
-            self.structure2d.basePairs,
-            self.structure2d.stackings,
+            self.base_interactions.basePairs,
+            self.base_interactions.stackings,
             False,
         )
         self.tetrads = self.__find_tetrads(self.no_reorder)
@@ -1409,9 +1409,9 @@ class Visualizer:
 
 
 class AnalysisSimple:
-    def __init__(self, structure2d: Structure2D, structure3d: Structure3D):
+    def __init__(self, base_interactions: BaseInteractions, structure3d: Structure3D):
         self.mapping = Mapping2D3D(
-            structure3d, structure2d.basePairs, structure2d.stackings, False
+            structure3d, base_interactions.basePairs, base_interactions.stackings, False
         )
 
     def has_tetrads(self) -> bool:
@@ -1444,15 +1444,17 @@ def center_of_mass(atoms: List[Atom]) -> numpy.typing.NDArray[numpy.floating]:
 
 
 def eltetrado(
-    structure2d: Structure2D,
+    base_interactions: BaseInteractions,
     structure3d: Structure3D,
     strict: bool,
     no_reorder: bool,
     stacking_mismatch: int,
 ) -> Analysis:
-    return Analysis(structure2d, structure3d, strict, no_reorder, stacking_mismatch)
+    return Analysis(
+        base_interactions, structure3d, strict, no_reorder, stacking_mismatch
+    )
 
 
-def has_tetrad(structure2d: Structure2D, structure3d: Structure3D) -> bool:
-    structure = AnalysisSimple(structure2d, structure3d)
+def has_tetrad(base_interactions: BaseInteractions, structure3d: Structure3D) -> bool:
+    structure = AnalysisSimple(base_interactions, structure3d)
     return structure.has_tetrads()
