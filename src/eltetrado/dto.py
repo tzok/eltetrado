@@ -196,9 +196,13 @@ def convert_quadruplexes(quadruplexes: List[Quadruplex]) -> List[QuadruplexDTO]:
         QuadruplexDTO(
             convert_tetrads(q),
             q.onzm.value if q.onzm else None,
-            LoopClassificationDTO(q.loop_class.value, q.loop_class.loop_progression())
-            if q.loop_class
-            else None,
+            (
+                LoopClassificationDTO(
+                    q.loop_class.value, q.loop_class.loop_progression()
+                )
+                if q.loop_class
+                else None
+            ),
             [g.value for g in q.gba_classes],
             [
                 nts_(q.tracts[0].nucleotides),
