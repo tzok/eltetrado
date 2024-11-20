@@ -91,3 +91,28 @@ def test_2awe():
         for l in q.loops
         for nt in l.nucleotides
     ]
+
+
+def test_5v3f():
+    """
+    In 5V3F there are O+ and O- tetrads and the two-line dot-bracket has to take that into account
+    """
+    cif = handle_input_file("tests/files/5v3f-assembly-1.cif.gz")
+    structure3d = rnapolis.parser.read_3d_structure(cif, 1)
+    structure2d = read_secondary_structure_from_dssr(
+        structure3d, 1, "tests/files/5v3f-assembly-1.json"
+    )
+    analysis = eltetrado(structure2d, structure3d, False, False, 2)
+    dto = generate_dto(analysis)
+    assert (
+        dto.dotBracket.sequence
+        == "GUGCGAAGGGACGGUGCGGAGAGGAGAGCACG-GGGACGGUGCGGAGAGGAGGUU"
+    )
+    assert (
+        dto.dotBracket.line1
+        == ".......([{..)].{.([.}.)].}......-([{..)].{.([.}.)].}..."
+    )
+    assert (
+        dto.dotBracket.line2
+        == ".......([{..([.}.)].{.)].}......-([{..([.}.)].{.)].}..."
+    )
