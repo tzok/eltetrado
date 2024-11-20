@@ -3,7 +3,7 @@ from collections import Counter
 from dataclasses import dataclass
 from typing import List, Optional
 
-from eltetrado.analysis import Analysis, Quadruplex, TetradPair
+from eltetrado.analysis import Analysis, Quadruplex, TetradPair, is_nucleotide
 from eltetrado.model import Ion
 
 
@@ -127,7 +127,7 @@ def convert_nucleotides(analysis: Analysis) -> List[NucleotideDTO]:
             nt.chi_class.value if nt.chi_class else None,
         )
         for nt in analysis.structure3d.residues
-        if nt.is_nucleotide
+        if is_nucleotide(nt)
     ]
 
 

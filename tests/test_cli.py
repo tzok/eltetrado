@@ -36,7 +36,7 @@ def test_eltetrado_with_dssr(capfd):
         ]
     )
     out, err = capfd.readouterr()
-    with open("tests/files/2awe-assembly-1.out.json") as f:
+    with open("tests/files/2awe-assembly-1.out") as f:
         assert out == f.read()
 
 
@@ -49,5 +49,5 @@ def test_eltetrado_without_dssr(capfd):
         ]
     )
     out, err = capfd.readouterr()
-    with open("tests/files/6fc9-assembly-1.out.json") as f:
+    with open("tests/files/6fc9-assembly-1.out") as f:
         assert out == f.read()
