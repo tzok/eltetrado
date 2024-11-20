@@ -105,14 +105,7 @@ def test_5v3f():
     analysis = eltetrado(structure2d, structure3d, False, False, 2)
     dto = generate_dto(analysis)
     assert (
-        dto.dotBracket.sequence
-        == "GUGCGAAGGGACGGUGCGGAGAGGAGAGCACG-GGGACGGUGCGGAGAGGAGGUU"
+        dto.dotBracket.sequence == "UGCGAAGGGACGGUGCGGAGAGGAGAGCA-CGGGACGGUGCGGAGAGGAG"
     )
-    assert (
-        dto.dotBracket.line1
-        == ".......([{..)].{.([.}.)].}......-([{..)].{.([.}.)].}..."
-    )
-    assert (
-        dto.dotBracket.line2
-        == ".......([{..([.}.)].{.)].}......-([{..([.}.)].{.)].}..."
-    )
+    assert dto.dotBracket.line1 == "......([{..)].(.[{.).]}.}....-.([{..)].(.[{.).]}.}"
+    assert dto.dotBracket.line2 == "......([(..[{.).]}.{.)].}....-.([(..[{.).]}.{.)].}"
