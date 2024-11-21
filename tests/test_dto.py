@@ -109,3 +109,28 @@ def test_5v3f():
     )
     assert dto.dotBracket.line1 == ".......([{..)].(.[{.).]}.}....-.([{..)].(.[{.).]}.}"
     assert dto.dotBracket.line2 == ".......([(..[{.).]}.{.)].}....-.([(..[{.).]}.{.)].}"
+
+
+def test_6a85():
+    """
+    In 6A85 the two-line dot-bracket notation requires more than 10 different bracket levels
+    """
+    cif = handle_input_file("tests/files/6a85-assembly1.cif.gz")
+    structure3d = rnapolis.parser.read_3d_structure(cif, 1)
+    structure2d = read_secondary_structure_from_dssr(
+        structure3d, 1, "tests/files/6a85-assembly1.json"
+    )
+    analysis = eltetrado(structure2d, structure3d, False, False, 2)
+    dto = generate_dto(analysis)
+    assert (
+        dto.dotBracket.sequence
+        == "AGAGAGATGGGTGCGT-TAGAGAGATGGGTGCGT-TAGAGAGATGGGTGCGT-TAGAGAGATGGGTGCGTT"
+    )
+    assert (
+        dto.dotBracket.line1
+        == ".([[{{.<ABCDE.F.-..)(][}.>abcde.f.-..{)(]<.ABCDEF.G.-..}])}>.abcdef.g.."
+    )
+    assert (
+        dto.dotBracket.line2
+        == ".(([[{.<ABCDE.F.-..{)(][.<ABCDE.F.-..}{)G].>abcde.f.-..)}]g}.>abcde.f.."
+    )
