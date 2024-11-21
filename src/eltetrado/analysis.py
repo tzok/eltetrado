@@ -8,7 +8,6 @@ import sys
 import tempfile
 from collections import Counter, defaultdict
 from dataclasses import dataclass, field
-from functools import lru_cache
 from typing import IO, Dict, FrozenSet, Iterable, List, Optional, Set, Tuple
 
 import numpy
@@ -28,69 +27,6 @@ from eltetrado.model import (
 )
 
 logging.basicConfig(level=os.environ.get("LOGLEVEL", "INFO"))
-
-
-@lru_cache(maxsize=None)
-def is_nucleotide(nt):
-    phosphate_atoms = {"P", "OP1", "OP2", "O3'", "O5'"}
-    sugar_atoms = {"C1'", "C2'", "C3'", "C4'", "C5'", "O4'"}
-    adenine_atoms = {"N1", "C2", "N3", "C4", "C5", "C6", "N6", "N7", "C8", "N9"}
-    guanine_atoms = {"N1", "C2", "N2", "N3", "C4", "C5", "C6", "O6", "N7", "C8", "N9"}
-    cytosine_atoms = {"N1", "C2", "O2", "N3", "C4", "N4", "C5", "C6"}
-    thymine_atoms = {"N1", "C2", "O2", "N3", "C4", "O4", "C5", "C5M", "C6"}
-    uracil_atoms = {"N1", "C2", "O2", "N3", "C4", "O4", "C5", "C6"}
-    scores = {"phosphate": 0.0, "sugar": 0.0, "base": 0.0, "connections": 0.0}
-    weights = {"phosphate": 0.25, "sugar": 0.25, "base": 0.25, "connections": 0.25}
-
-    residue_atoms = {atom.name for atom in nt.atoms}
-
-    phosphate_match = len(residue_atoms.intersection(phosphate_atoms))
-    scores["phosphate"] = phosphate_match / len(phosphate_atoms)
-
-    sugar_match = len(residue_atoms.intersection(sugar_atoms))
-    scores["sugar"] = sugar_match / len(sugar_atoms)
-
-    matches = {
-        "A": len(residue_atoms.intersection(adenine_atoms)) / len(adenine_atoms),
-        "G": len(residue_atoms.intersection(guanine_atoms)) / len(guanine_atoms),
-        "C": len(residue_atoms.intersection(cytosine_atoms)) / len(cytosine_atoms),
-        "T": len(residue_atoms.intersection(thymine_atoms)) / len(thymine_atoms),
-        "U": len(residue_atoms.intersection(uracil_atoms)) / len(uracil_atoms),
-    }
-    best_match = max(matches.items(), key=lambda x: x[1])
-    scores["base"] = best_match[1]
-
-    connection_score = 0.0
-    distance_threshold = 2.0
-
-    if "P" in residue_atoms and "O5'" in residue_atoms:
-        p_atom = next(atom for atom in nt.atoms if atom.name == "P")
-        o5_atom = next(atom for atom in nt.atoms if atom.name == "O5'")
-        if (
-            numpy.linalg.norm(p_atom.coordinates - o5_atom.coordinates)
-            <= distance_threshold
-        ):
-            connection_score += 0.5
-    if "C1'" in residue_atoms:
-        c1_atom = next(atom for atom in nt.atoms if atom.name == "C1'")
-        for base_connection in ["N9", "N1"]:
-            if base_connection in residue_atoms:
-                base_atom = next(
-                    atom for atom in nt.atoms if atom.name == base_connection
-                )
-                if (
-                    numpy.linalg.norm(c1_atom.coordinates - base_atom.coordinates)
-                    <= distance_threshold
-                ):
-                    connection_score += 0.5
-                    break
-
-    scores["connections"] = connection_score
-
-    probability = sum(
-        scores[component] * weights[component] for component in scores.keys()
-    )
-    return probability > 0.5
 
 
 @dataclass(order=True)
@@ -590,7 +526,7 @@ class Quadruplex:
                 else:
                     nts = list(
                         filter(
-                            lambda nt: is_nucleotide(nt)
+                            lambda nt: nt.is_nucleotide
                             and self.global_index[nprev]
                             < self.global_index[nt]
                             < self.global_index[ncur],
@@ -1286,7 +1222,7 @@ class Analysis:
         i = 1
 
         for nt in sorted(
-            filter(lambda nt: is_nucleotide(nt), self.structure3d.residues),
+            filter(lambda nt: nt.is_nucleotide, self.structure3d.residues),
             key=lambda nt: self.global_index[nt],
         ):
             if chain and chain != nt.chain:
@@ -1330,7 +1266,7 @@ class Analysis:
 
     def __chain_order(self) -> List[str]:
         only_nucleic_acids = filter(
-            lambda nt: is_nucleotide(nt), self.structure3d.residues
+            lambda nt: nt.is_nucleotide, self.structure3d.residues
         )
         return list(
             {
@@ -1451,7 +1387,7 @@ class Visualizer:
             ONZ.Z_MINUS: 6,
         }
         nucleotides = [
-            nt for nt in self.analysis.structure3d.residues if is_nucleotide(nt)
+            nt for nt in self.analysis.structure3d.residues if nt.is_nucleotide
         ]
         chain = None
         shifts = dict()
