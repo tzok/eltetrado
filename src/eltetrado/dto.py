@@ -3,7 +3,9 @@ from collections import Counter
 from dataclasses import dataclass
 from typing import List, Optional
 
-from eltetrado.analysis import Analysis, Quadruplex, TetradPair
+from rnapolis.common import GlycosidicBond
+
+from eltetrado.analysis import ONZ, Analysis, LoopType, Quadruplex, TetradPair
 from eltetrado.model import Ion
 
 
@@ -100,12 +102,21 @@ class TwoLineDotBracketDTO:
 
 
 @dataclass
+class QuadruplexDotBracketDTO:
+    sequence: str
+    structure: str
+    chi: str
+    loop: str
+
+
+@dataclass
 class ResultDTO:
     metals: List[MetalDTO]
     nucleotides: List[NucleotideDTO]
     basePairs: List[BasePairDTO]
     helices: List[HelixDTO]
     dotBracket: TwoLineDotBracketDTO
+    quadruplexDotBracket: QuadruplexDotBracketDTO
 
 
 def convert_metals(analysis: Analysis) -> List[MetalDTO]:
@@ -250,10 +261,121 @@ def convert_dot_bracket(analysis: Analysis) -> TwoLineDotBracketDTO:
     return TwoLineDotBracketDTO(analysis.sequence, analysis.line1, analysis.line2)
 
 
+def convert_quadruplex_dot_bracket(analysis: Analysis) -> QuadruplexDotBracketDTO:
+    letters = "QRSTUVWXYZ" + "".join(reversed("ABCDEFGHIJKLMNOP"))
+
+    if len(analysis.tetrads) > len(letters):
+        raise ValueError(f"Cannot represent more than {len(letters)} tetrads")
+
+    lines = analysis.mapping.dot_bracket.splitlines()
+    strands = []
+    sequences = []
+    structures = []
+
+    i = 0
+    while i < len(lines):
+        strand = lines[i].replace(">strand_", "")
+        if strand not in strands:
+            strands.append(strand)
+        sequences.append(lines[i + 1])
+        structures.append(lines[i + 2])
+        i += 3
+
+    mapping = {}
+    i = 0
+
+    for strand in strands:
+        for residue in analysis.structure3d.residues:
+            if residue.is_nucleotide and residue.chain == strand:
+                mapping[residue] = i
+                i += 1
+        i += 1
+    i -= 1
+
+    sequence = "-".join(sequences)
+    structure = list("-".join(structures))
+    assert len(sequence) == len(structure)
+    assert len(sequence) == i
+
+    for i, tetrad in enumerate(analysis.tetrads):
+        nt1, nt2, nt3, nt4 = sorted(tetrad.nucleotides)
+        if tetrad.onz == ONZ.O_PLUS:
+            structure[mapping[nt1]] = letters[i]
+            structure[mapping[nt2]] = letters[i].lower()
+            structure[mapping[nt3]] = letters[i]
+            structure[mapping[nt4]] = letters[i].lower()
+        elif tetrad.onz == ONZ.O_MINUS:
+            structure[mapping[nt1]] = letters[i].lower()
+            structure[mapping[nt2]] = letters[i]
+            structure[mapping[nt3]] = letters[i].lower()
+            structure[mapping[nt4]] = letters[i]
+        elif tetrad.onz == ONZ.N_PLUS:
+            structure[mapping[nt1]] = letters[i]
+            structure[mapping[nt2]] = letters[i].lower()
+            structure[mapping[nt3]] = letters[i].lower()
+            structure[mapping[nt4]] = letters[i]
+        elif tetrad.onz == ONZ.N_MINUS:
+            structure[mapping[nt1]] = letters[i].lower()
+            structure[mapping[nt2]] = letters[i]
+            structure[mapping[nt3]] = letters[i]
+            structure[mapping[nt4]] = letters[i].lower()
+        elif tetrad.onz == ONZ.Z_PLUS:
+            structure[mapping[nt1]] = letters[i]
+            structure[mapping[nt2]] = letters[i]
+            structure[mapping[nt3]] = letters[i].lower()
+            structure[mapping[nt4]] = letters[i].lower()
+        elif tetrad.onz == ONZ.Z_MINUS:
+            structure[mapping[nt1]] = letters[i].lower()
+            structure[mapping[nt2]] = letters[i].lower()
+            structure[mapping[nt3]] = letters[i]
+            structure[mapping[nt4]] = letters[i]
+        else:
+            raise ValueError(f"Unexpected ONZ value: {tetrad.onz}")
+
+    chi_line = list("-".join(["." * len(structure) for structure in structures]))
+
+    for nt in analysis.structure3d.residues:
+        if nt.is_nucleotide and nt in analysis.global_index:
+            chi_line[mapping[nt]] = (
+                "a"
+                if nt.chi_class == GlycosidicBond.anti
+                else "s"
+                if nt.chi_class == GlycosidicBond.syn
+                else "?"
+            )
+
+    loop_line = list("-".join(["." * len(structure) for structure in structures]))
+
+    for helix in analysis.helices:
+        for quadruplex in helix.quadruplexes:
+            for loop in quadruplex.loops:
+                for nt in loop.nucleotides:
+                    loop_line[mapping[nt]] = (
+                        "d"
+                        if loop.loop_type == LoopType.diagonal
+                        else "P"
+                        if loop.loop_type == LoopType.propeller_plus
+                        else "p"
+                        if loop.loop_type == LoopType.propeller_minus
+                        else "L"
+                        if loop.loop_type == LoopType.lateral_plus
+                        else "l"
+                        if loop.loop_type == LoopType.lateral_minus
+                        else "?"
+                    )
+
+    return QuadruplexDotBracketDTO(
+        sequence, "".join(structure), "".join(chi_line), "".join(loop_line)
+    )
+
+
 def generate_dto(analysis: Analysis):
     metals = convert_metals(analysis)
     nucleotides = convert_nucleotides(analysis)
     base_pairs = convert_base_pairs(analysis)
     helices = convert_helices(analysis)
     dot_bracket = convert_dot_bracket(analysis)
-    return ResultDTO(metals, nucleotides, base_pairs, helices, dot_bracket)
+    quadruplex_dot_bracket = convert_quadruplex_dot_bracket(analysis)
+    return ResultDTO(
+        metals, nucleotides, base_pairs, helices, dot_bracket, quadruplex_dot_bracket
+    )
