@@ -129,12 +129,12 @@ induced by 5’-3’ indexing. We select permutation with the minimum value.
 
     Chain order: 1
     n4-helix with 3 tetrads
-      Oh* V,VI 9a -(pll) quadruplex with 3 tetrads
+      Oh* V 9a -(pll) quadruplex with 3 tetrads
         1.DG4 1.DG22 1.DG18 1.DG10 cWH cWH cWH cWH O- Vb planarity=0.17  
           direction=hybrid rise=3.21 twist=16.23
         1.DG5 1.DG23 1.DG17 1.DG11 cHW cHW cHW cHW O+ Va planarity=0.1  
           direction=hybrid rise=3.11 twist=27.45
-        1.DG6 1.DG24 1.DG16 1.DG12 cHW cHW cHW cHW O+ VIa planarity=0.18  
+        1.DG6 1.DG24 1.DG16 1.DG12 cHW cHW cHW cHW O+ Va planarity=0.18  
 
         Tracts:
           1.DG4, 1.DG5, 1.DG6
@@ -148,11 +148,13 @@ induced by 5’-3’ indexing. We select permutation with the minimum value.
           lateral+ 1.DT19, 1.DT20, 1.DA21
 
     AAAGGGTTAGGGTTAGGGTTAGGGAA
-    ...([{...(((...)))...)]}..
-    ...([{...)]}...(((...)))..
+    ...(([...{)]...[[}...)]]..
+    ...([{...)((...))(...)]}..
 
 <details>
+
 <summary>
+
 Click to see the output JSON
 </summary>
 
@@ -235,7 +237,7 @@ Click to see the output JSON
       "fullName": "1.DT7",
       "shortName": "T",
       "chi": -63.10830751967371,
-      "glycosidicBond": "syn"
+      "glycosidicBond": "anti"
     },
     {
       "index": 8,
@@ -290,7 +292,7 @@ Click to see the output JSON
       "fullName": "1.DG12",
       "shortName": "G",
       "chi": -84.36679807284759,
-      "glycosidicBond": "syn"
+      "glycosidicBond": "anti"
     },
     {
       "index": 13,
@@ -301,7 +303,7 @@ Click to see the output JSON
       "fullName": "1.DT13",
       "shortName": "T",
       "chi": -30.819029132834157,
-      "glycosidicBond": "syn"
+      "glycosidicBond": "anti"
     },
     {
       "index": 14,
@@ -389,7 +391,7 @@ Click to see the output JSON
       "fullName": "1.DA21",
       "shortName": "A",
       "chi": -89.07113063649612,
-      "glycosidicBond": "syn"
+      "glycosidicBond": "anti"
     },
     {
       "index": 22,
@@ -433,7 +435,7 @@ Click to see the output JSON
       "fullName": "1.DA25",
       "shortName": "A",
       "chi": -58.323530637551954,
-      "glycosidicBond": "syn"
+      "glycosidicBond": "anti"
     },
     {
       "index": 26,
@@ -583,7 +585,7 @@ Click to see the output JSON
               "nt3": "1.DG16",
               "nt4": "1.DG12",
               "onz": "O+",
-              "gbaClassification": "VIa",
+              "gbaClassification": "Va",
               "planarityDeviation": 0.18293509778060615,
               "ionsChannel": [],
               "ionsOutside": []
@@ -595,8 +597,7 @@ Click to see the output JSON
             "loopProgression": "-(pll)"
           },
           "gbaClassification": [
-            "V",
-            "VI"
+            "V"
           ],
           "tracts": [
             [
@@ -668,8 +669,14 @@ Click to see the output JSON
   ],
   "dotBracket": {
     "sequence": "AAAGGGTTAGGGTTAGGGTTAGGGAA",
-    "line1": "...([{...(((...)))...)]}..",
-    "line2": "...([{...)]}...(((...))).."
+    "line1": "...(([...{)]...[[}...)]]..",
+    "line2": "...([{...)((...))(...)]}.."
+  },
+  "quadruplexDotBracket": {
+    "sequence": "AAAGGGTTAGGGTTAGGGTTAGGGAA",
+    "structure": "...qRS...Qrs...SRq...Qrs..",
+    "chi": "saasaaaaasaaaaassaaaasaaaa",
+    "loop": "......ppp...lll...LLL....."
   }
 }
 ```
@@ -686,7 +693,7 @@ Click to see the output JSON
     Chain order: A AB AA AC B BC BA BB
     n4-helix with 10 tetrads
       Op* VIII n/a quadruplex with 5 tetrads
-        A.U1006 AC.U1006 AA.U1006 AB.U1006 cWH cWH cWH cWH O- VIIIa planarity=1.06 ions_channel=NA ions_outside=A.U1006: [SR] AA.U1006: [SR] AB.U1006: [SR] AC.U1006: [SR]
+        A.U1006 AC.U1006 AA.U1006 AB.U1006 cWH cWH cWH cWH O- VIIIa planarity=1.06  ions_outside=A.U1006: [SR] AA.U1006: [SR] AB.U1006: [SR] AC.U1006: [SR]
           direction=parallel rise=3.37 twist=39.96
         A.G1005 AC.G1005 AA.G1005 AB.G1005 cHW cHW cHW cHW O+ VIIIa planarity=0.8  
           direction=parallel rise=3.31 twist=25.9
@@ -709,7 +716,7 @@ Click to see the output JSON
           direction=parallel rise=3.32 twist=35.04
         B.G2004 BC.G2004 BA.G2004 BB.G2004 cWH cWH cWH cWH O+ VIIIa planarity=0.23 ions_channel=SR 
           direction=parallel rise=3.27 twist=25.15
-        B.G2005 BC.G2005 BA.G2005 BB.G2005 cWH cWH cWH cWH O+ VIIIa planarity=0.78 ions_channel=NA 
+        B.G2005 BC.G2005 BA.G2005 BB.G2005 cWH cWH cWH cWH O+ VIIIa planarity=0.78  
           direction=parallel rise=7.14 twist=43.41
         B.U2006 BC.U2006 BA.U2006 BB.U2006 cHW cHW cHW cHW O- VIIIa planarity=1.58 ions_channel=NA,NA 
 
@@ -719,12 +726,14 @@ Click to see the output JSON
           BA.G2002, BA.G2003, BA.G2004, BA.G2005, BA.U2006
           BB.G2002, BB.G2003, BB.G2004, BB.G2005, BB.U2006
 
-    UGGGGU-UGGGGU-UGGGGU-UGGGGU-UGGGGU-UGGGGU-UGGGGU-UGGGGU
-    .([{<A-.([{<A-.)]}>a-.)]}>a-.([{<A-.)]}>a-.([{<A-.)]}>a
-    .([{<A-.)]}>a-.([{<A-.)]}>a-.([{<A-.([{<A-.)]}>a-.)]}>a
+    UGGGG-UUGGGG-UUGGGG-UUGGGG-UUGGGG-UUGGGG-UUGGGG-UUGGGGU
+    .([{<-A.)]}>-(.[{<A-).]}>a-a.([{<-A.)]}>-(.[{<A-).]}>aa
+    .([{<-(.[{<A-).]}>a-A.)]}>-a.([{<-(.[{<A-).]}>a-A.)]}>a
 
 <details>
+
 <summary>
+
 Click to see the output JSON
 </summary>
 
@@ -737,11 +746,11 @@ Click to see the output JSON
     },
     {
       "symbol": "Na",
-      "count": 4
+      "count": 2
     },
     {
       "symbol": "Ca",
-      "count": 12
+      "count": 8
     }
   ],
   "nucleotides": [
@@ -1304,6 +1313,20 @@ Click to see the output JSON
       "canonical": false
     },
     {
+      "nt1": "A.G1003",
+      "nt2": "AC.G1004",
+      "lw": "cSS",
+      "inTetrad": false,
+      "canonical": false
+    },
+    {
+      "nt1": "A.G1004",
+      "nt2": "AB.G1003",
+      "lw": "cSS",
+      "inTetrad": false,
+      "canonical": false
+    },
+    {
       "nt1": "A.G1004",
       "nt2": "AB.G1004",
       "lw": "cWH",
@@ -1367,6 +1390,13 @@ Click to see the output JSON
       "canonical": false
     },
     {
+      "nt1": "AB.G1004",
+      "nt2": "AA.G1003",
+      "lw": "cSS",
+      "inTetrad": false,
+      "canonical": false
+    },
+    {
       "nt1": "AA.G1003",
       "nt2": "AC.G1003",
       "lw": "cWH",
@@ -1378,6 +1408,13 @@ Click to see the output JSON
       "nt2": "AA.G1004",
       "lw": "cWH",
       "inTetrad": true,
+      "canonical": false
+    },
+    {
+      "nt1": "AA.G1004",
+      "nt2": "AC.G1003",
+      "lw": "cSS",
+      "inTetrad": false,
       "canonical": false
     },
     {
@@ -1514,6 +1551,13 @@ Click to see the output JSON
       "canonical": false
     },
     {
+      "nt1": "BC.G2004",
+      "nt2": "BA.G2003",
+      "lw": "cSS",
+      "inTetrad": false,
+      "canonical": false
+    },
+    {
       "nt1": "BA.G2004",
       "nt2": "BB.G2004",
       "lw": "cWH",
@@ -1570,25 +1614,23 @@ Click to see the output JSON
               "onz": "O-",
               "gbaClassification": "VIIIa",
               "planarityDeviation": 1.061,
-              "ionsChannel": [
-                "NA"
-              ],
+              "ionsChannel": [],
               "ionsOutside": [
                 {
                   "nt": "A.U1006",
-                  "ion": "SR"
+                  "ion": "Sr"
                 },
                 {
                   "nt": "AA.U1006",
-                  "ion": "SR"
+                  "ion": "Sr"
                 },
                 {
                   "nt": "AB.U1006",
-                  "ion": "SR"
+                  "ion": "Sr"
                 },
                 {
                   "nt": "AC.U1006",
-                  "ion": "SR"
+                  "ion": "Sr"
                 }
               ]
             },
@@ -1614,7 +1656,7 @@ Click to see the output JSON
               "gbaClassification": "VIIIa",
               "planarityDeviation": 0.4059999999999988,
               "ionsChannel": [
-                "SR"
+                "Sr"
               ],
               "ionsOutside": []
             },
@@ -1628,7 +1670,7 @@ Click to see the output JSON
               "gbaClassification": "VIIIa",
               "planarityDeviation": 0.5549999999999997,
               "ionsChannel": [
-                "SR"
+                "Sr"
               ],
               "ionsOutside": []
             },
@@ -1645,19 +1687,19 @@ Click to see the output JSON
               "ionsOutside": [
                 {
                   "nt": "AB.G1002",
-                  "ion": "CA"
+                  "ion": "Ca"
                 },
                 {
                   "nt": "AC.G1002",
-                  "ion": "CA"
+                  "ion": "Ca"
                 },
                 {
                   "nt": "AA.G1002",
-                  "ion": "CA"
+                  "ion": "Ca"
                 },
                 {
                   "nt": "A.G1002",
-                  "ion": "CA"
+                  "ion": "Ca"
                 }
               ]
             }
@@ -1723,24 +1765,24 @@ Click to see the output JSON
               "gbaClassification": "VIIIa",
               "planarityDeviation": 0.5769999999999982,
               "ionsChannel": [
-                "SR"
+                "Sr"
               ],
               "ionsOutside": [
                 {
                   "nt": "B.G2003",
-                  "ion": "CA"
+                  "ion": "Ca"
                 },
                 {
                   "nt": "BA.G2003",
-                  "ion": "CA"
+                  "ion": "Ca"
                 },
                 {
                   "nt": "BB.G2003",
-                  "ion": "CA"
+                  "ion": "Ca"
                 },
                 {
                   "nt": "BC.G2003",
-                  "ion": "CA"
+                  "ion": "Ca"
                 }
               ]
             },
@@ -1754,7 +1796,7 @@ Click to see the output JSON
               "gbaClassification": "VIIIa",
               "planarityDeviation": 0.2289999999999992,
               "ionsChannel": [
-                "SR"
+                "Sr"
               ],
               "ionsOutside": []
             },
@@ -1767,9 +1809,7 @@ Click to see the output JSON
               "onz": "O+",
               "gbaClassification": "VIIIa",
               "planarityDeviation": 0.7810000000000006,
-              "ionsChannel": [
-                "NA"
-              ],
+              "ionsChannel": [],
               "ionsOutside": []
             },
             {
@@ -1782,8 +1822,8 @@ Click to see the output JSON
               "gbaClassification": "VIIIa",
               "planarityDeviation": 1.5840000000000005,
               "ionsChannel": [
-                "NA",
-                "NA"
+                "Na",
+                "Na"
               ],
               "ionsOutside": []
             }
@@ -1894,9 +1934,15 @@ Click to see the output JSON
     }
   ],
   "dotBracket": {
+    "sequence": "UGGGG-UUGGGG-UUGGGG-UUGGGG-UUGGGG-UUGGGG-UUGGGG-UUGGGGU",
+    "line1": ".([{<-A.)]}>-(.[{<A-).]}>a-a.([{<-A.)]}>-(.[{<A-).]}>aa",
+    "line2": ".([{<-(.[{<A-).]}>a-A.)]}>-a.([{<-(.[{<A-).]}>a-A.)]}>a"
+  },
+  "quadruplexDotBracket": {
     "sequence": "UGGGGU-UGGGGU-UGGGGU-UGGGGU-UGGGGU-UGGGGU-UGGGGU-UGGGGU",
-    "line1": ".([{<A-.([{<A-.)]}>a-.)]}>a-.([{<A-.)]}>a-.([{<A-.)]}>a",
-    "line2": ".([{<A-.)]}>a-.([{<A-.)]}>a-.([{<A-.([{<A-.)]}>a-.)]}>a"
+    "structure": ".QRSTu-.qrstU-.QRSTu-.qrstU-.VWXYz-.vwxyZ-.VWXYz-.vwxyZ",
+    "chi": "aaaaaa-aaaaaa-aaaaaa-aaaaaa-aaaaaa-aaaaaa-aaaaaa-aaaaaa",
+    "loop": "......-......-......-......-......-......-......-......"
   }
 }
 ```
@@ -1931,7 +1977,7 @@ intramural financing program.
 3.  R-Chie : A Web Server and R Package for Visualizing RNA Secondary
     Structures. D. Lai, J.R. Proctor, J.Y.A. Zhu, I.M. Meyer. *Nucleic
     Acids Research*. 2012. 40(12):e95.
-    doi:[f99845](https://doi.org/f99845)
+    doi:[10/f99845](https://doi.org/10/f99845)
 
 4.  Geometric Nomenclature and Classification of RNA Base Pairs. N.B.
     Leontis, E. Westhof. *RNA*. 2001. 7(4):499–512.
