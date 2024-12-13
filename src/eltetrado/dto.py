@@ -1,4 +1,5 @@
 import math
+import re
 from collections import Counter
 from dataclasses import dataclass
 from typing import List, Optional
@@ -268,29 +269,28 @@ def convert_quadruplex_dot_bracket(analysis: Analysis) -> QuadruplexDotBracketDT
         raise ValueError(f"Cannot represent more than {len(letters)} tetrads")
 
     lines = analysis.mapping.dot_bracket.splitlines()
-    strands = []
     sequences = []
     structures = []
 
     i = 0
     while i < len(lines):
-        strand = lines[i].replace(">strand_", "")
-        if strand not in strands:
-            strands.append(strand)
         sequences.append(lines[i + 1])
         structures.append(lines[i + 2])
         i += 3
 
     mapping = {}
     i = 0
+    current_chain = None
 
-    for strand in strands:
-        for residue in analysis.structure3d.residues:
-            if residue.is_nucleotide and residue.chain == strand:
-                mapping[residue] = i
+    for residue in analysis.structure3d.residues:
+        if residue.is_nucleotide:
+            if current_chain is None:
+                current_chain = residue.chain
+            if residue.chain != current_chain:
+                current_chain = residue.chain
                 i += 1
-        i += 1
-    i -= 1
+            mapping[residue] = i
+            i += 1
 
     sequence = "-".join(sequences)
     structure = list("-".join(structures))
@@ -332,7 +332,7 @@ def convert_quadruplex_dot_bracket(analysis: Analysis) -> QuadruplexDotBracketDT
         else:
             raise ValueError(f"Unexpected ONZ value: {tetrad.onz}")
 
-    chi_line = list("-".join(["." * len(structure) for structure in structures]))
+    chi_line = list(re.sub(r"[^-]", ".", sequence))
 
     for nt in analysis.structure3d.residues:
         if nt.is_nucleotide and nt in analysis.global_index:
@@ -344,7 +344,7 @@ def convert_quadruplex_dot_bracket(analysis: Analysis) -> QuadruplexDotBracketDT
                 else "?"
             )
 
-    loop_line = list("-".join(["." * len(structure) for structure in structures]))
+    loop_line = list(re.sub(r"[^-]", ".", sequence))
 
     for helix in analysis.helices:
         for quadruplex in helix.quadruplexes:
