@@ -10,3 +10,4 @@ dist
 src/eltetrado.egg-info
 typings
 x3dna-dssr
+.aider*

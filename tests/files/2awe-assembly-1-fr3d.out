@@ -1,0 +1,32 @@
+Chain order: A D B C E G F H
+n4-helix with 3 tetrads
+  Op* VIII n/a quadruplex with 3 tetrads
+    A.G3 D.G3 B.G3 C.G3 cWH cWH cWH cWH O+ VIIIa planarity=0.68 ions_channel=K,K,K 
+      direction=parallel rise=3.38 twist=53.12
+    A.G5 D.G5 B.G5 C.G5 cWH cWH cWH cWH O+ VIIIa planarity=0.75 ions_channel=K 
+      direction=parallel rise=3.46 twist=37.95
+    A.U6 D.U6 B.U6 C.U6 cHW cHW cHW cHW O- VIIIa planarity=1.15  ions_outside=A.U6: [SR] C.U6: [K]
+
+    Tracts:
+      A.G3, A.G5, A.U6
+      D.G3, D.G5, D.U6
+      B.G3, B.G5, B.U6
+      C.G3, C.G5, C.U6
+
+n4-helix with 3 tetrads
+  Op* VIII n/a quadruplex with 3 tetrads
+    E.G3 H.G3 F.G3 G.G3 cWH cWH cWH cWH O- VIIIa planarity=0.67 ions_channel=K,K,K 
+      direction=parallel rise=3.39 twist=53.32
+    E.G5 H.G5 F.G5 G.G5 cWH cWH cWH cWH O- VIIIa planarity=0.81 ions_channel=K 
+      direction=parallel rise=3.47 twist=39.65
+    E.U6 H.U6 F.U6 G.U6 cHW cHW cHW cHW O+ VIIIa planarity=1.21  ions_outside=F.U6: [K] G.U6: [K]
+
+    Tracts:
+      E.G3, E.G5, E.U6
+      H.G3, H.G5, H.U6
+      F.G3, F.G5, F.U6
+      G.G3, G.G5, G.U6
+
+UGGUG-UUGGUG-UUGGUG-UUGGUG-UUGGUG-UUGGG-UUGGUG-UUGGUGU
+..(.[-{..).]-(..[.{-)..].}-}..(.[-(..[{-)..].}-{..).]}
+..(.[-(..[.{-)..].}-{..).]-}..(.[-{..)]-(..[.{-)..].}}
