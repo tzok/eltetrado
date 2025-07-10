@@ -442,6 +442,7 @@ class Quadruplex:
     onzm: Optional[ONZM] = field(init=False)
     gba_classes: List[GbaQuadruplexClassification] = field(init=False)
     tracts: List[Tract] = field(init=False)
+    bulges: List[Residue3D] = field(init=False)
     loops: List[Loop] = field(init=False)
     loop_class: Optional[LoopClassification] = field(init=False)
 
@@ -449,6 +450,7 @@ class Quadruplex:
         self.onzm = self.__classify_onzm()
         self.gba_classes = self.__classify_by_gba()
         self.tracts = self.__find_tracts()
+        self.bulges = self.__find_bulges()
         self.loops = self.__find_loops()
         self.loop_class = self.__classify_by_loops()
 
@@ -582,6 +584,50 @@ class Quadruplex:
         logging.warning(f"Failed to classify the loop between {nt_first} and {nt_last}")
         return None
 
+    # ------------------------------------------------------------------
+    # Bulges
+    # ------------------------------------------------------------------
+    def __find_bulges(self) -> List[Residue3D]:
+        """
+        Detect one- or two-nucleotide fragments (bulges) that appear inside a
+        tract.  Example:
+            …-DG13-DC14-DG15-…
+                        ↑
+                      bulge
+        """
+        bulges: List[Residue3D] = []
+
+        for tract in self.tracts:
+            nts_sorted = sorted(
+                tract.nucleotides, key=lambda nt: self.global_index[nt]
+            )
+            for i in range(1, len(nts_sorted)):
+                nt_prev, nt_cur = nts_sorted[i - 1], nts_sorted[i]
+                # only within the same chain
+                if nt_prev.chain != nt_cur.chain:
+                    continue
+                gap = self.global_index[nt_cur] - self.global_index[nt_prev] - 1
+                if gap in (1, 2):
+                    # gather residues that fill the gap
+                    for nt in self.structure3d.residues:
+                        if (
+                            nt.is_nucleotide
+                            and nt.chain == nt_cur.chain
+                            and self.global_index[nt_prev]
+                            < self.global_index[nt]
+                            < self.global_index[nt_cur]
+                        ):
+                            bulges.append(nt)
+
+        # keep order, remove duplicates
+        seen: Set[Residue3D] = set()
+        unique_bulges: List[Residue3D] = []
+        for nt in bulges:
+            if nt not in seen:
+                unique_bulges.append(nt)
+                seen.add(nt)
+        return unique_bulges
+
     def __find_tetrad_with_nt(self, nt: Residue3D) -> Optional[Tetrad]:
         for tetrad in self.tetrads:
             if nt in tetrad.nucleotides:
@@ -667,6 +713,13 @@ class Quadruplex:
                 builder += "\n    Loops:\n"
                 for loop in self.loops:
                     builder += f"{loop}\n"
+            if self.bulges:
+                builder += "\n    Bulges:\n"
+                builder += (
+                    "      "
+                    + ", ".join(nt.full_name for nt in self.bulges)
+                    + "\n"
+                )
             builder += "\n"
         return builder
 
