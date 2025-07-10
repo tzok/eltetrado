@@ -86,6 +86,7 @@ class QuadruplexDTO:
     loopClassification: Optional[LoopClassificationDTO]
     gbaClassification: List[str]
     tracts: List[List[str]]
+    bulges: List[str]
     loops: List[LoopDTO]
 
 
@@ -222,6 +223,7 @@ def convert_quadruplexes(quadruplexes: List[Quadruplex]) -> List[QuadruplexDTO]:
                 nts_(q.tracts[2].nucleotides),
                 nts_(q.tracts[3].nucleotides),
             ],
+            [nt.full_name for nt in q.bulges],
             [
                 LoopDTO(
                     l.loop_type.value if l.loop_type is not None else None,
@@ -363,6 +365,9 @@ def convert_quadruplex_dot_bracket(analysis: Analysis) -> QuadruplexDotBracketDT
                         if loop.loop_type == LoopType.lateral_minus
                         else "?"
                     )
+            # mark bulges
+            for nt in quadruplex.bulges:
+                loop_line[mapping[nt]] = "b"
 
     return QuadruplexDotBracketDTO(
         sequence, "".join(structure), "".join(chi_line), "".join(loop_line)

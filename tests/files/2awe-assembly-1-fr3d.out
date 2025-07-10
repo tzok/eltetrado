@@ -13,6 +13,9 @@ n4-helix with 3 tetrads
       B.G3, B.G5, B.U6
       C.G3, C.G5, C.U6
 
+    Bulges:
+      A.U4, D.U4, B.U4, C.U4
+
 n4-helix with 3 tetrads
   Op* VIII n/a quadruplex with 3 tetrads
     E.G3 H.G3 F.G3 G.G3 cWH cWH cWH cWH O- VIIIa planarity=0.67 ions_channel=K,K,K 
@@ -26,6 +29,9 @@ n4-helix with 3 tetrads
       H.G3, H.G5, H.U6
       F.G3, F.G5, F.U6
       G.G3, G.G5, G.U6
+
+    Bulges:
+      E.U4, H.U4, F.U4
 
 UGGUG-UUGGUG-UUGGUG-UUGGUG-UUGGUG-UUGGG-UUGGUG-UUGGUGU
 ..(.[-{..).]-(..[.{-)..].}-}..(.[-(..[{-)..].}-{..).]}

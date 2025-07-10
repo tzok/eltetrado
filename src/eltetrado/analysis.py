@@ -400,6 +400,20 @@ class TetradPair:
 
 
 @dataclass
+@dataclass(frozen=True)
+class TetradScore:
+    """
+    Detailed description of the alignment between two tetrads.
+    """
+
+    total: int  # overall score (stacking or sequential)
+    sequential: int  # strictly sequential nucleotide matches
+    stacking: int  # stacking-graph matches
+    nts1: Tuple[Residue3D, ...]  # order in the first tetrad
+    nts2: Tuple[Residue3D, ...]  # corresponding order in the second tetrad
+
+
+@dataclass
 class Tract:
     nucleotides: List[Residue3D]
 
@@ -428,6 +442,7 @@ class Quadruplex:
     onzm: Optional[ONZM] = field(init=False)
     gba_classes: List[GbaQuadruplexClassification] = field(init=False)
     tracts: List[Tract] = field(init=False)
+    bulges: List[Residue3D] = field(init=False)
     loops: List[Loop] = field(init=False)
     loop_class: Optional[LoopClassification] = field(init=False)
 
@@ -435,6 +450,7 @@ class Quadruplex:
         self.onzm = self.__classify_onzm()
         self.gba_classes = self.__classify_by_gba()
         self.tracts = self.__find_tracts()
+        self.bulges = self.__find_bulges()
         self.loops = self.__find_loops()
         self.loop_class = self.__classify_by_loops()
 
@@ -568,6 +584,48 @@ class Quadruplex:
         logging.warning(f"Failed to classify the loop between {nt_first} and {nt_last}")
         return None
 
+    # ------------------------------------------------------------------
+    # Bulges
+    # ------------------------------------------------------------------
+    def __find_bulges(self) -> List[Residue3D]:
+        """
+        Detect one- or two-nucleotide fragments (bulges) that appear inside a
+        tract.  Example:
+            …-DG13-DC14-DG15-…
+                        ↑
+                      bulge
+        """
+        bulges: List[Residue3D] = []
+
+        for tract in self.tracts:
+            nts_sorted = sorted(tract.nucleotides, key=lambda nt: self.global_index[nt])
+            for i in range(1, len(nts_sorted)):
+                nt_prev, nt_cur = nts_sorted[i - 1], nts_sorted[i]
+                # only within the same chain
+                if nt_prev.chain != nt_cur.chain:
+                    continue
+                gap = self.global_index[nt_cur] - self.global_index[nt_prev] - 1
+                if gap in (1, 2):
+                    # gather residues that fill the gap
+                    for nt in self.structure3d.residues:
+                        if (
+                            nt.is_nucleotide
+                            and nt.chain == nt_cur.chain
+                            and self.global_index[nt_prev]
+                            < self.global_index[nt]
+                            < self.global_index[nt_cur]
+                        ):
+                            bulges.append(nt)
+
+        # keep order, remove duplicates
+        seen: Set[Residue3D] = set()
+        unique_bulges: List[Residue3D] = []
+        for nt in bulges:
+            if nt not in seen:
+                unique_bulges.append(nt)
+                seen.add(nt)
+        return unique_bulges
+
     def __find_tetrad_with_nt(self, nt: Residue3D) -> Optional[Tetrad]:
         for tetrad in self.tetrads:
             if nt in tetrad.nucleotides:
@@ -653,6 +711,11 @@ class Quadruplex:
                 builder += "\n    Loops:\n"
                 for loop in self.loops:
                     builder += f"{loop}\n"
+            if self.bulges:
+                builder += "\n    Bulges:\n"
+                builder += (
+                    "      " + ", ".join(nt.full_name for nt in self.bulges) + "\n"
+                )
             builder += "\n"
         return builder
 
@@ -737,9 +800,7 @@ class Analysis:
     global_index: Dict[Residue3D, int] = field(init=False)
     mapping: Mapping2D3D = field(init=False)
     tetrads: List[Tetrad] = field(init=False)
-    tetrad_scores: Dict[Tetrad, Dict[Tetrad, Tuple[int, Tuple, Tuple]]] = field(
-        init=False
-    )
+    tetrad_scores: Dict[Tetrad, Dict[Tetrad, "TetradScore"]] = field(init=False)
     tetrad_pairs: List[TetradPair] = field(init=False)
     helices: List[Helix] = field(init=False)
     ions: List[Atom] = field(init=False)
@@ -843,15 +904,32 @@ class Analysis:
         def is_next_by_stacking(nt1: Residue3D, nt2: Residue3D) -> bool:
             return nt2 in self.mapping.stacking_graph.get(nt1, [])
 
-        def is_next_sequentially(nt1: Residue3D, nt2: Residue3D) -> bool:
-            return (
-                nt1.chain == nt2.chain
-                and abs(
-                    self.global_index.get(nt1, sys.maxsize)
-                    - self.global_index.get(nt2, sys.maxsize)
+        def is_next_sequentially(nt1: Residue3D, nt2: Residue3D) -> float:
+            """
+            Return a *fractional* sequential-proximity score between two residues.
+
+            1.0  – same chain, immediately adjacent (|idx₁ - idx₂| == 1)
+            0.5  – same chain, one residue apart  (|idx₁ - idx₂| == 2)
+            0.0  – anything else
+            """
+            if nt1.chain != nt2.chain:
+                return 0.0
+
+            # both residues must be indexed; otherwise return 0
+            idx1 = self.global_index.get(nt1)
+            idx2 = self.global_index.get(nt2)
+            if idx1 is None or idx2 is None:
+                logging.warning(
+                    "Residue missing in global_index while scoring sequential proximity"
                 )
-                == 1
-            )
+                return 0.0
+
+            diff = abs(idx1 - idx2)
+            if diff == 1:
+                return 1.0
+            if diff == 2:
+                return 0.5
+            return 0.0
 
         tetrad_scores: Dict[
             Tetrad,
@@ -859,13 +937,12 @@ class Analysis:
         ] = defaultdict(dict)
 
         for ti, tj in itertools.combinations(self.tetrads, 2):
-            nts1 = ti.nucleotides
-            best_score = 0
             best_score_sequential = 0
             best_score_stacking = 0
-            best_order = tj.nucleotides
 
-            n1, n2, n3, n4 = tj.nucleotides
+            nts1 = ti.nucleotides
+            nts2 = tj.nucleotides
+            n1, n2, n3, n4 = nts2
             viable_permutations = [
                 (n1, n2, n3, n4),
                 (n2, n3, n4, n1),
@@ -877,33 +954,43 @@ class Analysis:
                 (n2, n1, n4, n3),
             ]
 
-            for nts2 in viable_permutations:
-                flags_sequential: List[bool] = [
-                    is_next_sequentially(nts1[i], nts2[i]) for i in range(4)
+            for permutation in viable_permutations:
+                flags_sequential: List[float] = [
+                    is_next_sequentially(nts1[i], permutation[i]) for i in range(4)
                 ]
-                flags_stacking: List[bool] = [
-                    is_next_by_stacking(nts1[i], nts2[i]) for i in range(4)
+                flags_stacking: List[int] = [
+                    int(is_next_by_stacking(nts1[i], permutation[i])) for i in range(4)
                 ]
-                score = sum(flags_stacking[i] | flags_sequential[i] for i in range(4))
+
+                # compute independent scores
                 score_sequential = sum(flags_sequential)
                 score_stacking = sum(flags_stacking)
 
-                if (score, score_sequential, score_stacking) > (
-                    best_score,
+                if (score_sequential, score_stacking) > (
                     best_score_sequential,
                     best_score_stacking,
                 ):
-                    best_score, best_score_sequential, best_score_stacking = (
-                        score,
+                    best_score_sequential, best_score_stacking = (
                         score_sequential,
                         score_stacking,
                     )
-                    best_order = nts2
-                if best_score == 4:
-                    break
+                    nts2 = permutation
 
-            tetrad_scores[ti][tj] = (best_score, nts1, best_order)
-            tetrad_scores[tj][ti] = (best_score, best_order, nts1)
+            total_score = best_score_sequential + best_score_stacking
+            tetrad_scores[ti][tj] = TetradScore(
+                total_score,
+                best_score_sequential,
+                best_score_stacking,
+                nts1,
+                nts2,
+            )
+            tetrad_scores[tj][ti] = TetradScore(
+                total_score,
+                best_score_sequential,
+                best_score_stacking,
+                nts2,
+                nts1,
+            )
 
         # log information about tetrad scores
         logging.debug("Tetrad scores:")
@@ -918,19 +1005,48 @@ class Analysis:
     def __find_tetrad_pairs(self, stacking_mismatch: int) -> List[TetradPair]:
         def next_tetrad_scoring(
             ti: Tetrad, tj: Tetrad, candidates: Iterable[Tetrad]
-        ) -> Tuple[int, int, int]:
+        ) -> Tuple[int, int, int, int, int]:
+            """
+            Provide a sorting key that expresses how “good” a follow-up tetrad *tj*
+            is when the current end of a tentative helix is *ti*.
+
+            The tuple is evaluated lexicographically by ``max(…, key=next_tetrad_scoring)``.
+            Order of importance:
+              1. total alignment score           (4 = perfect)
+              2. sequential alignment component (0-4)
+              3. stacking  alignment component (0-4)
+              4. negative sum of *tj*’s scores to the remaining *candidates*
+                 – favours tetrads that are already **less** compatible with the
+                   rest of the pool so we can grow one continuous helix first.
+              5. deterministic tiebreaker = negative original index of *tj*
+            """
+            score_direct = self.tetrad_scores[ti].get(tj)
+
+            # direct scores (0–4 each)
+            total_direct = score_direct.total if score_direct else 0
+            sequential_direct = score_direct.sequential if score_direct else 0
+            stacking_direct = score_direct.stacking if score_direct else 0
+
+            # how strongly tj is connected to still-unvisited tetrads
+            total_candidates = -sum(
+                self.tetrad_scores[tj][tk].total if tk in self.tetrad_scores[tj] else 0
+                for tk in candidates
+            )
+
             return (
-                self.tetrad_scores[ti].get(tj, (0,))[0],
-                -sum([self.tetrad_scores[tj].get(tk, (0,))[0] for tk in candidates]),
+                total_direct,
+                sequential_direct,
+                stacking_direct,
+                total_candidates,
                 -self.tetrads.index(tj),
             )
 
         tetrads = list(self.tetrads)
-        best_score = 0
+        best_score = [0, 0, 0]
         best_order = tetrads
 
         for ti in tetrads:
-            score = 0
+            score = [0, 0, 0]
             order = [ti]
             candidates = set(self.tetrads) - {ti}
 
@@ -938,7 +1054,9 @@ class Analysis:
                 tj = max(
                     candidates, key=lambda tk: next_tetrad_scoring(ti, tk, candidates)
                 )
-                score += self.tetrad_scores[ti][tj][0]
+                score[0] += self.tetrad_scores[ti][tj].total
+                score[1] += self.tetrad_scores[ti][tj].sequential
+                score[2] += self.tetrad_scores[ti][tj].stacking
                 order.append(tj)
                 candidates.remove(tj)
                 ti = tj
@@ -947,17 +1065,21 @@ class Analysis:
                 best_score = score
                 best_order = order
 
-            if best_score == (len(self.tetrads) - 1) * 4:
+            # break the loop if we have a perfect tetrad order
+            if best_score[0] == (len(self.tetrads) - 1) * 4:
                 break
 
         tetrad_pairs = []
 
         for i in range(1, len(best_order)):
             ti, tj = best_order[i - 1], best_order[i]
-            score = self.tetrad_scores[ti][tj][0]
+            score = self.tetrad_scores[ti][tj].total
 
             if score >= (4 - stacking_mismatch):
-                nts1, nts2 = self.tetrad_scores[ti][tj][1:]
+                nts1, nts2 = (
+                    self.tetrad_scores[ti][tj].nts1,
+                    self.tetrad_scores[ti][tj].nts2,
+                )
                 stacked = {nts1[i]: nts2[i] for i in range(4)}
                 stacked.update({v: k for k, v in stacked.items()})
                 tetrad_pairs.append(TetradPair(ti, tj, stacked, self.global_index))
@@ -980,7 +1102,7 @@ class Analysis:
             ti, tj = tp.tetrad1, tp.tetrad2
             if not helix_tetrads:
                 helix_tetrads.append(ti)
-            score = self.tetrad_scores[helix_tetrads[-1]][tj][0]
+            score = self.tetrad_scores[helix_tetrads[-1]][tj].total
             if score >= (4 - self.stacking_mismatch):
                 helix_tetrads.append(tj)
                 helix_tetrad_pairs.append(tp)
