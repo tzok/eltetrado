@@ -53,6 +53,6 @@ def test_5zev_tracts():
     }
 
     for tract in expected_tracts:
-        assert (
-            tract in detected_tracts
-        ), f"Expected tract {tract} not found; detected tracts: {detected_tracts}"
+        assert tract in detected_tracts, (
+            f"Expected tract {tract} not found; detected tracts: {detected_tracts}"
+        )
