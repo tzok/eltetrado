@@ -859,8 +859,8 @@ class Analysis:
             """
             Return a *fractional* sequential-proximity score between two residues.
 
-            1.0  – same chain, immediately adjacent (|idx₁ − idx₂| == 1)  
-            0.5  – same chain, one residue apart  (|idx₁ − idx₂| == 2)  
+            1.0  – same chain, immediately adjacent (|idx₁ − idx₂| == 1)
+            0.5  – same chain, one residue apart  (|idx₁ − idx₂| == 2)
             0.0  – anything else
             """
             if nt1.chain != nt2.chain:
