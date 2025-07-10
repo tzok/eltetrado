@@ -315,7 +315,7 @@ class Tetrad:
             result = []
             for residue, ions in self.ions_outside.items():
                 result.append(
-                    f'{residue.full_name}: [{",".join([ion.name for ion in ions])}]'
+                    f"{residue.full_name}: [{','.join([ion.name for ion in ions])}]"
                 )
             return "ions_outside=" + " ".join(result)
         return ""
@@ -404,7 +404,7 @@ class Tract:
     nucleotides: List[Residue3D]
 
     def __str__(self):
-        return f'      {", ".join(map(lambda nt: nt.full_name, self.nucleotides))}'
+        return f"      {', '.join(map(lambda nt: nt.full_name, self.nucleotides))}"
 
 
 @dataclass
@@ -414,8 +414,8 @@ class Loop:
 
     def __str__(self):
         return (
-            f'      {self.loop_type.value if self.loop_type else "n/a"} '
-            f'{", ".join(map(lambda nt: nt.full_name, self.nucleotides))}'
+            f"      {self.loop_type.value if self.loop_type else 'n/a'} "
+            f"{', '.join(map(lambda nt: nt.full_name, self.nucleotides))}"
         )
 
 
@@ -632,8 +632,8 @@ class Quadruplex:
             builder += "  single tetrad\n"
             builder += str(self.tetrads[0])
         else:
-            builder += f'  {self.onzm.value if self.onzm is not None else "R"}'
-            builder += f' {",".join(map(lambda gba: gba.value, self.gba_classes))}'
+            builder += f"  {self.onzm.value if self.onzm is not None else 'R'}"
+            builder += f" {','.join(map(lambda gba: gba.value, self.gba_classes))}"
             if self.loop_class:
                 builder += (
                     f" {self.loop_class.value} {self.loop_class.loop_progression()}"
@@ -1024,7 +1024,7 @@ class Analysis:
                     self.__reorder_chains(permutation)
                     classifications = [t.onz for h in self.helices for t in h.tetrads]
                     logging.debug(
-                        f'Checking reorder: {" ".join(permutation)} {" ".join(map(lambda c: c.value, classifications))}'
+                        f"Checking reorder: {' '.join(permutation)} {' '.join(map(lambda c: c.value, classifications))}"
                     )
 
                     onz_score = sum(c.score() for c in classifications)
@@ -1045,8 +1045,8 @@ class Analysis:
             self.__reorder_chains(final_order)
             classifications = [t.onz for h in self.helices for t in h.tetrads]
             logging.debug(
-                f'Selected chain order: {" ".join(final_order)} '
-                f'{" ".join(map(lambda onz: onz.value, classifications))}'
+                f"Selected chain order: {' '.join(final_order)} "
+                f"{' '.join(map(lambda onz: onz.value, classifications))}"
             )
 
             self.tetrads = self.__find_tetrads(True)
@@ -1258,7 +1258,7 @@ class Analysis:
         )
 
     def __str__(self):
-        builder = f'Chain order: {" ".join(self.__chain_order())}\n'
+        builder = f"Chain order: {' '.join(self.__chain_order())}\n"
         for helix in self.helices:
             builder += str(helix)
         builder += f"{self.sequence}\n{self.line1}\n{self.line2}"
