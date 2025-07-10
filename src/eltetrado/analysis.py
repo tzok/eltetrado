@@ -405,12 +405,13 @@ class TetradScore:
     """
     Detailed description of the alignment between two tetrads.
     """
-    total: int                         # overall score (stacking or sequential)
-    sequential: int                    # strictly sequential nucleotide matches
-    stacking: int                      # stacking-graph matches
-    nts1: Tuple[Residue3D, ...]        # order in the first tetrad
-    nts2: Tuple[Residue3D, ...]        # corresponding order in the second tetrad
-        
+
+    total: int  # overall score (stacking or sequential)
+    sequential: int  # strictly sequential nucleotide matches
+    stacking: int  # stacking-graph matches
+    nts1: Tuple[Residue3D, ...]  # order in the first tetrad
+    nts2: Tuple[Residue3D, ...]  # corresponding order in the second tetrad
+
 
 @dataclass
 class Tract:
@@ -945,9 +946,7 @@ class Analysis:
             score_direct = self.tetrad_scores[ti].get(tj)
             total_direct = score_direct.total if score_direct else 0
             total_candidates = -sum(
-                self.tetrad_scores[tj][tk].total
-                if tk in self.tetrad_scores[tj]
-                else 0
+                self.tetrad_scores[tj][tk].total if tk in self.tetrad_scores[tj] else 0
                 for tk in candidates
             )
             return (total_direct, total_candidates, -self.tetrads.index(tj))
