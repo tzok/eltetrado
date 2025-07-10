@@ -598,9 +598,7 @@ class Quadruplex:
         bulges: List[Residue3D] = []
 
         for tract in self.tracts:
-            nts_sorted = sorted(
-                tract.nucleotides, key=lambda nt: self.global_index[nt]
-            )
+            nts_sorted = sorted(tract.nucleotides, key=lambda nt: self.global_index[nt])
             for i in range(1, len(nts_sorted)):
                 nt_prev, nt_cur = nts_sorted[i - 1], nts_sorted[i]
                 # only within the same chain
@@ -716,9 +714,7 @@ class Quadruplex:
             if self.bulges:
                 builder += "\n    Bulges:\n"
                 builder += (
-                    "      "
-                    + ", ".join(nt.full_name for nt in self.bulges)
-                    + "\n"
+                    "      " + ", ".join(nt.full_name for nt in self.bulges) + "\n"
                 )
             builder += "\n"
         return builder
