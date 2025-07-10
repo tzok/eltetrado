@@ -1425,7 +1425,10 @@ class Visualizer:
 class AnalysisSimple:
     def __init__(self, base_interactions: BaseInteractions, structure3d: Structure3D):
         self.mapping = Mapping2D3D(
-            structure3d, base_interactions.base_pairs, base_interactions.stackings, False
+            structure3d,
+            base_interactions.base_pairs,
+            base_interactions.stackings,
+            False,
         )
 
     def has_tetrads(self) -> bool:
