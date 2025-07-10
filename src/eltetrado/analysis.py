@@ -871,13 +871,13 @@ class Analysis:
         ] = defaultdict(dict)
 
         for ti, tj in itertools.combinations(self.tetrads, 2):
-            nts1 = ti.nucleotides
             best_score = 0
             best_score_sequential = 0
             best_score_stacking = 0
-            best_order = tj.nucleotides
 
-            n1, n2, n3, n4 = tj.nucleotides
+            nts1 = ti.nucleotides
+            nts2 = tj.nucleotides
+            n1, n2, n3, n4 = nts2
             viable_permutations = [
                 (n1, n2, n3, n4),
                 (n2, n3, n4, n1),
@@ -889,12 +889,12 @@ class Analysis:
                 (n2, n1, n4, n3),
             ]
 
-            for nts2 in viable_permutations:
+            for permutation in viable_permutations:
                 flags_sequential: List[bool] = [
-                    is_next_sequentially(nts1[i], nts2[i]) for i in range(4)
+                    is_next_sequentially(nts1[i], permutation[i]) for i in range(4)
                 ]
                 flags_stacking: List[bool] = [
-                    is_next_by_stacking(nts1[i], nts2[i]) for i in range(4)
+                    is_next_by_stacking(nts1[i], permutation[i]) for i in range(4)
                 ]
                 score = sum(flags_stacking[i] | flags_sequential[i] for i in range(4))
                 score_sequential = sum(flags_sequential)
@@ -910,7 +910,7 @@ class Analysis:
                         score_sequential,
                         score_stacking,
                     )
-                    best_order = nts2
+                    nts2 = permutation
                 if best_score == 4:
                     break
 
@@ -919,13 +919,13 @@ class Analysis:
                 best_score_sequential,
                 best_score_stacking,
                 nts1,
-                best_order,
+                nts2,
             )
             tetrad_scores[tj][ti] = TetradScore(
                 best_score,
                 best_score_sequential,
                 best_score_stacking,
-                best_order,
+                nts2,
                 nts1,
             )
 
@@ -942,14 +942,41 @@ class Analysis:
     def __find_tetrad_pairs(self, stacking_mismatch: int) -> List[TetradPair]:
         def next_tetrad_scoring(
             ti: Tetrad, tj: Tetrad, candidates: Iterable[Tetrad]
-        ) -> Tuple[int, int, int]:
+        ) -> Tuple[int, int, int, int, int]:
+            """
+            Provide a sorting key that expresses how “good” a follow-up tetrad *tj*
+            is when the current end of a tentative helix is *ti*.
+
+            The tuple is evaluated lexicographically by ``max(…, key=next_tetrad_scoring)``.
+            Order of importance:
+              1. total alignment score           (4 = perfect)
+              2. sequential alignment component (0-4)
+              3. stacking  alignment component (0-4)
+              4. negative sum of *tj*’s scores to the remaining *candidates*
+                 – favours tetrads that are already **less** compatible with the
+                   rest of the pool so we can grow one continuous helix first.
+              5. deterministic tiebreaker = negative original index of *tj*
+            """
             score_direct = self.tetrad_scores[ti].get(tj)
+
+            # direct scores (0–4 each)
             total_direct = score_direct.total if score_direct else 0
+            sequential_direct = score_direct.sequential if score_direct else 0
+            stacking_direct = score_direct.stacking if score_direct else 0
+
+            # how strongly tj is connected to still-unvisited tetrads
             total_candidates = -sum(
                 self.tetrad_scores[tj][tk].total if tk in self.tetrad_scores[tj] else 0
                 for tk in candidates
             )
-            return (total_direct, total_candidates, -self.tetrads.index(tj))
+
+            return (
+                total_direct,
+                sequential_direct,
+                stacking_direct,
+                total_candidates,
+                -self.tetrads.index(tj),
+            )
 
         tetrads = list(self.tetrads)
         best_score = 0
