@@ -751,7 +751,7 @@ class Analysis:
         self.global_index = self.__prepare_global_index()
         self.mapping = Mapping2D3D(
             self.structure3d,
-            self.base_interactions.basePairs,
+            self.base_interactions.base_pairs,
             self.base_interactions.stackings,
             False,
         )
@@ -1425,7 +1425,10 @@ class Visualizer:
 class AnalysisSimple:
     def __init__(self, base_interactions: BaseInteractions, structure3d: Structure3D):
         self.mapping = Mapping2D3D(
-            structure3d, base_interactions.basePairs, base_interactions.stackings, False
+            structure3d,
+            base_interactions.base_pairs,
+            base_interactions.stackings,
+            False,
         )
 
     def has_tetrads(self) -> bool:

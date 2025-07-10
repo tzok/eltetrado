@@ -6,8 +6,10 @@ def test_has_tetrad_with_dssr(capfd):
         [
             "--input",
             "tests/files/1v3p-assembly-1.cif.gz",
-            "--dssr-json",
+            "--external-files",
             "tests/files/1v3p-assembly-1.json",
+            "--tool",
+            "dssr",
         ]
     )
     out, err = capfd.readouterr()
@@ -19,8 +21,10 @@ def test_has_tetrad_with_fr3d(capfd):
         [
             "--input",
             "tests/files/1v3p-assembly-1.cif.gz",
-            "--fr3d-txt",
+            "--external-files",
             "tests/files/1v3p-assembly-1.txt",
+            "--tool",
+            "fr3d",
         ]
     )
     out, err = capfd.readouterr()
@@ -43,8 +47,10 @@ def test_eltetrado_with_dssr(capfd):
         [
             "--input",
             "tests/files/2awe-assembly-1.cif.gz",
-            "--dssr-json",
+            "--external-files",
             "tests/files/2awe-assembly-1.json",
+            "--tool",
+            "dssr",
             "--no-image",
         ]
     )
@@ -58,8 +64,10 @@ def test_eltetrado_with_fr3d(capfd):
         [
             "--input",
             "tests/files/2awe-assembly-1.cif.gz",
-            "--fr3d-txt",
+            "--external-files",
             "tests/files/2awe-assembly-1.txt",
+            "--tool",
+            "fr3d",
             "--no-image",
         ]
     )
