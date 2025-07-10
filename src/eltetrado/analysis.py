@@ -855,15 +855,26 @@ class Analysis:
         def is_next_by_stacking(nt1: Residue3D, nt2: Residue3D) -> bool:
             return nt2 in self.mapping.stacking_graph.get(nt1, [])
 
-        def is_next_sequentially(nt1: Residue3D, nt2: Residue3D) -> bool:
-            return (
-                nt1.chain == nt2.chain
-                and abs(
-                    self.global_index.get(nt1, sys.maxsize)
-                    - self.global_index.get(nt2, sys.maxsize)
-                )
-                == 1
+        def is_next_sequentially(nt1: Residue3D, nt2: Residue3D) -> float:
+            """
+            Return a *fractional* sequential-proximity score between two residues.
+
+            1.0  – same chain, immediately adjacent (|idx₁ − idx₂| == 1)  
+            0.5  – same chain, one residue apart  (|idx₁ − idx₂| == 2)  
+            0.0  – anything else
+            """
+            if nt1.chain != nt2.chain:
+                return 0.0
+
+            diff = abs(
+                self.global_index.get(nt1, sys.maxsize)
+                - self.global_index.get(nt2, sys.maxsize)
             )
+            if diff == 1:
+                return 1.0
+            if diff == 2:
+                return 0.5
+            return 0.0
 
         tetrad_scores: Dict[
             Tetrad,
@@ -889,16 +900,27 @@ class Analysis:
                 (n2, n1, n4, n3),
             ]
 
+            breakpoint()
+
             for permutation in viable_permutations:
-                flags_sequential: List[bool] = [
+                flags_sequential: List[float] = [
                     is_next_sequentially(nts1[i], permutation[i]) for i in range(4)
                 ]
-                flags_stacking: List[bool] = [
-                    is_next_by_stacking(nts1[i], permutation[i]) for i in range(4)
+                flags_stacking: List[int] = [
+                    int(is_next_by_stacking(nts1[i], permutation[i])) for i in range(4)
                 ]
-                score = sum(flags_stacking[i] | flags_sequential[i] for i in range(4))
+
+                # overall score – highest contribution per nucleotide link
+                score = sum(
+                    max(flags_stacking[i], flags_sequential[i]) for i in range(4)
+                )
                 score_sequential = sum(flags_sequential)
                 score_stacking = sum(flags_stacking)
+
+                print(
+                    f"Comparing {repr(ti)} and {repr(tj)} with permutation {permutation} "
+                    f"-> score={score}, sequential={score_sequential}, stacking={score_stacking}"
+                )
 
                 if (score, score_sequential, score_stacking) > (
                     best_score,
@@ -911,8 +933,8 @@ class Analysis:
                         score_stacking,
                     )
                     nts2 = permutation
-                if best_score == 4:
-                    break
+
+            breakpoint()
 
             tetrad_scores[ti][tj] = TetradScore(
                 best_score,
@@ -979,11 +1001,11 @@ class Analysis:
             )
 
         tetrads = list(self.tetrads)
-        best_score = 0
+        best_score = [0, 0, 0]
         best_order = tetrads
 
         for ti in tetrads:
-            score = 0
+            score = [0, 0, 0]
             order = [ti]
             candidates = set(self.tetrads) - {ti}
 
@@ -991,7 +1013,9 @@ class Analysis:
                 tj = max(
                     candidates, key=lambda tk: next_tetrad_scoring(ti, tk, candidates)
                 )
-                score += self.tetrad_scores[ti][tj][0]
+                score[0] += self.tetrad_scores[ti][tj].total
+                score[1] += self.tetrad_scores[ti][tj].sequential
+                score[2] += self.tetrad_scores[ti][tj].stacking
                 order.append(tj)
                 candidates.remove(tj)
                 ti = tj
@@ -1000,11 +1024,12 @@ class Analysis:
                 best_score = score
                 best_order = order
 
-            if best_score == (len(self.tetrads) - 1) * 4:
+            # break the loop if we have a perfect tetrad order
+            if best_score[0] == (len(self.tetrads) - 1) * 4:
                 break
 
-        breakpoint()
         tetrad_pairs = []
+        breakpoint()
 
         for i in range(1, len(best_order)):
             ti, tj = best_order[i - 1], best_order[i]
