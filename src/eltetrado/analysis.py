@@ -905,8 +905,6 @@ class Analysis:
                 (n2, n1, n4, n3),
             ]
 
-            breakpoint()
-
             for permutation in viable_permutations:
                 flags_sequential: List[float] = [
                     is_next_sequentially(nts1[i], permutation[i]) for i in range(4)
@@ -919,11 +917,6 @@ class Analysis:
                 score_sequential = sum(flags_sequential)
                 score_stacking = sum(flags_stacking)
 
-                print(
-                    f"Comparing {repr(ti)} and {repr(tj)} with permutation {permutation} "
-                    f"-> sequential={score_sequential}, stacking={score_stacking}"
-                )
-
                 if (score_sequential, score_stacking) > (
                     best_score_sequential,
                     best_score_stacking,
@@ -933,8 +926,6 @@ class Analysis:
                         score_stacking,
                     )
                     nts2 = permutation
-
-            breakpoint()
 
             total_score = best_score_sequential + best_score_stacking
             tetrad_scores[ti][tj] = TetradScore(
@@ -1030,7 +1021,6 @@ class Analysis:
                 break
 
         tetrad_pairs = []
-        breakpoint()
 
         for i in range(1, len(best_order)):
             ti, tj = best_order[i - 1], best_order[i]

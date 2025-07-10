@@ -1,9 +1,10 @@
 from pathlib import Path
 
-from rnapolis.adapter import ExternalTool, parse_external_output
 import rnapolis.parser
-from eltetrado.cli import handle_input_file
+from rnapolis.adapter import ExternalTool, parse_external_output
+
 from eltetrado.analysis import eltetrado
+from eltetrado.cli import handle_input_file
 
 
 def test_5zev_tracts():
@@ -31,7 +32,7 @@ def test_5zev_tracts():
         structure3d,
         strict=False,
         no_reorder=False,
-        stacking_mismatch=0,
+        stacking_mismatch=2,
     )
 
     # Expected tracts (in 5'→3' order within each tract)
