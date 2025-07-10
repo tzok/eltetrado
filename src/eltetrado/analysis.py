@@ -400,6 +400,19 @@ class TetradPair:
 
 
 @dataclass
+@dataclass(frozen=True)
+class TetradScore:
+    """
+    Detailed description of the alignment between two tetrads.
+    """
+    total: int                         # overall score (stacking or sequential)
+    sequential: int                    # strictly sequential nucleotide matches
+    stacking: int                      # stacking-graph matches
+    nts1: Tuple[Residue3D, ...]        # order in the first tetrad
+    nts2: Tuple[Residue3D, ...]        # corresponding order in the second tetrad
+        
+
+@dataclass
 class Tract:
     nucleotides: List[Residue3D]
 
@@ -737,9 +750,7 @@ class Analysis:
     global_index: Dict[Residue3D, int] = field(init=False)
     mapping: Mapping2D3D = field(init=False)
     tetrads: List[Tetrad] = field(init=False)
-    tetrad_scores: Dict[Tetrad, Dict[Tetrad, Tuple[int, Tuple, Tuple]]] = field(
-        init=False
-    )
+    tetrad_scores: Dict[Tetrad, Dict[Tetrad, "TetradScore"]] = field(init=False)
     tetrad_pairs: List[TetradPair] = field(init=False)
     helices: List[Helix] = field(init=False)
     ions: List[Atom] = field(init=False)
@@ -902,8 +913,20 @@ class Analysis:
                 if best_score == 4:
                     break
 
-            tetrad_scores[ti][tj] = (best_score, nts1, best_order)
-            tetrad_scores[tj][ti] = (best_score, best_order, nts1)
+            tetrad_scores[ti][tj] = TetradScore(
+                best_score,
+                best_score_sequential,
+                best_score_stacking,
+                nts1,
+                best_order,
+            )
+            tetrad_scores[tj][ti] = TetradScore(
+                best_score,
+                best_score_sequential,
+                best_score_stacking,
+                best_order,
+                nts1,
+            )
 
         # log information about tetrad scores
         logging.debug("Tetrad scores:")
@@ -919,11 +942,15 @@ class Analysis:
         def next_tetrad_scoring(
             ti: Tetrad, tj: Tetrad, candidates: Iterable[Tetrad]
         ) -> Tuple[int, int, int]:
-            return (
-                self.tetrad_scores[ti].get(tj, (0,))[0],
-                -sum([self.tetrad_scores[tj].get(tk, (0,))[0] for tk in candidates]),
-                -self.tetrads.index(tj),
+            score_direct = self.tetrad_scores[ti].get(tj)
+            total_direct = score_direct.total if score_direct else 0
+            total_candidates = -sum(
+                self.tetrad_scores[tj][tk].total
+                if tk in self.tetrad_scores[tj]
+                else 0
+                for tk in candidates
             )
+            return (total_direct, total_candidates, -self.tetrads.index(tj))
 
         tetrads = list(self.tetrads)
         best_score = 0
@@ -950,14 +977,18 @@ class Analysis:
             if best_score == (len(self.tetrads) - 1) * 4:
                 break
 
+        breakpoint()
         tetrad_pairs = []
 
         for i in range(1, len(best_order)):
             ti, tj = best_order[i - 1], best_order[i]
-            score = self.tetrad_scores[ti][tj][0]
+            score = self.tetrad_scores[ti][tj].total
 
             if score >= (4 - stacking_mismatch):
-                nts1, nts2 = self.tetrad_scores[ti][tj][1:]
+                nts1, nts2 = (
+                    self.tetrad_scores[ti][tj].nts1,
+                    self.tetrad_scores[ti][tj].nts2,
+                )
                 stacked = {nts1[i]: nts2[i] for i in range(4)}
                 stacked.update({v: k for k, v in stacked.items()})
                 tetrad_pairs.append(TetradPair(ti, tj, stacked, self.global_index))
@@ -980,7 +1011,7 @@ class Analysis:
             ti, tj = tp.tetrad1, tp.tetrad2
             if not helix_tetrads:
                 helix_tetrads.append(ti)
-            score = self.tetrad_scores[helix_tetrads[-1]][tj][0]
+            score = self.tetrad_scores[helix_tetrads[-1]][tj].total
             if score >= (4 - self.stacking_mismatch):
                 helix_tetrads.append(tj)
                 helix_tetrad_pairs.append(tp)
