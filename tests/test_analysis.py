@@ -1,8 +1,8 @@
 from pathlib import Path
 
 from rnapolis.adapter import ExternalTool, parse_external_output
-from rnapolis.tertiary import Structure3D
-
+import rnapolis.parser
+from eltetrado.cli import handle_input_file
 from eltetrado.analysis import eltetrado
 
 
@@ -14,13 +14,11 @@ def test_5zev_tracts():
     cif_path = Path("tests/files/5zev-assembly1.cif.gz")
     json_path = Path("tests/files/5zev-assembly1.json")
 
-    # Load the 3D structure (API differences handled for older/newer rnapolis)
-    if hasattr(Structure3D, "from_file"):
-        structure3d = Structure3D.from_file(cif_path, model=1)
-    elif hasattr(Structure3D, "from_cif"):
-        structure3d = Structure3D.from_cif(cif_path, model=1)  # type: ignore[attr-defined]
-    else:
-        raise RuntimeError("Unable to create Structure3D instance from mmCIF")
+    # Load the 3D structure using the same helper routine as the CLI
+    cif_or_pdb = handle_input_file(str(cif_path))
+    structure3d = rnapolis.parser.read_3d_structure(
+        cif_or_pdb, 1, nucleic_acid_only=False
+    )
 
     # Parse external interactions produced by DSSR
     base_interactions = parse_external_output(
