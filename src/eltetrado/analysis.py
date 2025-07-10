@@ -859,17 +859,23 @@ class Analysis:
             """
             Return a *fractional* sequential-proximity score between two residues.
 
-            1.0  – same chain, immediately adjacent (|idx₁ − idx₂| == 1)
-            0.5  – same chain, one residue apart  (|idx₁ − idx₂| == 2)
+            1.0  – same chain, immediately adjacent (|idx₁ - idx₂| == 1)
+            0.5  – same chain, one residue apart  (|idx₁ - idx₂| == 2)
             0.0  – anything else
             """
             if nt1.chain != nt2.chain:
                 return 0.0
 
-            diff = abs(
-                self.global_index.get(nt1, sys.maxsize)
-                - self.global_index.get(nt2, sys.maxsize)
-            )
+            # both residues must be indexed; otherwise return 0
+            idx1 = self.global_index.get(nt1)
+            idx2 = self.global_index.get(nt2)
+            if idx1 is None or idx2 is None:
+                logging.warning(
+                    "Residue missing in global_index while scoring sequential proximity"
+                )
+                return 0.0
+
+            diff = abs(idx1 - idx2)
             if diff == 1:
                 return 1.0
             if diff == 2:
