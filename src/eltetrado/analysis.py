@@ -888,7 +888,6 @@ class Analysis:
         ] = defaultdict(dict)
 
         for ti, tj in itertools.combinations(self.tetrads, 2):
-            best_score = 0
             best_score_sequential = 0
             best_score_stacking = 0
 
@@ -916,25 +915,20 @@ class Analysis:
                     int(is_next_by_stacking(nts1[i], permutation[i])) for i in range(4)
                 ]
 
-                # overall score – highest contribution per nucleotide link
-                score = sum(
-                    max(flags_stacking[i], flags_sequential[i]) for i in range(4)
-                )
+                # compute independent scores
                 score_sequential = sum(flags_sequential)
                 score_stacking = sum(flags_stacking)
 
                 print(
                     f"Comparing {repr(ti)} and {repr(tj)} with permutation {permutation} "
-                    f"-> score={score}, sequential={score_sequential}, stacking={score_stacking}"
+                    f"-> sequential={score_sequential}, stacking={score_stacking}"
                 )
 
-                if (score, score_sequential, score_stacking) > (
-                    best_score,
+                if (score_sequential, score_stacking) > (
                     best_score_sequential,
                     best_score_stacking,
                 ):
-                    best_score, best_score_sequential, best_score_stacking = (
-                        score,
+                    best_score_sequential, best_score_stacking = (
                         score_sequential,
                         score_stacking,
                     )
@@ -942,15 +936,16 @@ class Analysis:
 
             breakpoint()
 
+            total_score = best_score_sequential + best_score_stacking
             tetrad_scores[ti][tj] = TetradScore(
-                best_score,
+                total_score,
                 best_score_sequential,
                 best_score_stacking,
                 nts1,
                 nts2,
             )
             tetrad_scores[tj][ti] = TetradScore(
-                best_score,
+                total_score,
                 best_score_sequential,
                 best_score_stacking,
                 nts2,
