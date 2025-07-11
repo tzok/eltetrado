@@ -29,19 +29,6 @@ def eltetrado_cli(args=sys.argv[1:]):
         "-m", "--model", help="(optional) model number to process", default=1, type=int
     )
     parser.add_argument(
-        "--stacking-mismatch",
-        help="a perfect tetrad stacking covers 4 nucleotides; this option can be used with value 1 or "
-        "2 to allow this number of nucleotides to be non-stacked with otherwise well aligned "
-        "tetrad [default=2]",
-        default=2,
-        type=int,
-    )
-    parser.add_argument(
-        "--strict",
-        action="store_true",
-        help="nucleotides in tetrad are found when linked only by cWH pairing",
-    )
-    parser.add_argument(
         "--no-reorder",
         action="store_true",
         help="chains of bi- and tetramolecular quadruplexes should be reordered to be able to have "
@@ -55,9 +42,11 @@ def eltetrado_cli(args=sys.argv[1:]):
         "the quadruplex",
     )
     parser.add_argument(
-        "--no-image",
-        action="store_true",
-        help="when set, the visualization will not be created at all",
+        "--image",
+        metavar="DIR",
+        help="directory where visualization files (PDF) will be saved; "
+        "if omitted, no images are generated",
+        default=None,
     )
     parser.add_argument(
         "-e",
@@ -108,13 +97,11 @@ def eltetrado_cli(args=sys.argv[1:]):
     analysis = eltetrado(
         base_interactions,
         structure3d,
-        args.strict,
         args.no_reorder,
-        args.stacking_mismatch,
     )
     print(analysis)
 
-    if not args.no_image:
+    if args.image is not None:
         visualizer = Visualizer(
             analysis, analysis.tetrads, args.complete_2d, analysis.global_index
         )
@@ -125,14 +112,14 @@ def eltetrado_cli(args=sys.argv[1:]):
             root, ext = os.path.splitext(root)
         prefix = root
         suffix = "str"
-        visualizer.visualize(prefix, suffix)
+        visualizer.visualize(prefix, suffix, args.image)
 
         for i, helix in enumerate(analysis.helices):
             hv = Visualizer(
                 analysis, helix.tetrads, args.complete_2d, analysis.global_index
             )
             suffix = "h{}".format(i + 1)
-            hv.visualize(prefix, suffix)
+            hv.visualize(prefix, suffix, args.image)
 
             for j, quadruplex in enumerate(helix.quadruplexes):
                 qv = Visualizer(
@@ -141,13 +128,15 @@ def eltetrado_cli(args=sys.argv[1:]):
                     args.complete_2d,
                     analysis.global_index,
                 )
-                qv.visualize(prefix, "{}-q{}".format(suffix, j + 1))
+                qv.visualize(prefix, "{}-q{}".format(suffix, j + 1), args.image)
 
                 for k, tetrad in enumerate(quadruplex.tetrads):
                     tv = Visualizer(
                         analysis, [tetrad], args.complete_2d, analysis.global_index
                     )
-                    tv.visualize(prefix, "{}-q{}-t{}".format(suffix, j + 1, k + 1))
+                    tv.visualize(
+                        prefix, "{}-q{}-t{}".format(suffix, j + 1, k + 1), args.image
+                    )
 
     if args.output:
         dto = generate_dto(analysis)
