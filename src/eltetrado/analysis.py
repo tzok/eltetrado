@@ -1441,7 +1441,9 @@ class Visualizer:
     def __post_init__(self):
         self.onz_dict = {}
 
-    def visualize(self, prefix: str, suffix: str):
+    def visualize(
+        self, prefix: str, suffix: str, output_dir: Optional[str] = None
+    ):
         fasta = tempfile.NamedTemporaryFile("w+", suffix=".fasta")
         fasta.write(f">{prefix}-{suffix}\n")
         fasta.write(self.analysis.sequence)
@@ -1473,6 +1475,8 @@ class Visualizer:
 
         currdir = os.path.dirname(os.path.realpath(__file__))
         output_pdf = f"{prefix}-{suffix}.pdf"
+        if output_dir:
+            output_pdf = os.path.join(output_dir, output_pdf)
         run = subprocess.run(
             [
                 os.path.join(currdir, "quadraw.R"),
