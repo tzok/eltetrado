@@ -406,7 +406,6 @@ class TetradScore:
     Detailed description of the alignment between two tetrads.
     """
 
-    total: int  # overall score (stacking or sequential)
     sequential: int  # strictly sequential nucleotide matches
     stacking: int  # stacking-graph matches
     nts1: Tuple[Residue3D, ...]  # order in the first tetrad
@@ -818,7 +817,7 @@ class Analysis:
         )
         self.tetrads = self.__find_tetrads(self.no_reorder)
         self.tetrad_scores = self.__calculate_tetrad_scores()
-        self.tetrad_pairs = self.__find_tetrad_pairs(self.stacking_mismatch)
+        self.tetrad_pairs = self.__find_tetrad_pairs()
         self.helices = self.__find_helices()
 
         if not self.no_reorder:
@@ -976,16 +975,13 @@ class Analysis:
                     )
                     nts2 = permutation
 
-            total_score = best_score_sequential + best_score_stacking
             tetrad_scores[ti][tj] = TetradScore(
-                total_score,
                 best_score_sequential,
                 best_score_stacking,
                 nts1,
                 nts2,
             )
             tetrad_scores[tj][ti] = TetradScore(
-                total_score,
                 best_score_sequential,
                 best_score_stacking,
                 nts2,
@@ -1002,7 +998,7 @@ class Analysis:
 
         return tetrad_scores
 
-    def __find_tetrad_pairs(self, stacking_mismatch: int) -> List[TetradPair]:
+    def __find_tetrad_pairs(self) -> List[TetradPair]:
         def next_tetrad_scoring(
             ti: Tetrad, tj: Tetrad, candidates: Iterable[Tetrad]
         ) -> Tuple[int, int, int, int, int]:
@@ -1023,18 +1019,21 @@ class Analysis:
             score_direct = self.tetrad_scores[ti].get(tj)
 
             # direct scores (0–4 each)
-            total_direct = score_direct.total if score_direct else 0
             sequential_direct = score_direct.sequential if score_direct else 0
             stacking_direct = score_direct.stacking if score_direct else 0
 
             # how strongly tj is connected to still-unvisited tetrads
             total_candidates = -sum(
-                self.tetrad_scores[tj][tk].total if tk in self.tetrad_scores[tj] else 0
+                (
+                    self.tetrad_scores[tj][tk].sequential
+                    + self.tetrad_scores[tj][tk].stacking
+                    if tk in self.tetrad_scores[tj]
+                    else 0
+                )
                 for tk in candidates
             )
 
             return (
-                total_direct,
                 sequential_direct,
                 stacking_direct,
                 total_candidates,
@@ -1054,7 +1053,10 @@ class Analysis:
                 tj = max(
                     candidates, key=lambda tk: next_tetrad_scoring(ti, tk, candidates)
                 )
-                score[0] += self.tetrad_scores[ti][tj].total
+                score[0] += (
+                    self.tetrad_scores[ti][tj].sequential
+                    + self.tetrad_scores[ti][tj].stacking
+                )
                 score[1] += self.tetrad_scores[ti][tj].sequential
                 score[2] += self.tetrad_scores[ti][tj].stacking
                 order.append(tj)
@@ -1073,9 +1075,10 @@ class Analysis:
 
         for i in range(1, len(best_order)):
             ti, tj = best_order[i - 1], best_order[i]
-            score = self.tetrad_scores[ti][tj].total
+            score_seq = self.tetrad_scores[ti][tj].sequential
+            score_stack = self.tetrad_scores[ti][tj].stacking
 
-            if score >= (4 - stacking_mismatch):
+            if (score_seq > 0) or (score_stack > 0):
                 nts1, nts2 = (
                     self.tetrad_scores[ti][tj].nts1,
                     self.tetrad_scores[ti][tj].nts2,
@@ -1102,7 +1105,10 @@ class Analysis:
             ti, tj = tp.tetrad1, tp.tetrad2
             if not helix_tetrads:
                 helix_tetrads.append(ti)
-            score = self.tetrad_scores[helix_tetrads[-1]][tj].total
+            score = (
+                self.tetrad_scores[helix_tetrads[-1]][tj].sequential
+                + self.tetrad_scores[helix_tetrads[-1]][tj].stacking
+            )
             if score >= (4 - self.stacking_mismatch):
                 helix_tetrads.append(tj)
                 helix_tetrad_pairs.append(tp)
@@ -1173,7 +1179,7 @@ class Analysis:
 
             self.tetrads = self.__find_tetrads(True)
             self.tetrad_scores = self.__calculate_tetrad_scores()
-            self.tetrad_pairs = self.__find_tetrad_pairs(self.stacking_mismatch)
+            self.tetrad_pairs = self.__find_tetrad_pairs()
             self.helices = self.__find_helices()
 
     def __group_related_chains(self) -> List[List[str]]:
