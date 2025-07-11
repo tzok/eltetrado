@@ -55,10 +55,8 @@ file, you can easily change them without knowledge of R language. If you
 want ElTetrado to not visualize anything, pass `--no-image` switch to
 it.
 
-    usage: eltetrado [-h] [-i INPUT] [-o OUTPUT] [-m MODEL]
-                     [--stacking-mismatch STACKING_MISMATCH] [--strict]
-                     [--no-reorder] [--complete-2d] [--no-image]
-                     [-e [EXTERNAL_FILES ...]]
+    usage: eltetrado [-h] [-i INPUT] [-o OUTPUT] [-m MODEL] [--no-reorder]
+                     [--complete-2d] [--image DIR] [-e [EXTERNAL_FILES ...]]
                      [--tool {fr3d,dssr,rnaview,bpnet,maxit}] [-v]
 
     options:
@@ -69,13 +67,6 @@ it.
                             (optional) path for output JSON file
       -m MODEL, --model MODEL
                             (optional) model number to process
-      --stacking-mismatch STACKING_MISMATCH
-                            a perfect tetrad stacking covers 4 nucleotides; this
-                            option can be used with value 1 or 2 to allow this
-                            number of nucleotides to be non-stacked with otherwise
-                            well aligned tetrad [default=2]
-      --strict              nucleotides in tetrad are found when linked only by
-                            cWH pairing
       --no-reorder          chains of bi- and tetramolecular quadruplexes should
                             be reordered to be able to have them classified; when
                             this is set, chains will be processed in original
@@ -83,7 +74,8 @@ it.
                             will likely be misclassified; use with care!
       --complete-2d         when set, the visualization will also show canonical
                             base pairs to provide context for the quadruplex
-      --no-image            when set, the visualization will not be created at all
+      --image DIR           directory where visualization files (PDF) will be
+                            saved; if omitted, no images are generated
       -e [EXTERNAL_FILES ...], --external-files [EXTERNAL_FILES ...]
                             path(s) to external tool output file(s); if omitted
                             ElTetrado will compute interactions itself
