@@ -1579,10 +1579,9 @@ def center_of_mass(atoms: List[Atom]) -> numpy.typing.NDArray[numpy.floating]:
 def eltetrado(
     base_interactions: BaseInteractions,
     structure3d: Structure3D,
-    strict: bool,
     no_reorder: bool,
 ) -> Analysis:
-    return Analysis(base_interactions, structure3d, strict, no_reorder)
+    return Analysis(base_interactions, structure3d, no_reorder)
 
 
 def has_tetrad(base_interactions: BaseInteractions, structure3d: Structure3D) -> bool:
