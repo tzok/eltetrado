@@ -13,7 +13,7 @@ def test_convert_nucleotides():
     cif = handle_input_file("tests/files/6fc9-assembly-1.cif.gz")
     structure3d = rnapolis.parser.read_3d_structure(cif, nucleic_acid_only=False)
     base_interactions = rnapolis.annotator.extract_base_interactions(structure3d)
-    analysis = eltetrado(base_interactions, structure3d, False, False, 2)
+    analysis = eltetrado(base_interactions, structure3d, False)
     nucleotides = convert_nucleotides(analysis)
     assert len(nucleotides) == 27
 
@@ -25,7 +25,7 @@ def test_ions():
     cif = handle_input_file("tests/files/7dju-assembly-1.cif.gz")
     structure3d = rnapolis.parser.read_3d_structure(cif, nucleic_acid_only=False)
     base_interactions = rnapolis.annotator.extract_base_interactions(structure3d)
-    analysis = eltetrado(base_interactions, structure3d, False, False, 2)
+    analysis = eltetrado(base_interactions, structure3d, False)
     tetrads = convert_tetrads(analysis.helices[0].quadruplexes[0])
     assert len(tetrads) > 0
     assert len(tetrads[0].ionsChannel) > 0
@@ -42,7 +42,7 @@ def test_7zko():
     structure2d = read_secondary_structure_from_dssr(
         structure3d, 1, "tests/files/7zko-assembly-1.json"
     )
-    analysis = eltetrado(structure2d, structure3d, False, False, 2)
+    analysis = eltetrado(structure2d, structure3d, False)
     assert len(analysis.helices) == 2
     assert len(analysis.helices[1].quadruplexes) == 1
     assert len(analysis.helices[1].quadruplexes[0].tetrads) == 1
@@ -60,7 +60,7 @@ def test_1v3p():
     structure2d = read_secondary_structure_from_dssr(
         structure3d, 1, "tests/files/1v3p-assembly-1.json"
     )
-    analysis = eltetrado(structure2d, structure3d, False, False, 2)
+    analysis = eltetrado(structure2d, structure3d, False)
     assert len(analysis.helices) == 1
     assert len(analysis.helices[0].quadruplexes) == 2
     assert len(analysis.helices[0].quadruplexes[0].tetrads) == 1
@@ -81,7 +81,7 @@ def test_2awe():
     structure2d = read_secondary_structure_from_dssr(
         structure3d, 1, "tests/files/2awe-assembly-1.json"
     )
-    analysis = eltetrado(structure2d, structure3d, False, False, 2)
+    analysis = eltetrado(structure2d, structure3d, False)
     dto = generate_dto(analysis)
     assert "G.U4" not in [nt.fullName for nt in dto.nucleotides]
     assert "G.U4" not in [
@@ -102,7 +102,7 @@ def test_5v3f():
     structure2d = read_secondary_structure_from_dssr(
         structure3d, 1, "tests/files/5v3f-assembly-1.json"
     )
-    analysis = eltetrado(structure2d, structure3d, False, False, 2)
+    analysis = eltetrado(structure2d, structure3d, False)
     dto = generate_dto(analysis)
     assert (
         dto.dotBracket.sequence == "GUGCGAAGGGACGGUGCGGAGAGGAGAGCA-CGGGACGGUGCGGAGAGGAG"
@@ -120,7 +120,7 @@ def test_6a85():
     structure2d = read_secondary_structure_from_dssr(
         structure3d, 1, "tests/files/6a85-assembly1.json"
     )
-    analysis = eltetrado(structure2d, structure3d, False, False, 2)
+    analysis = eltetrado(structure2d, structure3d, False)
     dto = generate_dto(analysis)
     assert (
         dto.dotBracket.sequence

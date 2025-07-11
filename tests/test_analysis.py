@@ -30,9 +30,7 @@ def test_5zev_tracts():
     analysis = eltetrado(
         base_interactions,
         structure3d,
-        strict=False,
         no_reorder=False,
-        stacking_mismatch=2,
     )
 
     # Expected tracts (in 5'→3' order within each tract)

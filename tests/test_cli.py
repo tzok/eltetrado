@@ -51,7 +51,6 @@ def test_eltetrado_with_dssr(capfd):
             "tests/files/2awe-assembly-1.json",
             "--tool",
             "dssr",
-            "--no-image",
         ]
     )
     out, err = capfd.readouterr()
@@ -68,7 +67,6 @@ def test_eltetrado_with_fr3d(capfd):
             "tests/files/2awe-assembly-1.txt",
             "--tool",
             "fr3d",
-            "--no-image",
         ]
     )
     out, err = capfd.readouterr()
@@ -81,7 +79,6 @@ def test_eltetrado_without_dssr(capfd):
         [
             "--input",
             "tests/files/6fc9-assembly-1.cif.gz",
-            "--no-image",
         ]
     )
     out, err = capfd.readouterr()
