@@ -1441,9 +1441,7 @@ class Visualizer:
     def __post_init__(self):
         self.onz_dict = {}
 
-    def visualize(
-        self, prefix: str, suffix: str, output_dir: Optional[str] = None
-    ):
+    def visualize(self, prefix: str, suffix: str, output_dir: Optional[str] = None):
         fasta = tempfile.NamedTemporaryFile("w+", suffix=".fasta")
         fasta.write(f">{prefix}-{suffix}\n")
         fasta.write(self.analysis.sequence)
