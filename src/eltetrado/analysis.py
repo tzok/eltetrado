@@ -1096,11 +1096,9 @@ class Analysis:
             ti, tj = tp.tetrad1, tp.tetrad2
             if not helix_tetrads:
                 helix_tetrads.append(ti)
-            score = (
-                self.tetrad_scores[helix_tetrads[-1]][tj].sequential
-                + self.tetrad_scores[helix_tetrads[-1]][tj].stacking
-            )
-            if score >= 2:
+            score_seq = self.tetrad_scores[helix_tetrads[-1]][tj].sequential
+            score_stack = self.tetrad_scores[helix_tetrads[-1]][tj].stacking
+            if (score_seq > 0) or (score_stack > 0):
                 helix_tetrads.append(tj)
                 helix_tetrad_pairs.append(tp)
             else:
