@@ -29,11 +29,6 @@ def eltetrado_cli(args=sys.argv[1:]):
         "-m", "--model", help="(optional) model number to process", default=1, type=int
     )
     parser.add_argument(
-        "--strict",
-        action="store_true",
-        help="nucleotides in tetrad are found when linked only by cWH pairing",
-    )
-    parser.add_argument(
         "--no-reorder",
         action="store_true",
         help="chains of bi- and tetramolecular quadruplexes should be reordered to be able to have "
@@ -100,7 +95,6 @@ def eltetrado_cli(args=sys.argv[1:]):
     analysis = eltetrado(
         base_interactions,
         structure3d,
-        args.strict,
         args.no_reorder,
     )
     print(analysis)

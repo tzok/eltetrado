@@ -793,7 +793,6 @@ class Helix:
 class Analysis:
     base_interactions: BaseInteractions
     structure3d: Structure3D
-    strict: bool
     no_reorder: bool
     global_index: Dict[Residue3D, int] = field(init=False)
     mapping: Mapping2D3D = field(init=False)
