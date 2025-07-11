@@ -795,7 +795,6 @@ class Analysis:
     structure3d: Structure3D
     strict: bool
     no_reorder: bool
-    stacking_mismatch: int
     global_index: Dict[Residue3D, int] = field(init=False)
     mapping: Mapping2D3D = field(init=False)
     tetrads: List[Tetrad] = field(init=False)
@@ -1041,11 +1040,11 @@ class Analysis:
             )
 
         tetrads = list(self.tetrads)
-        best_score = [0, 0, 0]
+        best_score = [0, 0]
         best_order = tetrads
 
         for ti in tetrads:
-            score = [0, 0, 0]
+            score = [0, 0]
             order = [ti]
             candidates = set(self.tetrads) - {ti}
 
@@ -1053,12 +1052,8 @@ class Analysis:
                 tj = max(
                     candidates, key=lambda tk: next_tetrad_scoring(ti, tk, candidates)
                 )
-                score[0] += (
-                    self.tetrad_scores[ti][tj].sequential
-                    + self.tetrad_scores[ti][tj].stacking
-                )
-                score[1] += self.tetrad_scores[ti][tj].sequential
-                score[2] += self.tetrad_scores[ti][tj].stacking
+                score[0] += self.tetrad_scores[ti][tj].sequential
+                score[1] += self.tetrad_scores[ti][tj].stacking
                 order.append(tj)
                 candidates.remove(tj)
                 ti = tj
@@ -1066,10 +1061,6 @@ class Analysis:
             if score > best_score:
                 best_score = score
                 best_order = order
-
-            # break the loop if we have a perfect tetrad order
-            if best_score[0] == (len(self.tetrads) - 1) * 4:
-                break
 
         tetrad_pairs = []
 
@@ -1109,7 +1100,7 @@ class Analysis:
                 self.tetrad_scores[helix_tetrads[-1]][tj].sequential
                 + self.tetrad_scores[helix_tetrads[-1]][tj].stacking
             )
-            if score >= (4 - self.stacking_mismatch):
+            if score >= 2:
                 helix_tetrads.append(tj)
                 helix_tetrad_pairs.append(tp)
             else:
@@ -1593,10 +1584,9 @@ def eltetrado(
     structure3d: Structure3D,
     strict: bool,
     no_reorder: bool,
-    stacking_mismatch: int,
 ) -> Analysis:
     return Analysis(
-        base_interactions, structure3d, strict, no_reorder, stacking_mismatch
+        base_interactions, structure3d, strict, no_reorder
     )
 
 

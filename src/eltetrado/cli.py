@@ -29,14 +29,6 @@ def eltetrado_cli(args=sys.argv[1:]):
         "-m", "--model", help="(optional) model number to process", default=1, type=int
     )
     parser.add_argument(
-        "--stacking-mismatch",
-        help="a perfect tetrad stacking covers 4 nucleotides; this option can be used with value 1 or "
-        "2 to allow this number of nucleotides to be non-stacked with otherwise well aligned "
-        "tetrad [default=2]",
-        default=2,
-        type=int,
-    )
-    parser.add_argument(
         "--strict",
         action="store_true",
         help="nucleotides in tetrad are found when linked only by cWH pairing",
@@ -110,7 +102,6 @@ def eltetrado_cli(args=sys.argv[1:]):
         structure3d,
         args.strict,
         args.no_reorder,
-        args.stacking_mismatch,
     )
     print(analysis)
 
