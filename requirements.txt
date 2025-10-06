@@ -1,4 +1,4 @@
 mmcif==0.92.0
-numpy==2.2.4
+numpy==2.3.3
 orjson==3.11.3
 rnapolis==0.10.2
