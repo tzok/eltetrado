@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "eltetrado"
-version = "0.1.0"
+version = "1.7.2"
 description = "Find and classify tetrads and quadruplexes in DNA/RNA 3D structure"
 authors = ["Tomasz Żok <tomasz.zok@cs.put.poznan.pl>"]
 readme = "README.md"
@@ -25,14 +25,14 @@ scripts = { eltetrado = "eltetrado.cli:eltetrado_cli", has_tetrad = "eltetrado.c
 
 [tool.poetry.dependencies]
 python = "^3.8"
-mmcif = "^0.92.0"
-numpy = "^2.2.4"
-orjson = "^3.11.4"
-rnapolis = "^0.11.4"
+mmcif = "*"
+numpy = "*"
+orjson = "*"
+rnapolis = "*"
 
 [tool.poetry.group.dev.dependencies]
-ruff = "^0.14.5"
-pytest = "^8.4.2"
+ruff = "*"
+pytest = "*"
 
 [build-system]
 requires = ["poetry-core"]
