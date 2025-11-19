@@ -14,14 +14,12 @@ from rnapolis.annotator import BaseInteractions, LeontisWesthof
 from rnapolis.common import BasePair, Residue, Stacking
 from rnapolis.tertiary import Structure3D
 
+from eltetrado import __version__
 from eltetrado.analysis import Visualizer, eltetrado, has_tetrad
 from eltetrado.dto import generate_dto
 
 
 def eltetrado_cli(args=sys.argv[1:]):
-    with open(os.path.join(os.path.dirname(__file__), "VERSION")) as f:
-        version = f.read().strip()
-
     parser = argparse.ArgumentParser()
     parser.add_argument("-i", "--input", help="path to input PDB or PDBx/mmCIF file")
     parser.add_argument("-o", "--output", help="(optional) path for output JSON file")
@@ -61,7 +59,7 @@ def eltetrado_cli(args=sys.argv[1:]):
         help="name of the external tool that produced the files (auto-detected when not provided)",
     )
     parser.add_argument(
-        "-v", "--version", action="version", version="%(prog)s {}".format(version)
+        "-v", "--version", action="version", version="%(prog)s {}".format(__version__)
     )
     args = parser.parse_args(args)
 
@@ -146,9 +144,6 @@ def eltetrado_cli(args=sys.argv[1:]):
 
 
 def has_tetrad_cli(args=sys.argv[1:]):
-    with open(os.path.join(os.path.dirname(__file__), "VERSION")) as f:
-        version = f.read().strip()
-
     parser = argparse.ArgumentParser()
     parser.add_argument("-i", "--input", help="path to input PDB or PDBx/mmCIF file")
     parser.add_argument(
@@ -167,7 +162,7 @@ def has_tetrad_cli(args=sys.argv[1:]):
         help="name of the external tool that produced the files (auto-detected when not provided)",
     )
     parser.add_argument(
-        "--version", action="version", version="%(prog)s {}".format(version)
+        "--version", action="version", version="%(prog)s {}".format(__version__)
     )
     args = parser.parse_args(args)
 
