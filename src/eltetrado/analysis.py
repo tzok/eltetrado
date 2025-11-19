@@ -926,10 +926,10 @@ class Analysis:
                     graph[tj].append(ti)
 
             # remove tetrad which conflicts the most with others
-            # in case of a tie, remove one which has the worst planarity deviation
+            # in case of a tie, remove one which has the worst planarity deviation (highest rmsd)
             candidates = sorted(
                 tetrads,
-                key=lambda t: (len(graph[t]), t.planarity_deviation),
+                key=lambda t: (len(graph[t]), t.planarity_deviation["rmsd"]),
                 reverse=True,
             )
             if len(graph[candidates[0]]) > 0:
