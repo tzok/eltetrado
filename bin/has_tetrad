@@ -1,4 +1,4 @@
-#! /usr/bin/env python
-import eltetrado.cli
+#!/usr/bin/env python
+from eltetrado.cli import has_tetrad_cli
 
-eltetrado.cli.has_tetrad_cli()
+has_tetrad_cli()

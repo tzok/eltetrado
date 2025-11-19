@@ -1,6 +1,39 @@
-[build-system]
-requires = [
-    "setuptools",
-    "wheel"
+[tool.poetry]
+name = "eltetrado"
+version = "0.1.0"
+description = "Find and classify tetrads and quadruplexes in DNA/RNA 3D structure"
+authors = ["Tomasz Żok <tomasz.zok@cs.put.poznan.pl>"]
+readme = "README.md"
+license = "MIT"
+homepage = "https://github.com/tzok/eltetrado"
+repository = "https://github.com/tzok/eltetrado"
+documentation = "https://github.com/tzok/eltetrado"
+keywords = ["bioinformatics", "rna", "dna", "quadruplex", "tetrad"]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Environment :: Console",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Topic :: Scientific/Engineering :: Bio-Informatics",
 ]
-build-backend = "setuptools.build_meta"
+packages = [
+    { include = "eltetrado", from = "src" }
+]
+scripts = { eltetrado = "eltetrado.cli:eltetrado_cli", has_tetrad = "eltetrado.cli:has_tetrad_cli" }
+
+[tool.poetry.dependencies]
+python = "^3.8"
+mmcif = "^0.92.0"
+numpy = "^2.2.4"
+orjson = "^3.11.4"
+rnapolis = "^0.11.4"
+
+[tool.poetry.group.dev.dependencies]
+ruff = "^0.14.5"
+pytest = "^8.4.2"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
