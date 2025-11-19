@@ -73,6 +73,50 @@ def calculate_planarity_deviation(atom_coords: numpy.ndarray) -> Dict[str, float
     return {"rmsd": rmsd, "max": max_deviation, "avg": avg_deviation}
 
 
+def calculate_planarity_deviation(atom_coords: numpy.ndarray) -> Dict[str, float]:
+    """
+    Calculates the RMSD of atom coordinates from their best-fit plane.
+
+    Parameters:
+    atom_coords (numpy.ndarray): An N x 3 array of XYZ coordinates.
+
+    Returns:
+    dict: Dictionary with keys 'rmsd', 'max', 'avg' containing:
+        - 'rmsd': Root Mean Square Deviation from the plane
+        - 'max': Maximum absolute deviation from the plane
+        - 'avg': Average absolute deviation from the plane
+    """
+    # 1. Center the coordinates
+    # We calculate the centroid of the atoms
+    centroid = numpy.mean(atom_coords, axis=0)
+    # Subtract centroid to shift data to origin
+    centered_coords = atom_coords - centroid
+
+    # 2. Compute SVD (Singular Value Decomposition)
+    # U: Unitary arrays, S: Singular values (sorted desc), Vt: Transpose of V
+    # determining the principal axes of the point cloud
+    u, s, vt = numpy.linalg.svd(centered_coords)
+
+    # 3. Identify the Normal Vector
+    # The row of Vt corresponding to the smallest singular value
+    # represents the normal to the best-fit plane (the direction of least variance).
+    # Since numpy gives S in descending order, this is the last row.
+    normal_vector = vt[2, :]
+
+    # 4. Calculate Distances
+    # Project the centered coordinates onto the normal vector.
+    # The dot product gives the signed distance from the plane for each atom.
+    # d = (P - C) . n
+    distances = numpy.dot(centered_coords, normal_vector)
+
+    # 5. Compute RMSD (Root Mean Square Deviation)
+    rmsd = numpy.sqrt(numpy.mean(distances**2))
+    max_deviation = numpy.max(numpy.abs(distances))
+    avg_deviation = numpy.mean(numpy.abs(distances))
+
+    return {"rmsd": rmsd, "max": max_deviation, "avg": avg_deviation}
+
+
 @dataclass(order=True)
 class Tetrad:
     @staticmethod
