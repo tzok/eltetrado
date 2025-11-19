@@ -60,35 +60,45 @@ def calculate_planarity_deviation(atom_coords: numpy.ndarray) -> Dict[str, float
         - 'max': Maximum absolute deviation from the plane
         - 'avg': Average absolute deviation from the plane
     """
-    # 1. Center the coordinates
-    # We calculate the centroid of the atoms
-    centroid = numpy.mean(atom_coords, axis=0)
-    # Subtract centroid to shift data to origin
+    centroid, normal_vector = get_plane_vectors(atom_coords)
+
+    # Center the coordinates
     centered_coords = atom_coords - centroid
 
-    # 2. Compute SVD (Singular Value Decomposition)
-    # U: Unitary arrays, S: Singular values (sorted desc), Vt: Transpose of V
-    # determining the principal axes of the point cloud
-    u, s, vt = numpy.linalg.svd(centered_coords)
-
-    # 3. Identify the Normal Vector
-    # The row of Vt corresponding to the smallest singular value
-    # represents the normal to the best-fit plane (the direction of least variance).
-    # Since numpy gives S in descending order, this is the last row.
-    normal_vector = vt[2, :]
-
-    # 4. Calculate Distances
+    # Calculate Distances
     # Project the centered coordinates onto the normal vector.
     # The dot product gives the signed distance from the plane for each atom.
     # d = (P - C) . n
     distances = numpy.dot(centered_coords, normal_vector)
 
-    # 5. Compute RMSD (Root Mean Square Deviation)
+    # Compute RMSD (Root Mean Square Deviation)
     rmsd = numpy.sqrt(numpy.mean(distances**2))
     max_deviation = numpy.max(numpy.abs(distances))
     avg_deviation = numpy.mean(numpy.abs(distances))
 
     return {"rmsd": rmsd, "max": max_deviation, "avg": avg_deviation}
+
+
+def collect_nucleobase_atoms(nucleotides: Tuple[Residue3D, ...]) -> List[numpy.ndarray]:
+    """
+    Collect all heavy atoms from nucleobases of given nucleotides.
+
+    Parameters:
+    nucleotides (tuple): Tuple of Residue3D objects.
+
+    Returns:
+    list: List of coordinate arrays for all nucleobase heavy atoms.
+    """
+    coords = []
+    for nt in nucleotides:
+        heavy_atoms = Residue3D.nucleobase_heavy_atoms.get(
+            nt.one_letter_name.upper(), []
+        )
+        for atom_name in heavy_atoms:
+            atom = nt.find_atom(atom_name)
+            if atom is not None:
+                coords.append(atom.coordinates)
+    return coords
 
 
 def calculate_rise(coords_base_A: numpy.ndarray, coords_base_B: numpy.ndarray) -> float:
@@ -366,14 +376,7 @@ class Tetrad:
         return gba_classes[fingerprint]
 
     def __calculate_planarity_deviation(self) -> Dict[str, float]:
-        atom_coords = []
-        for nt in self.nucleotides:
-            heavy_atoms = Residue3D.nucleobase_heavy_atoms.get(
-                nt.one_letter_name.upper(), []
-            )
-            for atom_name in heavy_atoms:
-                atom = nt.find_atom(atom_name)
-                atom_coords.append(atom.coordinates)
+        atom_coords = collect_nucleobase_atoms(self.nucleotides)
         return calculate_planarity_deviation(numpy.array(atom_coords))
 
     @property
@@ -476,27 +479,8 @@ class TetradPair:
         return Direction.hybrid
 
     def __calculate_rise(self) -> float:
-        # Collect all nucleobase heavy atoms for tetrad 1
-        coords_base_A = []
-        for nt in self.tetrad1.nucleotides:
-            heavy_atoms = Residue3D.nucleobase_heavy_atoms.get(
-                nt.one_letter_name.upper(), []
-            )
-            for atom_name in heavy_atoms:
-                atom = nt.find_atom(atom_name)
-                if atom is not None:
-                    coords_base_A.append(atom.coordinates)
-
-        # Collect all nucleobase heavy atoms for tetrad 2
-        coords_base_B = []
-        for nt in self.tetrad2.nucleotides:
-            heavy_atoms = Residue3D.nucleobase_heavy_atoms.get(
-                nt.one_letter_name.upper(), []
-            )
-            for atom_name in heavy_atoms:
-                atom = nt.find_atom(atom_name)
-                if atom is not None:
-                    coords_base_B.append(atom.coordinates)
+        coords_base_A = collect_nucleobase_atoms(self.tetrad1.nucleotides)
+        coords_base_B = collect_nucleobase_atoms(self.tetrad2.nucleotides)
 
         if coords_base_A and coords_base_B:
             return calculate_rise(
