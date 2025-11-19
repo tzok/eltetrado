@@ -24,7 +24,7 @@ packages = [
 scripts = { eltetrado = "eltetrado.cli:eltetrado_cli", has_tetrad = "eltetrado.cli:has_tetrad_cli" }
 
 [tool.poetry.dependencies]
-python = "^3.8"
+python = "^3.12"
 mmcif = "*"
 numpy = "*"
 orjson = "*"
