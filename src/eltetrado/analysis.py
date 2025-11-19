@@ -29,6 +29,50 @@ from eltetrado.model import (
 logging.basicConfig(level=os.environ.get("LOGLEVEL", "INFO"))
 
 
+def calculate_planarity_deviation(atom_coords: numpy.ndarray) -> Dict[str, float]:
+    """
+    Calculates the RMSD of atom coordinates from their best-fit plane.
+
+    Parameters:
+    atom_coords (numpy.ndarray): An N x 3 array of XYZ coordinates.
+
+    Returns:
+    dict: Dictionary with keys 'rmsd', 'max', 'avg' containing:
+        - 'rmsd': Root Mean Square Deviation from the plane
+        - 'max': Maximum absolute deviation from the plane
+        - 'avg': Average absolute deviation from the plane
+    """
+    # 1. Center the coordinates
+    # We calculate the centroid of the atoms
+    centroid = numpy.mean(atom_coords, axis=0)
+    # Subtract centroid to shift data to origin
+    centered_coords = atom_coords - centroid
+
+    # 2. Compute SVD (Singular Value Decomposition)
+    # U: Unitary arrays, S: Singular values (sorted desc), Vt: Transpose of V
+    # determining the principal axes of the point cloud
+    u, s, vt = numpy.linalg.svd(centered_coords)
+
+    # 3. Identify the Normal Vector
+    # The row of Vt corresponding to the smallest singular value
+    # represents the normal to the best-fit plane (the direction of least variance).
+    # Since numpy gives S in descending order, this is the last row.
+    normal_vector = vt[2, :]
+
+    # 4. Calculate Distances
+    # Project the centered coordinates onto the normal vector.
+    # The dot product gives the signed distance from the plane for each atom.
+    # d = (P - C) . n
+    distances = numpy.dot(centered_coords, normal_vector)
+
+    # 5. Compute RMSD (Root Mean Square Deviation)
+    rmsd = numpy.sqrt(numpy.mean(distances**2))
+    max_deviation = numpy.max(numpy.abs(distances))
+    avg_deviation = numpy.mean(numpy.abs(distances))
+
+    return {"rmsd": rmsd, "max": max_deviation, "avg": avg_deviation}
+
+
 @dataclass(order=True)
 class Tetrad:
     @staticmethod
@@ -59,7 +103,7 @@ class Tetrad:
     global_index: Dict[Residue3D, int]
     onz: ONZ = field(init=False)
     gba_class: Optional[GbaTetradClassification] = field(init=False)
-    planarity_deviation: float = field(init=False)
+    planarity_deviation: Dict[str, float] = field(init=False)
     ions_channel: List[Atom] = field(default_factory=list)
     ions_outside: Dict[Residue3D, List[Atom]] = field(default_factory=dict)
 
@@ -265,10 +309,11 @@ class Tetrad:
             return None
         return gba_classes[fingerprint]
 
-    def __calculate_planarity_deviation(self) -> float:
+    def __calculate_planarity_deviation(self) -> Dict[str, float]:
         outer = [nt.outermost_atom for nt in self.nucleotides]
         inner = [nt.innermost_atom for nt in self.nucleotides]
-        return numpy.linalg.norm(center_of_mass(outer) - center_of_mass(inner)).item()
+        atom_coords = numpy.array([atom.coordinates for atom in outer + inner])
+        return calculate_planarity_deviation(atom_coords)
 
     @property
     def nucleotides(self) -> Tuple[Residue3D, Residue3D, Residue3D, Residue3D]:
@@ -286,7 +331,9 @@ class Tetrad:
             f"{self.nt1.full_name} {self.nt2.full_name} {self.nt3.full_name} {self.nt4.full_name} "
             f"{self.pair_12.lw.value} {self.pair_23.lw.value} {self.pair_34.lw.value} {self.pair_41.lw.value} "
             f"{self.onz.value} {self.gba_class.value if self.gba_class is not None else ''} "
-            f"planarity={round(self.planarity_deviation, 2)} "
+            f"planarity=rmsd:{round(self.planarity_deviation['rmsd'], 2)} "
+            f"max:{round(self.planarity_deviation['max'], 2)} "
+            f"avg:{round(self.planarity_deviation['avg'], 2)} "
             f"{self.__ions_channel_str()} "
             f"{self.__ions_outside_str()}\n"
         )
