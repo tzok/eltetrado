@@ -29,6 +29,24 @@ from eltetrado.model import (
 logging.basicConfig(level=os.environ.get("LOGLEVEL", "INFO"))
 
 
+def get_plane_vectors(coords: numpy.ndarray) -> Tuple[numpy.ndarray, numpy.ndarray]:
+    """
+    Helper function to get centroid and normal for a single set of coordinates.
+
+    Parameters:
+    coords (numpy.ndarray): An N x 3 array of XYZ coordinates.
+
+    Returns:
+    tuple: (centroid, normal_vector) where both are numpy arrays
+    """
+    centroid = numpy.mean(coords, axis=0)
+    centered = coords - centroid
+    u, s, vt = numpy.linalg.svd(centered)
+    # The normal is the last row of Vt (smallest variance)
+    normal = vt[2, :]
+    return centroid, normal
+
+
 def calculate_planarity_deviation(atom_coords: numpy.ndarray) -> Dict[str, float]:
     """
     Calculates the RMSD of atom coordinates from their best-fit plane.
@@ -73,48 +91,42 @@ def calculate_planarity_deviation(atom_coords: numpy.ndarray) -> Dict[str, float
     return {"rmsd": rmsd, "max": max_deviation, "avg": avg_deviation}
 
 
-def calculate_planarity_deviation(atom_coords: numpy.ndarray) -> Dict[str, float]:
+def calculate_rise(coords_base_A: numpy.ndarray, coords_base_B: numpy.ndarray) -> float:
     """
-    Calculates the RMSD of atom coordinates from their best-fit plane.
+    Calculates the vertical rise between two lists of coordinates.
 
     Parameters:
-    atom_coords (numpy.ndarray): An N x 3 array of XYZ coordinates.
+    coords_base_A (numpy.ndarray): An N x 3 array of XYZ coordinates for base A.
+    coords_base_B (numpy.ndarray): An M x 3 array of XYZ coordinates for base B.
 
     Returns:
-    dict: Dictionary with keys 'rmsd', 'max', 'avg' containing:
-        - 'rmsd': Root Mean Square Deviation from the plane
-        - 'max': Maximum absolute deviation from the plane
-        - 'avg': Average absolute deviation from the plane
+    float: The absolute rise distance between the two bases.
     """
-    # 1. Center the coordinates
-    # We calculate the centroid of the atoms
-    centroid = numpy.mean(atom_coords, axis=0)
-    # Subtract centroid to shift data to origin
-    centered_coords = atom_coords - centroid
+    # 1. Get Centroids and Normals for both bases
+    c_A, n_A = get_plane_vectors(coords_base_A)
+    c_B, n_B = get_plane_vectors(coords_base_B)
 
-    # 2. Compute SVD (Singular Value Decomposition)
-    # U: Unitary arrays, S: Singular values (sorted desc), Vt: Transpose of V
-    # determining the principal axes of the point cloud
-    u, s, vt = numpy.linalg.svd(centered_coords)
+    # 2. Align Normals
+    # If the bases are stacked, normals should point roughly the same way.
+    # If dot product is negative, they point in opposite directions.
+    if numpy.dot(n_A, n_B) < 0:
+        n_B = -n_B
 
-    # 3. Identify the Normal Vector
-    # The row of Vt corresponding to the smallest singular value
-    # represents the normal to the best-fit plane (the direction of least variance).
-    # Since numpy gives S in descending order, this is the last row.
-    normal_vector = vt[2, :]
+    # 3. Compute Average Normal
+    # This represents the "intermediate" director axis between the two bases
+    n_avg = n_A + n_B
+    n_avg = n_avg / numpy.linalg.norm(n_avg)  # Normalize to unit vector
 
-    # 4. Calculate Distances
-    # Project the centered coordinates onto the normal vector.
-    # The dot product gives the signed distance from the plane for each atom.
-    # d = (P - C) . n
-    distances = numpy.dot(centered_coords, normal_vector)
+    # 4. Compute Centroid-to-Centroid vector
+    vector_connect = c_B - c_A
 
-    # 5. Compute RMSD (Root Mean Square Deviation)
-    rmsd = numpy.sqrt(numpy.mean(distances**2))
-    max_deviation = numpy.max(numpy.abs(distances))
-    avg_deviation = numpy.mean(numpy.abs(distances))
+    # 5. Calculate Rise (Projection)
+    # The dot product projects the connecting vector onto the average normal axis
+    rise = numpy.dot(vector_connect, n_avg)
 
-    return {"rmsd": rmsd, "max": max_deviation, "avg": avg_deviation}
+    # We usually care about the absolute distance, though sign indicates
+    # if B is "above" or "below" A relative to the normal.
+    return abs(rise)
 
 
 @dataclass(order=True)
@@ -354,10 +366,15 @@ class Tetrad:
         return gba_classes[fingerprint]
 
     def __calculate_planarity_deviation(self) -> Dict[str, float]:
-        outer = [nt.outermost_atom for nt in self.nucleotides]
-        inner = [nt.innermost_atom for nt in self.nucleotides]
-        atom_coords = numpy.array([atom.coordinates for atom in outer + inner])
-        return calculate_planarity_deviation(atom_coords)
+        atom_coords = []
+        for nt in self.nucleotides:
+            heavy_atoms = Residue3D.nucleobase_heavy_atoms.get(
+                nt.one_letter_name.upper(), []
+            )
+            for atom_name in heavy_atoms:
+                atom = nt.find_atom(atom_name)
+                atom_coords.append(atom.coordinates)
+        return calculate_planarity_deviation(numpy.array(atom_coords))
 
     @property
     def nucleotides(self) -> Tuple[Residue3D, Residue3D, Residue3D, Residue3D]:
@@ -459,9 +476,33 @@ class TetradPair:
         return Direction.hybrid
 
     def __calculate_rise(self) -> float:
-        t1 = self.tetrad1.outer_and_inner_atoms()
-        t2 = self.tetrad2.outer_and_inner_atoms()
-        return numpy.linalg.norm(center_of_mass(t1) - center_of_mass(t2)).item()
+        # Collect all nucleobase heavy atoms for tetrad 1
+        coords_base_A = []
+        for nt in self.tetrad1.nucleotides:
+            heavy_atoms = Residue3D.nucleobase_heavy_atoms.get(
+                nt.one_letter_name.upper(), []
+            )
+            for atom_name in heavy_atoms:
+                atom = nt.find_atom(atom_name)
+                if atom is not None:
+                    coords_base_A.append(atom.coordinates)
+
+        # Collect all nucleobase heavy atoms for tetrad 2
+        coords_base_B = []
+        for nt in self.tetrad2.nucleotides:
+            heavy_atoms = Residue3D.nucleobase_heavy_atoms.get(
+                nt.one_letter_name.upper(), []
+            )
+            for atom_name in heavy_atoms:
+                atom = nt.find_atom(atom_name)
+                if atom is not None:
+                    coords_base_B.append(atom.coordinates)
+
+        if coords_base_A and coords_base_B:
+            return calculate_rise(
+                numpy.array(coords_base_A), numpy.array(coords_base_B)
+            )
+        return math.nan
 
     def __calculate_twist(self) -> float:
         nt1_1, nt1_2, _, _ = self.tetrad1.nucleotides
