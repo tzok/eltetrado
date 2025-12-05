@@ -7,6 +7,7 @@
   packages = [
     pkgs.graphviz
     pkgs.highs
+    pkgs.ruff
     pkgs.zlib
   ];
   enterShell = ''
