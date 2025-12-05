@@ -139,7 +139,9 @@ def calculate_rise(coords_base_A: numpy.ndarray, coords_base_B: numpy.ndarray) -
     return abs(rise)
 
 
-def get_signed_angle(v1: numpy.ndarray, v2: numpy.ndarray, normal: numpy.ndarray) -> float:
+def get_signed_angle(
+    v1: numpy.ndarray, v2: numpy.ndarray, normal: numpy.ndarray
+) -> float:
     """
     Calculates the signed angle (degrees) between v1 and v2,
     looking down the 'normal' axis.
