@@ -1,9 +1,9 @@
 Chain order: A
 n4-helix with 2 tetrads
   Oa* II 6b +(lll) quadruplex with 2 tetrads
-    A.DG1 A.DG6 A.DG22 A.DG27 cWH cWH cWH cWH O+ IIb planarity=0.04  
-      direction=antiparallel rise=3.52 twist=18.75
-    A.DG2 A.DG5 A.DG23 A.DG26 cHW cHW cHW cHW O- IIa planarity=0.07  
+    A.DG1 A.DG6 A.DG22 A.DG27 cWH cWH cWH cWH O+ IIb planarity=0.16  
+      direction=antiparallel rise=3.4 twist=28.57
+    A.DG2 A.DG5 A.DG23 A.DG26 cHW cHW cHW cHW O- IIa planarity=0.2  
 
     Tracts:
       A.DG1, A.DG2

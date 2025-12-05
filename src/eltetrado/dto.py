@@ -179,7 +179,7 @@ def convert_tetrads(quadruplex: Quadruplex) -> List[TetradDTO]:
             tetrad.nt4.full_name,
             tetrad.onz.value,
             tetrad.gba_class.value if tetrad.gba_class is not None else None,
-            float(tetrad.planarity_deviation),
+            float(tetrad.planarity_deviation["rmsd"]),
             ions_channel(tetrad),
             ions_outside(tetrad),
         )

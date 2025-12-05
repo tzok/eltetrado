@@ -1,13 +1,13 @@
 Chain order: A C B D E H F G
 n4-helix with 4 tetrads
   Op* VIII n/a quadruplex with 4 tetrads
-    A.BGM2 C.BGM2 B.BGM2 D.BGM2 cWH cWH cWH cWH O+ VIIIb planarity=0.34 ions_channel=K,K 
-      direction=parallel rise=3.57 twist=14.63
-    A.G3 C.G3 B.G3 D.G3 cHW cHW cHW cHW O- VIIIa planarity=0.68 ions_channel=K 
-      direction=parallel rise=3.38 twist=53.44
-    A.G5 C.G5 B.G5 D.G5 cHW cHW cHW cHW O- VIIIa planarity=0.75 ions_channel=K 
-      direction=parallel rise=3.46 twist=38.55
-    A.U6 C.U6 B.U6 D.U6 cWH cWH cWH cWH O+ VIIIa planarity=1.15  ions_outside=A.U6: [SR] C.U6: [K]
+    A.BGM2 C.BGM2 B.BGM2 D.BGM2 cWH cWH cWH cWH O+ VIIIb planarity=0.13 ions_channel=K,K 
+      direction=parallel rise=3.58 twist=25.9
+    A.G3 C.G3 B.G3 D.G3 cHW cHW cHW cHW O- VIIIa planarity=0.21 ions_channel=K 
+      direction=parallel rise=3.44 twist=53.57
+    A.G5 C.G5 B.G5 D.G5 cHW cHW cHW cHW O- VIIIa planarity=0.22 ions_channel=K 
+      direction=parallel rise=3.48 twist=-36.2
+    A.U6 C.U6 B.U6 D.U6 cWH cWH cWH cWH O+ VIIIa planarity=0.37  ions_outside=A.U6: [SR] C.U6: [K]
 
     Tracts:
       A.BGM2, A.G3, A.G5, A.U6
@@ -20,13 +20,13 @@ n4-helix with 4 tetrads
 
 n4-helix with 4 tetrads
   Op* VIII n/a quadruplex with 4 tetrads
-    E.BGM2 G.BGM2 F.BGM2 H.BGM2 cWH cWH cWH cWH O- VIIIb planarity=0.29 ions_channel=K,K 
-      direction=parallel rise=3.54 twist=13.64
-    E.G3 G.G3 F.G3 H.G3 cHW cHW cHW cHW O+ VIIIa planarity=0.67 ions_channel=K 
-      direction=parallel rise=3.39 twist=53.15
-    E.G5 G.G5 F.G5 H.G5 cHW cHW cHW cHW O+ VIIIa planarity=0.81 ions_channel=K 
-      direction=parallel rise=3.47 twist=39.69
-    E.U6 G.U6 F.U6 H.U6 cWH cWH cWH cWH O- VIIIa planarity=1.21  ions_outside=F.U6: [K] G.U6: [K]
+    E.BGM2 G.BGM2 F.BGM2 H.BGM2 cWH cWH cWH cWH O- VIIIb planarity=0.14 ions_channel=K,K 
+      direction=parallel rise=3.56 twist=26.2
+    E.G3 G.G3 F.G3 H.G3 cHW cHW cHW cHW O+ VIIIa planarity=0.22 ions_channel=K 
+      direction=parallel rise=3.45 twist=53.11
+    E.G5 G.G5 F.G5 H.G5 cHW cHW cHW cHW O+ VIIIa planarity=0.24 ions_channel=K 
+      direction=parallel rise=3.49 twist=-37.9
+    E.U6 G.U6 F.U6 H.U6 cWH cWH cWH cWH O- VIIIa planarity=0.41  ions_outside=F.U6: [K] G.U6: [K]
 
     Tracts:
       E.BGM2, E.G3, E.G5, E.U6
