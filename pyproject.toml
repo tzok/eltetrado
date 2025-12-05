@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "eltetrado"
-version = "1.7.2"
+version = "1.8.0"
 description = "Find and classify tetrads and quadruplexes in DNA/RNA 3D structure"
 authors = ["Tomasz Żok <tomasz.zok@cs.put.poznan.pl>"]
 readme = "README.md"
