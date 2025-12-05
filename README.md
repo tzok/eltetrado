@@ -7,19 +7,22 @@ structures to find and classify tetrads and quadruplexes. ElTetrado
 assigns tetrads to one of the ONZ classes (O, N, Z) alongside with the
 directionality of the tetrad (+/-) determined by the bonds between bases
 and their non-canonical interactions. The interactions follow
-Leontis/Westhof classification (Leontis _et al._ 2001). Watson-Crick (W)
+Leontis/Westhof classification (Leontis *et al.* 2001). Watson-Crick (W)
 edge of first base in the tetrad structure exposed to the Hoogsteen (H)
 edge of the next nucleobase from the same tetrad sets the tetrad
 directionality, clockwise (+) or anticlockwise (-). For more details,
-please refer to Zok _et al._ (2020) and Popenda _et al._ (2020)
+please refer to Zok *et al.* (2020) and Popenda *et al.* (2020)
 
 # Installation
 
-This project uses [Poetry](https://python-poetry.org/) for dependency management.
+This project uses [Poetry](https://python-poetry.org/) for dependency
+management.
 
-To install the project and its dependencies, run:
+To install the package, run:
 
-    poetry install
+``` bash
+poetry install
+```
 
 # Dependencies
 
@@ -29,7 +32,7 @@ The project is written in Python 3.12+ and requires
 [rnapolis](https://github.com/tzok/rnapolis-py).
 
 Visualization is created by `R` 3.6+ script which uses
-[R4RNA](https://www.e-rna.org/r-chie/) (Lai _et al._ 2012) library. The
+[R4RNA](https://www.e-rna.org/r-chie/) (Lai *et al.* 2012) library. The
 dependency will be automatically installed if not present.
 
 Base pairs and stacking interactions are identified by
@@ -54,16 +57,14 @@ it.
 
     usage: eltetrado [-h] [-i INPUT] [-o OUTPUT] [-m MODEL] [--no-reorder]
                      [--complete-2d] [--image DIR] [-e [EXTERNAL_FILES ...]]
-                     [--tool {fr3d,dssr,rnaview,bpnet,maxit}] [-v]
+                     [--tool {fr3d,dssr,rnaview,bpnet,maxit,barnaba,mc-annotate}]
+                     [-v]
 
     options:
       -h, --help            show this help message and exit
-      -i INPUT, --input INPUT
-                            path to input PDB or PDBx/mmCIF file
-      -o OUTPUT, --output OUTPUT
-                            (optional) path for output JSON file
-      -m MODEL, --model MODEL
-                            (optional) model number to process
+      -i, --input INPUT     path to input PDB or PDBx/mmCIF file
+      -o, --output OUTPUT   (optional) path for output JSON file
+      -m, --model MODEL     (optional) model number to process
       --no-reorder          chains of bi- and tetramolecular quadruplexes should
                             be reordered to be able to have them classified; when
                             this is set, chains will be processed in original
@@ -73,10 +74,10 @@ it.
                             base pairs to provide context for the quadruplex
       --image DIR           directory where visualization files (PDF) will be
                             saved; if omitted, no images are generated
-      -e [EXTERNAL_FILES ...], --external-files [EXTERNAL_FILES ...]
+      -e, --external-files [EXTERNAL_FILES ...]
                             path(s) to external tool output file(s); if omitted
                             ElTetrado will compute interactions itself
-      --tool {fr3d,dssr,rnaview,bpnet,maxit}
+      --tool {fr3d,dssr,rnaview,bpnet,maxit,barnaba,mc-annotate}
                             name of the external tool that produced the files
                             (auto-detected when not provided)
       -v, --version         show program's version number and exit
@@ -122,11 +123,11 @@ induced by 5’-3’ indexing. We select permutation with the minimum value.
     Chain order: 1
     n4-helix with 3 tetrads
       Oh* V 9a -(pll) quadruplex with 3 tetrads
-        1.DG4 1.DG22 1.DG18 1.DG10 cWH cWH cWH cWH O- Vb planarity=0.17
-          direction=hybrid rise=3.21 twist=16.23
-        1.DG5 1.DG23 1.DG17 1.DG11 cHW cHW cHW cHW O+ Va planarity=0.1
-          direction=hybrid rise=3.11 twist=27.45
-        1.DG6 1.DG24 1.DG16 1.DG12 cHW cHW cHW cHW O+ Va planarity=0.18
+        1.DG4 1.DG22 1.DG18 1.DG10 cWH cWH cWH cWH O- Vb planarity=0.06  
+          direction=hybrid rise=3.15 twist=28.48
+        1.DG5 1.DG23 1.DG17 1.DG11 cHW cHW cHW cHW O+ Va planarity=0.05  
+          direction=hybrid rise=3.08 twist=29.27
+        1.DG6 1.DG24 1.DG16 1.DG12 cHW cHW cHW cHW O+ Va planarity=0.05  
 
         Tracts:
           1.DG4, 1.DG5, 1.DG6
@@ -148,10 +149,9 @@ induced by 5’-3’ indexing. We select permutation with the minimum value.
 <summary>
 
 Click to see the output JSON
-
 </summary>
 
-```json
+``` json
 {
   "metals": [],
   "nucleotides": [
@@ -555,7 +555,7 @@ Click to see the output JSON
               "nt4": "1.DG10",
               "onz": "O-",
               "gbaClassification": "Vb",
-              "planarityDeviation": 0.17372283960377805,
+              "planarityDeviation": 0.06027201827666498,
               "ionsChannel": [],
               "ionsOutside": []
             },
@@ -567,7 +567,7 @@ Click to see the output JSON
               "nt4": "1.DG11",
               "onz": "O+",
               "gbaClassification": "Va",
-              "planarityDeviation": 0.10474313820007483,
+              "planarityDeviation": 0.05012803856522407,
               "ionsChannel": [],
               "ionsOutside": []
             },
@@ -579,7 +579,7 @@ Click to see the output JSON
               "nt4": "1.DG12",
               "onz": "O+",
               "gbaClassification": "Va",
-              "planarityDeviation": 0.18293509778060615,
+              "planarityDeviation": 0.05469205291187412,
               "ionsChannel": [],
               "ionsOutside": []
             }
@@ -589,26 +589,56 @@ Click to see the output JSON
             "classification": "9a",
             "loopProgression": "-(pll)"
           },
-          "gbaClassification": ["V"],
+          "gbaClassification": [
+            "V"
+          ],
           "tracts": [
-            ["1.DG4", "1.DG5", "1.DG6"],
-            ["1.DG22", "1.DG23", "1.DG24"],
-            ["1.DG18", "1.DG17", "1.DG16"],
-            ["1.DG10", "1.DG11", "1.DG12"]
+            [
+              "1.DG4",
+              "1.DG5",
+              "1.DG6"
+            ],
+            [
+              "1.DG22",
+              "1.DG23",
+              "1.DG24"
+            ],
+            [
+              "1.DG18",
+              "1.DG17",
+              "1.DG16"
+            ],
+            [
+              "1.DG10",
+              "1.DG11",
+              "1.DG12"
+            ]
           ],
           "bulges": [],
           "loops": [
             {
               "type": "propeller-",
-              "nucleotides": ["1.DT7", "1.DT8", "1.DA9"]
+              "nucleotides": [
+                "1.DT7",
+                "1.DT8",
+                "1.DA9"
+              ]
             },
             {
               "type": "lateral-",
-              "nucleotides": ["1.DT13", "1.DT14", "1.DA15"]
+              "nucleotides": [
+                "1.DT13",
+                "1.DT14",
+                "1.DA15"
+              ]
             },
             {
               "type": "lateral+",
-              "nucleotides": ["1.DT19", "1.DT20", "1.DA21"]
+              "nucleotides": [
+                "1.DT19",
+                "1.DT20",
+                "1.DA21"
+              ]
             }
           ]
         }
@@ -618,15 +648,15 @@ Click to see the output JSON
           "tetrad1": "1.DG4-1.DG22-1.DG18-1.DG10",
           "tetrad2": "1.DG5-1.DG23-1.DG17-1.DG11",
           "direction": "hybrid",
-          "rise": 3.2109650905140654,
-          "twist": 16.228973729066034
+          "rise": 3.150278534585139,
+          "twist": 28.481078816046786
         },
         {
           "tetrad1": "1.DG5-1.DG23-1.DG17-1.DG11",
           "tetrad2": "1.DG6-1.DG24-1.DG16-1.DG12",
           "direction": "hybrid",
-          "rise": 3.1149939255558747,
-          "twist": 27.448958336697046
+          "rise": 3.0769001101988023,
+          "twist": 29.26743815869744
         }
       ]
     }
@@ -657,15 +687,15 @@ Click to see the output JSON
     Chain order: A AB AA AC B BC BA BB
     n4-helix with 10 tetrads
       Op* VIII n/a quadruplex with 5 tetrads
-        A.U1006 AC.U1006 AA.U1006 AB.U1006 cWH cWH cWH cWH O- VIIIa planarity=1.06  ions_outside=A.U1006: [SR] AA.U1006: [SR] AB.U1006: [SR] AC.U1006: [SR]
-          direction=parallel rise=3.37 twist=39.96
-        A.G1005 AC.G1005 AA.G1005 AB.G1005 cHW cHW cHW cHW O+ VIIIa planarity=0.8
-          direction=parallel rise=3.31 twist=25.9
-        A.G1004 AC.G1004 AA.G1004 AB.G1004 cHW cHW cHW cHW O+ VIIIa planarity=0.41 ions_channel=SR
-          direction=parallel rise=3.34 twist=35.81
-        A.G1003 AC.G1003 AA.G1003 AB.G1003 cHW cHW cHW cHW O+ VIIIa planarity=0.55 ions_channel=SR
-          direction=parallel rise=3.29 twist=27.12
-        A.G1002 AC.G1002 AA.G1002 AB.G1002 cHW cHW cHW cHW O+ VIIIa planarity=0.54  ions_outside=AB.G1002: [CA] AC.G1002: [CA] AA.G1002: [CA] A.G1002: [CA]
+        A.U1006 AC.U1006 AA.U1006 AB.U1006 cWH cWH cWH cWH O- VIIIa planarity=0.34  ions_outside=A.U1006: [SR] AA.U1006: [SR] AB.U1006: [SR] AC.U1006: [SR]
+          direction=parallel rise=3.35 twist=-37.92
+        A.G1005 AC.G1005 AA.G1005 AB.G1005 cHW cHW cHW cHW O+ VIIIa planarity=0.23  
+          direction=parallel rise=3.41 twist=27.05
+        A.G1004 AC.G1004 AA.G1004 AB.G1004 cHW cHW cHW cHW O+ VIIIa planarity=0.11 ions_channel=SR 
+          direction=parallel rise=3.31 twist=35.0
+        A.G1003 AC.G1003 AA.G1003 AB.G1003 cHW cHW cHW cHW O+ VIIIa planarity=0.15 ions_channel=SR 
+          direction=parallel rise=3.33 twist=27.49
+        A.G1002 AC.G1002 AA.G1002 AB.G1002 cHW cHW cHW cHW O+ VIIIa planarity=0.16  ions_outside=AB.G1002: [CA] AC.G1002: [CA] AA.G1002: [CA] A.G1002: [CA]
 
         Tracts:
           A.U1006, A.G1005, A.G1004, A.G1003, A.G1002
@@ -674,15 +704,15 @@ Click to see the output JSON
           AB.U1006, AB.G1005, AB.G1004, AB.G1003, AB.G1002
 
       Op* VIII n/a quadruplex with 5 tetrads
-        B.G2002 BC.G2002 BA.G2002 BB.G2002 cWH cWH cWH cWH O+ VIIIa planarity=0.67
-          direction=parallel rise=3.37 twist=27.41
-        B.G2003 BC.G2003 BA.G2003 BB.G2003 cWH cWH cWH cWH O+ VIIIa planarity=0.58 ions_channel=SR ions_outside=B.G2003: [CA] BA.G2003: [CA] BB.G2003: [CA] BC.G2003: [CA]
-          direction=parallel rise=3.32 twist=35.04
-        B.G2004 BC.G2004 BA.G2004 BB.G2004 cWH cWH cWH cWH O+ VIIIa planarity=0.23 ions_channel=SR
-          direction=parallel rise=3.27 twist=25.15
-        B.G2005 BC.G2005 BA.G2005 BB.G2005 cWH cWH cWH cWH O+ VIIIa planarity=0.78
-          direction=parallel rise=7.14 twist=43.41
-        B.U2006 BC.U2006 BA.U2006 BB.U2006 cHW cHW cHW cHW O- VIIIa planarity=1.58 ions_channel=NA,NA
+        B.G2002 BC.G2002 BA.G2002 BB.G2002 cWH cWH cWH cWH O+ VIIIa planarity=0.19  
+          direction=parallel rise=3.4 twist=27.97
+        B.G2003 BC.G2003 BA.G2003 BB.G2003 cWH cWH cWH cWH O+ VIIIa planarity=0.16 ions_channel=SR ions_outside=B.G2003: [CA] BA.G2003: [CA] BB.G2003: [CA] BC.G2003: [CA]
+          direction=parallel rise=3.29 twist=33.99
+        B.G2004 BC.G2004 BA.G2004 BB.G2004 cWH cWH cWH cWH O+ VIIIa planarity=0.06 ions_channel=SR 
+          direction=parallel rise=3.35 twist=26.1
+        B.G2005 BC.G2005 BA.G2005 BB.G2005 cWH cWH cWH cWH O+ VIIIa planarity=0.22  
+          direction=parallel rise=6.89 twist=-40.98
+        B.U2006 BC.U2006 BA.U2006 BB.U2006 cHW cHW cHW cHW O- VIIIa planarity=0.5 ions_channel=NA,NA 
 
         Tracts:
           B.G2002, B.G2003, B.G2004, B.G2005, B.U2006
@@ -699,10 +729,9 @@ Click to see the output JSON
 <summary>
 
 Click to see the output JSON
-
 </summary>
 
-```json
+``` json
 {
   "metals": [
     {
@@ -1578,7 +1607,7 @@ Click to see the output JSON
               "nt4": "AB.U1006",
               "onz": "O-",
               "gbaClassification": "VIIIa",
-              "planarityDeviation": 1.061,
+              "planarityDeviation": 0.34191400600150934,
               "ionsChannel": [],
               "ionsOutside": [
                 {
@@ -1607,7 +1636,7 @@ Click to see the output JSON
               "nt4": "AB.G1005",
               "onz": "O+",
               "gbaClassification": "VIIIa",
-              "planarityDeviation": 0.7999999999999972,
+              "planarityDeviation": 0.22931709613221674,
               "ionsChannel": [],
               "ionsOutside": []
             },
@@ -1619,8 +1648,10 @@ Click to see the output JSON
               "nt4": "AB.G1004",
               "onz": "O+",
               "gbaClassification": "VIIIa",
-              "planarityDeviation": 0.4059999999999988,
-              "ionsChannel": ["Sr"],
+              "planarityDeviation": 0.11204500276508543,
+              "ionsChannel": [
+                "Sr"
+              ],
               "ionsOutside": []
             },
             {
@@ -1631,8 +1662,10 @@ Click to see the output JSON
               "nt4": "AB.G1003",
               "onz": "O+",
               "gbaClassification": "VIIIa",
-              "planarityDeviation": 0.5549999999999997,
-              "ionsChannel": ["Sr"],
+              "planarityDeviation": 0.14900890205810532,
+              "ionsChannel": [
+                "Sr"
+              ],
               "ionsOutside": []
             },
             {
@@ -1643,7 +1676,7 @@ Click to see the output JSON
               "nt4": "AB.G1002",
               "onz": "O+",
               "gbaClassification": "VIIIa",
-              "planarityDeviation": 0.541999999999998,
+              "planarityDeviation": 0.157182265102682,
               "ionsChannel": [],
               "ionsOutside": [
                 {
@@ -1667,12 +1700,38 @@ Click to see the output JSON
           ],
           "onzm": "Op*",
           "loopClassification": null,
-          "gbaClassification": ["VIII"],
+          "gbaClassification": [
+            "VIII"
+          ],
           "tracts": [
-            ["A.U1006", "A.G1005", "A.G1004", "A.G1003", "A.G1002"],
-            ["AC.U1006", "AC.G1005", "AC.G1004", "AC.G1003", "AC.G1002"],
-            ["AA.U1006", "AA.G1005", "AA.G1004", "AA.G1003", "AA.G1002"],
-            ["AB.U1006", "AB.G1005", "AB.G1004", "AB.G1003", "AB.G1002"]
+            [
+              "A.U1006",
+              "A.G1005",
+              "A.G1004",
+              "A.G1003",
+              "A.G1002"
+            ],
+            [
+              "AC.U1006",
+              "AC.G1005",
+              "AC.G1004",
+              "AC.G1003",
+              "AC.G1002"
+            ],
+            [
+              "AA.U1006",
+              "AA.G1005",
+              "AA.G1004",
+              "AA.G1003",
+              "AA.G1002"
+            ],
+            [
+              "AB.U1006",
+              "AB.G1005",
+              "AB.G1004",
+              "AB.G1003",
+              "AB.G1002"
+            ]
           ],
           "bulges": [],
           "loops": []
@@ -1687,7 +1746,7 @@ Click to see the output JSON
               "nt4": "BB.G2002",
               "onz": "O+",
               "gbaClassification": "VIIIa",
-              "planarityDeviation": 0.6730000000000018,
+              "planarityDeviation": 0.1941232461884563,
               "ionsChannel": [],
               "ionsOutside": []
             },
@@ -1699,8 +1758,10 @@ Click to see the output JSON
               "nt4": "BB.G2003",
               "onz": "O+",
               "gbaClassification": "VIIIa",
-              "planarityDeviation": 0.5769999999999982,
-              "ionsChannel": ["Sr"],
+              "planarityDeviation": 0.15566413303664228,
+              "ionsChannel": [
+                "Sr"
+              ],
               "ionsOutside": [
                 {
                   "nt": "B.G2003",
@@ -1728,8 +1789,10 @@ Click to see the output JSON
               "nt4": "BB.G2004",
               "onz": "O+",
               "gbaClassification": "VIIIa",
-              "planarityDeviation": 0.2289999999999992,
-              "ionsChannel": ["Sr"],
+              "planarityDeviation": 0.06292564154330361,
+              "ionsChannel": [
+                "Sr"
+              ],
               "ionsOutside": []
             },
             {
@@ -1740,7 +1803,7 @@ Click to see the output JSON
               "nt4": "BB.G2005",
               "onz": "O+",
               "gbaClassification": "VIIIa",
-              "planarityDeviation": 0.7810000000000006,
+              "planarityDeviation": 0.22228215261667064,
               "ionsChannel": [],
               "ionsOutside": []
             },
@@ -1752,19 +1815,48 @@ Click to see the output JSON
               "nt4": "BB.U2006",
               "onz": "O-",
               "gbaClassification": "VIIIa",
-              "planarityDeviation": 1.5840000000000005,
-              "ionsChannel": ["Na", "Na"],
+              "planarityDeviation": 0.5029635765888024,
+              "ionsChannel": [
+                "Na",
+                "Na"
+              ],
               "ionsOutside": []
             }
           ],
           "onzm": "Op*",
           "loopClassification": null,
-          "gbaClassification": ["VIII"],
+          "gbaClassification": [
+            "VIII"
+          ],
           "tracts": [
-            ["B.G2002", "B.G2003", "B.G2004", "B.G2005", "B.U2006"],
-            ["BC.G2002", "BC.G2003", "BC.G2004", "BC.G2005", "BC.U2006"],
-            ["BA.G2002", "BA.G2003", "BA.G2004", "BA.G2005", "BA.U2006"],
-            ["BB.G2002", "BB.G2003", "BB.G2004", "BB.G2005", "BB.U2006"]
+            [
+              "B.G2002",
+              "B.G2003",
+              "B.G2004",
+              "B.G2005",
+              "B.U2006"
+            ],
+            [
+              "BC.G2002",
+              "BC.G2003",
+              "BC.G2004",
+              "BC.G2005",
+              "BC.U2006"
+            ],
+            [
+              "BA.G2002",
+              "BA.G2003",
+              "BA.G2004",
+              "BA.G2005",
+              "BA.U2006"
+            ],
+            [
+              "BB.G2002",
+              "BB.G2003",
+              "BB.G2004",
+              "BB.G2005",
+              "BB.U2006"
+            ]
           ],
           "bulges": [],
           "loops": []
@@ -1775,64 +1867,64 @@ Click to see the output JSON
           "tetrad1": "A.U1006-AC.U1006-AA.U1006-AB.U1006",
           "tetrad2": "A.G1005-AC.G1005-AA.G1005-AB.G1005",
           "direction": "parallel",
-          "rise": 3.366499999999995,
-          "twist": 39.962531742191736
+          "rise": 3.3539318181818345,
+          "twist": -37.9220816533747
         },
         {
           "tetrad1": "A.G1005-AC.G1005-AA.G1005-AB.G1005",
           "tetrad2": "A.G1004-AC.G1004-AA.G1004-AB.G1004",
           "direction": "parallel",
-          "rise": 3.308000000000007,
-          "twist": 25.89614444631925
+          "rise": 3.412909090909082,
+          "twist": 27.046885537946945
         },
         {
           "tetrad1": "A.G1004-AC.G1004-AA.G1004-AB.G1004",
           "tetrad2": "A.G1003-AC.G1003-AA.G1003-AB.G1003",
           "direction": "parallel",
-          "rise": 3.339499999999994,
-          "twist": 35.81115298630443
+          "rise": 3.3061818181818126,
+          "twist": 34.99709346862177
         },
         {
           "tetrad1": "A.G1003-AC.G1003-AA.G1003-AB.G1003",
           "tetrad2": "A.G1002-AC.G1002-AA.G1002-AB.G1002",
           "direction": "parallel",
-          "rise": 3.2865,
-          "twist": 27.11515971986803
+          "rise": 3.3308181818181843,
+          "twist": 27.48554182421778
         },
         {
           "tetrad1": "A.G1002-AC.G1002-AA.G1002-AB.G1002",
           "tetrad2": "B.G2002-BC.G2002-BA.G2002-BB.G2002",
           "direction": "parallel",
-          "rise": 3.369500000000002,
-          "twist": 28.993180312675573
+          "rise": 3.349181818181819,
+          "twist": -18.629974333033623
         },
         {
           "tetrad1": "B.G2002-BC.G2002-BA.G2002-BB.G2002",
           "tetrad2": "B.G2003-BC.G2003-BA.G2003-BB.G2003",
           "direction": "parallel",
-          "rise": 3.371000000000002,
-          "twist": 27.410084968596852
+          "rise": 3.3993636363636277,
+          "twist": 27.970515314496566
         },
         {
           "tetrad1": "B.G2003-BC.G2003-BA.G2003-BB.G2003",
           "tetrad2": "B.G2004-BC.G2004-BA.G2004-BB.G2004",
           "direction": "parallel",
-          "rise": 3.318000000000005,
-          "twist": 35.04072146975963
+          "rise": 3.289363636363646,
+          "twist": 33.98648268341131
         },
         {
           "tetrad1": "B.G2004-BC.G2004-BA.G2004-BB.G2004",
           "tetrad2": "B.G2005-BC.G2005-BA.G2005-BB.G2005",
           "direction": "parallel",
-          "rise": 3.2689999999999966,
-          "twist": 25.149997949938147
+          "rise": 3.346909090909092,
+          "twist": 26.097046696319186
         },
         {
           "tetrad1": "B.G2005-BC.G2005-BA.G2005-BB.G2005",
           "tetrad2": "B.U2006-BC.U2006-BA.U2006-BB.U2006",
           "direction": "parallel",
-          "rise": 7.140499999999998,
-          "twist": 43.40609492262336
+          "rise": 6.888965909090907,
+          "twist": -40.976824341202736
         }
       ]
     }
@@ -1870,21 +1962,21 @@ intramural financing program.
 
 1.  Topology-Based Classification of Tetrads and Quadruplex
     Structures. M. Popenda, J. Miskiewicz, J. Sarzynska, T. Zok, M.
-    Szachniuk. _Bioinformatics_. 2020. 36(4):1129–1134.
+    Szachniuk. *Bioinformatics*. 2020. 36(4):1129–1134.
     doi:[10.1093/bioinformatics/btz738](https://doi.org/10.1093/bioinformatics/btz738)
 
 2.  ElTetrado: A Tool for Identification and Classification of Tetrads
-    and Quadruplexes. T. Zok, M. Popenda, M. Szachniuk. _BMC
-    Bioinformatics_. 2020. 21(1):40.
+    and Quadruplexes. T. Zok, M. Popenda, M. Szachniuk. *BMC
+    Bioinformatics*. 2020. 21(1):40.
     doi:[10.1186/s12859-020-3385-1](https://doi.org/10.1186/s12859-020-3385-1)
 
 3.  R-Chie : A Web Server and R Package for Visualizing RNA Secondary
-    Structures. D. Lai, J.R. Proctor, J.Y.A. Zhu, I.M. Meyer. _Nucleic
-    Acids Research_. 2012. 40(12):e95.
+    Structures. D. Lai, J.R. Proctor, J.Y.A. Zhu, I.M. Meyer. *Nucleic
+    Acids Research*. 2012. 40(12):e95.
     doi:[10/f99845](https://doi.org/10/f99845)
 
 4.  Geometric Nomenclature and Classification of RNA Base Pairs. N.B.
-    Leontis, E. Westhof. _RNA_. 2001. 7(4):499–512.
+    Leontis, E. Westhof. *RNA*. 2001. 7(4):499–512.
     doi:[10.1017/s1355838201002515](https://doi.org/10.1017/s1355838201002515)
 
 </div>
