@@ -7,32 +7,29 @@ structures to find and classify tetrads and quadruplexes. ElTetrado
 assigns tetrads to one of the ONZ classes (O, N, Z) alongside with the
 directionality of the tetrad (+/-) determined by the bonds between bases
 and their non-canonical interactions. The interactions follow
-Leontis/Westhof classification (Leontis *et al.* 2001). Watson-Crick (W)
+Leontis/Westhof classification (Leontis _et al._ 2001). Watson-Crick (W)
 edge of first base in the tetrad structure exposed to the Hoogsteen (H)
 edge of the next nucleobase from the same tetrad sets the tetrad
 directionality, clockwise (+) or anticlockwise (-). For more details,
-please refer to Zok *et al.* (2020) and Popenda *et al.* (2020)
+please refer to Zok _et al._ (2020) and Popenda _et al._ (2020)
 
 # Installation
 
-Please run:
+This project uses [Poetry](https://python-poetry.org/) for dependency management.
 
-    pip install eltetrado
+To install the project and its dependencies, run:
 
-If you have both Python 2 and Python 3 installed, you need to explicitly
-call `pip3`:
-
-    pip3 install eltetrado
+    poetry install
 
 # Dependencies
 
-The project is written in Python 3.6+ and requires
+The project is written in Python 3.12+ and requires
 [mmcif](https://pypi.org/project/mmcif/),
 [orjson](https://github.com/ijl/orjson), [NumPy](https://numpy.org/) and
-[requests](https://docs.python-requests.org/en/latest/).
+[rnapolis](https://github.com/tzok/rnapolis-py).
 
 Visualization is created by `R` 3.6+ script which uses
-[R4RNA](https://www.e-rna.org/r-chie/) (Lai *et al.* 2012) library. The
+[R4RNA](https://www.e-rna.org/r-chie/) (Lai _et al._ 2012) library. The
 dependency will be automatically installed if not present.
 
 Base pairs and stacking interactions are identified by
@@ -125,11 +122,11 @@ induced by 5’-3’ indexing. We select permutation with the minimum value.
     Chain order: 1
     n4-helix with 3 tetrads
       Oh* V 9a -(pll) quadruplex with 3 tetrads
-        1.DG4 1.DG22 1.DG18 1.DG10 cWH cWH cWH cWH O- Vb planarity=0.17  
+        1.DG4 1.DG22 1.DG18 1.DG10 cWH cWH cWH cWH O- Vb planarity=0.17
           direction=hybrid rise=3.21 twist=16.23
-        1.DG5 1.DG23 1.DG17 1.DG11 cHW cHW cHW cHW O+ Va planarity=0.1  
+        1.DG5 1.DG23 1.DG17 1.DG11 cHW cHW cHW cHW O+ Va planarity=0.1
           direction=hybrid rise=3.11 twist=27.45
-        1.DG6 1.DG24 1.DG16 1.DG12 cHW cHW cHW cHW O+ Va planarity=0.18  
+        1.DG6 1.DG24 1.DG16 1.DG12 cHW cHW cHW cHW O+ Va planarity=0.18
 
         Tracts:
           1.DG4, 1.DG5, 1.DG6
@@ -151,9 +148,10 @@ induced by 5’-3’ indexing. We select permutation with the minimum value.
 <summary>
 
 Click to see the output JSON
+
 </summary>
 
-``` json
+```json
 {
   "metals": [],
   "nucleotides": [
@@ -591,56 +589,26 @@ Click to see the output JSON
             "classification": "9a",
             "loopProgression": "-(pll)"
           },
-          "gbaClassification": [
-            "V"
-          ],
+          "gbaClassification": ["V"],
           "tracts": [
-            [
-              "1.DG4",
-              "1.DG5",
-              "1.DG6"
-            ],
-            [
-              "1.DG22",
-              "1.DG23",
-              "1.DG24"
-            ],
-            [
-              "1.DG18",
-              "1.DG17",
-              "1.DG16"
-            ],
-            [
-              "1.DG10",
-              "1.DG11",
-              "1.DG12"
-            ]
+            ["1.DG4", "1.DG5", "1.DG6"],
+            ["1.DG22", "1.DG23", "1.DG24"],
+            ["1.DG18", "1.DG17", "1.DG16"],
+            ["1.DG10", "1.DG11", "1.DG12"]
           ],
           "bulges": [],
           "loops": [
             {
               "type": "propeller-",
-              "nucleotides": [
-                "1.DT7",
-                "1.DT8",
-                "1.DA9"
-              ]
+              "nucleotides": ["1.DT7", "1.DT8", "1.DA9"]
             },
             {
               "type": "lateral-",
-              "nucleotides": [
-                "1.DT13",
-                "1.DT14",
-                "1.DA15"
-              ]
+              "nucleotides": ["1.DT13", "1.DT14", "1.DA15"]
             },
             {
               "type": "lateral+",
-              "nucleotides": [
-                "1.DT19",
-                "1.DT20",
-                "1.DA21"
-              ]
+              "nucleotides": ["1.DT19", "1.DT20", "1.DA21"]
             }
           ]
         }
@@ -691,11 +659,11 @@ Click to see the output JSON
       Op* VIII n/a quadruplex with 5 tetrads
         A.U1006 AC.U1006 AA.U1006 AB.U1006 cWH cWH cWH cWH O- VIIIa planarity=1.06  ions_outside=A.U1006: [SR] AA.U1006: [SR] AB.U1006: [SR] AC.U1006: [SR]
           direction=parallel rise=3.37 twist=39.96
-        A.G1005 AC.G1005 AA.G1005 AB.G1005 cHW cHW cHW cHW O+ VIIIa planarity=0.8  
+        A.G1005 AC.G1005 AA.G1005 AB.G1005 cHW cHW cHW cHW O+ VIIIa planarity=0.8
           direction=parallel rise=3.31 twist=25.9
-        A.G1004 AC.G1004 AA.G1004 AB.G1004 cHW cHW cHW cHW O+ VIIIa planarity=0.41 ions_channel=SR 
+        A.G1004 AC.G1004 AA.G1004 AB.G1004 cHW cHW cHW cHW O+ VIIIa planarity=0.41 ions_channel=SR
           direction=parallel rise=3.34 twist=35.81
-        A.G1003 AC.G1003 AA.G1003 AB.G1003 cHW cHW cHW cHW O+ VIIIa planarity=0.55 ions_channel=SR 
+        A.G1003 AC.G1003 AA.G1003 AB.G1003 cHW cHW cHW cHW O+ VIIIa planarity=0.55 ions_channel=SR
           direction=parallel rise=3.29 twist=27.12
         A.G1002 AC.G1002 AA.G1002 AB.G1002 cHW cHW cHW cHW O+ VIIIa planarity=0.54  ions_outside=AB.G1002: [CA] AC.G1002: [CA] AA.G1002: [CA] A.G1002: [CA]
 
@@ -706,15 +674,15 @@ Click to see the output JSON
           AB.U1006, AB.G1005, AB.G1004, AB.G1003, AB.G1002
 
       Op* VIII n/a quadruplex with 5 tetrads
-        B.G2002 BC.G2002 BA.G2002 BB.G2002 cWH cWH cWH cWH O+ VIIIa planarity=0.67  
+        B.G2002 BC.G2002 BA.G2002 BB.G2002 cWH cWH cWH cWH O+ VIIIa planarity=0.67
           direction=parallel rise=3.37 twist=27.41
         B.G2003 BC.G2003 BA.G2003 BB.G2003 cWH cWH cWH cWH O+ VIIIa planarity=0.58 ions_channel=SR ions_outside=B.G2003: [CA] BA.G2003: [CA] BB.G2003: [CA] BC.G2003: [CA]
           direction=parallel rise=3.32 twist=35.04
-        B.G2004 BC.G2004 BA.G2004 BB.G2004 cWH cWH cWH cWH O+ VIIIa planarity=0.23 ions_channel=SR 
+        B.G2004 BC.G2004 BA.G2004 BB.G2004 cWH cWH cWH cWH O+ VIIIa planarity=0.23 ions_channel=SR
           direction=parallel rise=3.27 twist=25.15
-        B.G2005 BC.G2005 BA.G2005 BB.G2005 cWH cWH cWH cWH O+ VIIIa planarity=0.78  
+        B.G2005 BC.G2005 BA.G2005 BB.G2005 cWH cWH cWH cWH O+ VIIIa planarity=0.78
           direction=parallel rise=7.14 twist=43.41
-        B.U2006 BC.U2006 BA.U2006 BB.U2006 cHW cHW cHW cHW O- VIIIa planarity=1.58 ions_channel=NA,NA 
+        B.U2006 BC.U2006 BA.U2006 BB.U2006 cHW cHW cHW cHW O- VIIIa planarity=1.58 ions_channel=NA,NA
 
         Tracts:
           B.G2002, B.G2003, B.G2004, B.G2005, B.U2006
@@ -731,9 +699,10 @@ Click to see the output JSON
 <summary>
 
 Click to see the output JSON
+
 </summary>
 
-``` json
+```json
 {
   "metals": [
     {
@@ -1651,9 +1620,7 @@ Click to see the output JSON
               "onz": "O+",
               "gbaClassification": "VIIIa",
               "planarityDeviation": 0.4059999999999988,
-              "ionsChannel": [
-                "Sr"
-              ],
+              "ionsChannel": ["Sr"],
               "ionsOutside": []
             },
             {
@@ -1665,9 +1632,7 @@ Click to see the output JSON
               "onz": "O+",
               "gbaClassification": "VIIIa",
               "planarityDeviation": 0.5549999999999997,
-              "ionsChannel": [
-                "Sr"
-              ],
+              "ionsChannel": ["Sr"],
               "ionsOutside": []
             },
             {
@@ -1702,38 +1667,12 @@ Click to see the output JSON
           ],
           "onzm": "Op*",
           "loopClassification": null,
-          "gbaClassification": [
-            "VIII"
-          ],
+          "gbaClassification": ["VIII"],
           "tracts": [
-            [
-              "A.U1006",
-              "A.G1005",
-              "A.G1004",
-              "A.G1003",
-              "A.G1002"
-            ],
-            [
-              "AC.U1006",
-              "AC.G1005",
-              "AC.G1004",
-              "AC.G1003",
-              "AC.G1002"
-            ],
-            [
-              "AA.U1006",
-              "AA.G1005",
-              "AA.G1004",
-              "AA.G1003",
-              "AA.G1002"
-            ],
-            [
-              "AB.U1006",
-              "AB.G1005",
-              "AB.G1004",
-              "AB.G1003",
-              "AB.G1002"
-            ]
+            ["A.U1006", "A.G1005", "A.G1004", "A.G1003", "A.G1002"],
+            ["AC.U1006", "AC.G1005", "AC.G1004", "AC.G1003", "AC.G1002"],
+            ["AA.U1006", "AA.G1005", "AA.G1004", "AA.G1003", "AA.G1002"],
+            ["AB.U1006", "AB.G1005", "AB.G1004", "AB.G1003", "AB.G1002"]
           ],
           "bulges": [],
           "loops": []
@@ -1761,9 +1700,7 @@ Click to see the output JSON
               "onz": "O+",
               "gbaClassification": "VIIIa",
               "planarityDeviation": 0.5769999999999982,
-              "ionsChannel": [
-                "Sr"
-              ],
+              "ionsChannel": ["Sr"],
               "ionsOutside": [
                 {
                   "nt": "B.G2003",
@@ -1792,9 +1729,7 @@ Click to see the output JSON
               "onz": "O+",
               "gbaClassification": "VIIIa",
               "planarityDeviation": 0.2289999999999992,
-              "ionsChannel": [
-                "Sr"
-              ],
+              "ionsChannel": ["Sr"],
               "ionsOutside": []
             },
             {
@@ -1818,47 +1753,18 @@ Click to see the output JSON
               "onz": "O-",
               "gbaClassification": "VIIIa",
               "planarityDeviation": 1.5840000000000005,
-              "ionsChannel": [
-                "Na",
-                "Na"
-              ],
+              "ionsChannel": ["Na", "Na"],
               "ionsOutside": []
             }
           ],
           "onzm": "Op*",
           "loopClassification": null,
-          "gbaClassification": [
-            "VIII"
-          ],
+          "gbaClassification": ["VIII"],
           "tracts": [
-            [
-              "B.G2002",
-              "B.G2003",
-              "B.G2004",
-              "B.G2005",
-              "B.U2006"
-            ],
-            [
-              "BC.G2002",
-              "BC.G2003",
-              "BC.G2004",
-              "BC.G2005",
-              "BC.U2006"
-            ],
-            [
-              "BA.G2002",
-              "BA.G2003",
-              "BA.G2004",
-              "BA.G2005",
-              "BA.U2006"
-            ],
-            [
-              "BB.G2002",
-              "BB.G2003",
-              "BB.G2004",
-              "BB.G2005",
-              "BB.U2006"
-            ]
+            ["B.G2002", "B.G2003", "B.G2004", "B.G2005", "B.U2006"],
+            ["BC.G2002", "BC.G2003", "BC.G2004", "BC.G2005", "BC.U2006"],
+            ["BA.G2002", "BA.G2003", "BA.G2004", "BA.G2005", "BA.U2006"],
+            ["BB.G2002", "BB.G2003", "BB.G2004", "BB.G2005", "BB.U2006"]
           ],
           "bulges": [],
           "loops": []
@@ -1964,21 +1870,21 @@ intramural financing program.
 
 1.  Topology-Based Classification of Tetrads and Quadruplex
     Structures. M. Popenda, J. Miskiewicz, J. Sarzynska, T. Zok, M.
-    Szachniuk. *Bioinformatics*. 2020. 36(4):1129–1134.
+    Szachniuk. _Bioinformatics_. 2020. 36(4):1129–1134.
     doi:[10.1093/bioinformatics/btz738](https://doi.org/10.1093/bioinformatics/btz738)
 
 2.  ElTetrado: A Tool for Identification and Classification of Tetrads
-    and Quadruplexes. T. Zok, M. Popenda, M. Szachniuk. *BMC
-    Bioinformatics*. 2020. 21(1):40.
+    and Quadruplexes. T. Zok, M. Popenda, M. Szachniuk. _BMC
+    Bioinformatics_. 2020. 21(1):40.
     doi:[10.1186/s12859-020-3385-1](https://doi.org/10.1186/s12859-020-3385-1)
 
 3.  R-Chie : A Web Server and R Package for Visualizing RNA Secondary
-    Structures. D. Lai, J.R. Proctor, J.Y.A. Zhu, I.M. Meyer. *Nucleic
-    Acids Research*. 2012. 40(12):e95.
+    Structures. D. Lai, J.R. Proctor, J.Y.A. Zhu, I.M. Meyer. _Nucleic
+    Acids Research_. 2012. 40(12):e95.
     doi:[10/f99845](https://doi.org/10/f99845)
 
 4.  Geometric Nomenclature and Classification of RNA Base Pairs. N.B.
-    Leontis, E. Westhof. *RNA*. 2001. 7(4):499–512.
+    Leontis, E. Westhof. _RNA_. 2001. 7(4):499–512.
     doi:[10.1017/s1355838201002515](https://doi.org/10.1017/s1355838201002515)
 
 </div>
