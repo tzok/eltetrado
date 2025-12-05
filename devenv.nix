@@ -4,11 +4,12 @@
     enable = true;
     poetry.enable = true;
   };
-  packages = [
-    pkgs.graphviz
-    pkgs.highs
-    pkgs.ruff
-    pkgs.zlib
+  packages = with pkgs; [
+    graphviz
+    highs
+    pandoc-include
+    ruff
+    zlib
   ];
   enterShell = ''
     export PYTHONPATH=src/

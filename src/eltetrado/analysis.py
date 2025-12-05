@@ -492,9 +492,7 @@ class Tetrad:
             f"{self.nt1.full_name} {self.nt2.full_name} {self.nt3.full_name} {self.nt4.full_name} "
             f"{self.pair_12.lw.value} {self.pair_23.lw.value} {self.pair_34.lw.value} {self.pair_41.lw.value} "
             f"{self.onz.value} {self.gba_class.value if self.gba_class is not None else ''} "
-            f"planarity=rmsd:{round(self.planarity_deviation['rmsd'], 2)} "
-            f"max:{round(self.planarity_deviation['max'], 2)} "
-            f"avg:{round(self.planarity_deviation['avg'], 2)} "
+            f"planarity={round(self.planarity_deviation['rmsd'], 2)} "
             f"{self.__ions_channel_str()} "
             f"{self.__ions_outside_str()}\n"
         )

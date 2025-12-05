@@ -45,13 +45,6 @@ class IonOutsideDTO:
 
 
 @dataclass
-class PlanarityDeviationDTO:
-    rmsd: float
-    max: float
-    avg: float
-
-
-@dataclass
 class TetradDTO:
     id: str
     nt1: str
@@ -60,7 +53,7 @@ class TetradDTO:
     nt4: str
     onz: str
     gbaClassification: Optional[str]
-    planarityDeviation: PlanarityDeviationDTO
+    planarityDeviation: float
     ionsChannel: List[str]
     ionsOutside: List[IonOutsideDTO]
 
@@ -186,11 +179,7 @@ def convert_tetrads(quadruplex: Quadruplex) -> List[TetradDTO]:
             tetrad.nt4.full_name,
             tetrad.onz.value,
             tetrad.gba_class.value if tetrad.gba_class is not None else None,
-            PlanarityDeviationDTO(
-                float(tetrad.planarity_deviation["rmsd"]),
-                float(tetrad.planarity_deviation["max"]),
-                float(tetrad.planarity_deviation["avg"]),
-            ),
+            float(tetrad.planarity_deviation["rmsd"]),
             ions_channel(tetrad),
             ions_outside(tetrad),
         )
