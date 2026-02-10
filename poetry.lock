@@ -800,14 +800,14 @@ use-chardet-on-py3 = ["chardet (>=3.0.2,<6)"]
 
 [[package]]
 name = "rnapolis"
-version = "0.14.0"
+version = "0.14.2"
 description = "A Python library containing RNA-related bioinformatics functions and classes"
 optional = false
 python-versions = "<4.0,>=3.12"
 groups = ["main"]
 files = [
-    {file = "rnapolis-0.14.0-py3-none-any.whl", hash = "sha256:6b70d66917dbdbc5539571dfa86f2b487fd9d4615b799d6351ca8243030912dd"},
-    {file = "rnapolis-0.14.0.tar.gz", hash = "sha256:b9626c00a5996b9ae76dadb4b9a2015e471f7680b6752d296b748cd3098165ff"},
+    {file = "rnapolis-0.14.2-py3-none-any.whl", hash = "sha256:8e5bcd37178490ff13c0d967665c8d753af6775e3e598511fda4c0a64949a266"},
+    {file = "rnapolis-0.14.2.tar.gz", hash = "sha256:e3fe704cc824cf30f990b8144ed5504f4a64518ae00648769373ee78da70227e"},
 ]
 
 [package.dependencies]
