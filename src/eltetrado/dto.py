@@ -159,8 +159,8 @@ def convert_base_pairs(analysis: Analysis) -> List[BasePairDTO]:
 
 
 def convert_tetrads(quadruplex: Quadruplex) -> List[TetradDTO]:
-    id_ = (
-        lambda tetrad: f"{tetrad.nt1.full_name}-{tetrad.nt2.full_name}-{tetrad.nt3.full_name}-{tetrad.nt4.full_name}"
+    id_ = lambda tetrad: (
+        f"{tetrad.nt1.full_name}-{tetrad.nt2.full_name}-{tetrad.nt3.full_name}-{tetrad.nt4.full_name}"
     )
     ions_channel = lambda tetrad: [
         Ion[atom.name.title()].value for atom in tetrad.ions_channel
@@ -188,8 +188,8 @@ def convert_tetrads(quadruplex: Quadruplex) -> List[TetradDTO]:
 
 
 def convert_tetrad_pairs(tetrad_pairs: List[TetradPair]) -> List[TetradPairDTO]:
-    id_ = (
-        lambda tetrad: f"{tetrad.nt1.full_name}-{tetrad.nt2.full_name}-{tetrad.nt3.full_name}-{tetrad.nt4.full_name}"
+    id_ = lambda tetrad: (
+        f"{tetrad.nt1.full_name}-{tetrad.nt2.full_name}-{tetrad.nt3.full_name}-{tetrad.nt4.full_name}"
     )
     return [
         TetradPairDTO(
