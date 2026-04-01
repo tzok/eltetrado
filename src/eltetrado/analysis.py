@@ -763,10 +763,12 @@ class Quadruplex:
                 else:
                     nts = list(
                         filter(
-                            lambda nt: nt.is_nucleotide
-                            and self.global_index[nprev]
-                            < self.global_index[nt]
-                            < self.global_index[ncur],
+                            lambda nt: (
+                                nt.is_nucleotide
+                                and self.global_index[nprev]
+                                < self.global_index[nt]
+                                < self.global_index[ncur]
+                            ),
                             self.structure3d.residues,
                         )
                     )
