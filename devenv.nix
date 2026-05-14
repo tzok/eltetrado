@@ -2,7 +2,13 @@
 {
   languages.python = {
     enable = true;
-    poetry.enable = true;
+    uv = {
+      enable = true;
+      sync = {
+        enable = true;
+        arguments = [ "--locked" ];
+      };
+    };
   };
   packages = with pkgs; [
     graphviz

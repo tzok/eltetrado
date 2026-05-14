@@ -15,13 +15,13 @@ please refer to Zok *et al.* (2020) and Popenda *et al.* (2020)
 
 # Installation
 
-This project uses [Poetry](https://python-poetry.org/) for dependency
+This project uses [uv](https://docs.astral.sh/uv/) for dependency
 management.
 
 To install the package, run:
 
 ``` bash
-poetry install
+uv sync --locked
 ```
 
 # Dependencies
@@ -118,7 +118,7 @@ induced by 5’-3’ indexing. We select permutation with the minimum value.
 ![](2hy9.png)
 
     $ curl ftp://ftp.wwpdb.org/pub/pdb/data/structures/divided/mmCIF/my/2hy9.cif.gz | gzip -d > 2hy9.cif
-    $ ./eltetrado --input 2hy9.cif --output 2hy9.json
+    $ uv run --locked eltetrado --input 2hy9.cif --output 2hy9.json
 
     Chain order: 1
     n4-helix with 3 tetrads
@@ -682,7 +682,7 @@ Click to see the output JSON
 ![](4rj1.png)
 
     $ curl https://www.ebi.ac.uk/pdbe/static/entry/download/4rj1-assembly-1.cif.gz | gzip -d > 4rj1-1.cif
-    $ ./eltetrado --input 4rj1-1.cif --output 4rj1-1.json
+    $ uv run --locked eltetrado --input 4rj1-1.cif --output 4rj1-1.json
 
     Chain order: A AB AA AC B BC BA BB
     n4-helix with 10 tetrads
