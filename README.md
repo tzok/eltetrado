@@ -57,7 +57,7 @@ it.
 
     usage: eltetrado [-h] [-i INPUT] [-o OUTPUT] [-m MODEL] [--no-reorder]
                      [--complete-2d] [--image DIR] [-e [EXTERNAL_FILES ...]]
-                     [--tool {fr3d,dssr,rnaview,bpnet,maxit,barnaba,mc-annotate}]
+                     [--tool {fr3d,dssr,rnaview,bpnet,maxit,barnaba,mc-annotate,dnatco}]
                      [-v]
 
     options:
@@ -77,7 +77,7 @@ it.
       -e, --external-files [EXTERNAL_FILES ...]
                             path(s) to external tool output file(s); if omitted
                             ElTetrado will compute interactions itself
-      --tool {fr3d,dssr,rnaview,bpnet,maxit,barnaba,mc-annotate}
+      --tool {fr3d,dssr,rnaview,bpnet,maxit,barnaba,mc-annotate,dnatco}
                             name of the external tool that produced the files
                             (auto-detected when not provided)
       -v, --version         show program's version number and exit
@@ -123,6 +123,8 @@ induced by 5’-3’ indexing. We select permutation with the minimum value.
     Chain order: 1
     n4-helix with 3 tetrads
       Oh* V 9a -(pll) quadruplex with 3 tetrads
+        Handedness: right
+        Tetrad polarities: clockwise, anticlockwise, anticlockwise
         1.DG4 1.DG22 1.DG18 1.DG10 cWH cWH cWH cWH O- Vb planarity=0.06  
           direction=hybrid rise=3.15 twist=28.48
         1.DG5 1.DG23 1.DG17 1.DG11 cHW cHW cHW cHW O+ Va planarity=0.05  
@@ -131,9 +133,12 @@ induced by 5’-3’ indexing. We select permutation with the minimum value.
 
         Tracts:
           1.DG4, 1.DG5, 1.DG6
-          1.DG22, 1.DG23, 1.DG24
-          1.DG18, 1.DG17, 1.DG16
           1.DG10, 1.DG11, 1.DG12
+          1.DG18, 1.DG17, 1.DG16
+          1.DG22, 1.DG23, 1.DG24
+
+        Path:
+          A1, B1, C1, A2, B2, C2, C3, B3, A3, A4, B4, C4
 
         Loops:
           propeller- 1.DT7, 1.DT8, 1.DA9
@@ -585,6 +590,12 @@ Click to see the output JSON
             }
           ],
           "onzm": "Oh*",
+          "handedness": "right",
+          "tetradPolarities": [
+            "clockwise",
+            "anticlockwise",
+            "anticlockwise"
+          ],
           "loopClassification": {
             "classification": "9a",
             "loopProgression": "-(pll)"
@@ -599,9 +610,9 @@ Click to see the output JSON
               "1.DG6"
             ],
             [
-              "1.DG22",
-              "1.DG23",
-              "1.DG24"
+              "1.DG10",
+              "1.DG11",
+              "1.DG12"
             ],
             [
               "1.DG18",
@@ -609,10 +620,24 @@ Click to see the output JSON
               "1.DG16"
             ],
             [
-              "1.DG10",
-              "1.DG11",
-              "1.DG12"
+              "1.DG22",
+              "1.DG23",
+              "1.DG24"
             ]
+          ],
+          "path": [
+            "A1",
+            "B1",
+            "C1",
+            "A2",
+            "B2",
+            "C2",
+            "C3",
+            "B3",
+            "A3",
+            "A4",
+            "B4",
+            "C4"
           ],
           "bulges": [],
           "loops": [
@@ -687,6 +712,8 @@ Click to see the output JSON
     Chain order: A AB AA AC B BC BA BB
     n4-helix with 10 tetrads
       Op* VIII n/a quadruplex with 5 tetrads
+        Handedness: right
+        Tetrad polarities: anticlockwise, clockwise, clockwise, clockwise, clockwise
         A.U1006 AC.U1006 AA.U1006 AB.U1006 cWH cWH cWH cWH O- VIIIa planarity=0.34  ions_outside=A.U1006: [SR] AA.U1006: [SR] AB.U1006: [SR] AC.U1006: [SR]
           direction=parallel rise=3.35 twist=-37.92
         A.G1005 AC.G1005 AA.G1005 AB.G1005 cHW cHW cHW cHW O+ VIIIa planarity=0.23  
@@ -703,7 +730,12 @@ Click to see the output JSON
           AA.U1006, AA.G1005, AA.G1004, AA.G1003, AA.G1002
           AB.U1006, AB.G1005, AB.G1004, AB.G1003, AB.G1002
 
+        Path:
+          E1, D1, C1, B1, A1, E4, D4, C4, B4, A4, E3, D3, C3, B3, A3, E2, D2, C2, B2, A2
+
       Op* VIII n/a quadruplex with 5 tetrads
+        Handedness: right
+        Tetrad polarities: anticlockwise, anticlockwise, anticlockwise, anticlockwise, clockwise
         B.G2002 BC.G2002 BA.G2002 BB.G2002 cWH cWH cWH cWH O+ VIIIa planarity=0.19  
           direction=parallel rise=3.4 twist=27.97
         B.G2003 BC.G2003 BA.G2003 BB.G2003 cWH cWH cWH cWH O+ VIIIa planarity=0.16 ions_channel=SR ions_outside=B.G2003: [CA] BA.G2003: [CA] BB.G2003: [CA] BC.G2003: [CA]
@@ -719,6 +751,9 @@ Click to see the output JSON
           BC.G2002, BC.G2003, BC.G2004, BC.G2005, BC.U2006
           BA.G2002, BA.G2003, BA.G2004, BA.G2005, BA.U2006
           BB.G2002, BB.G2003, BB.G2004, BB.G2005, BB.U2006
+
+        Path:
+          A1, B1, C1, D1, E1, A2, B2, C2, D2, E2, A3, B3, C3, D3, E3, A4, B4, C4, D4, E4
 
     UGGGG-UUGGGG-UUGGGG-UUGGGG-UUGGGG-UUGGGG-UUGGGG-UUGGGGU
     .([{<-A.)]}>-(.[{<A-).]}>a-a.([{<-A.)]}>-(.[{<A-).]}>aa
@@ -1699,6 +1734,14 @@ Click to see the output JSON
             }
           ],
           "onzm": "Op*",
+          "handedness": "right",
+          "tetradPolarities": [
+            "anticlockwise",
+            "clockwise",
+            "clockwise",
+            "clockwise",
+            "clockwise"
+          ],
           "loopClassification": null,
           "gbaClassification": [
             "VIII"
@@ -1732,6 +1775,28 @@ Click to see the output JSON
               "AB.G1003",
               "AB.G1002"
             ]
+          ],
+          "path": [
+            "E1",
+            "D1",
+            "C1",
+            "B1",
+            "A1",
+            "E4",
+            "D4",
+            "C4",
+            "B4",
+            "A4",
+            "E3",
+            "D3",
+            "C3",
+            "B3",
+            "A3",
+            "E2",
+            "D2",
+            "C2",
+            "B2",
+            "A2"
           ],
           "bulges": [],
           "loops": []
@@ -1824,6 +1889,14 @@ Click to see the output JSON
             }
           ],
           "onzm": "Op*",
+          "handedness": "right",
+          "tetradPolarities": [
+            "anticlockwise",
+            "anticlockwise",
+            "anticlockwise",
+            "anticlockwise",
+            "clockwise"
+          ],
           "loopClassification": null,
           "gbaClassification": [
             "VIII"
@@ -1857,6 +1930,28 @@ Click to see the output JSON
               "BB.G2005",
               "BB.U2006"
             ]
+          ],
+          "path": [
+            "A1",
+            "B1",
+            "C1",
+            "D1",
+            "E1",
+            "A2",
+            "B2",
+            "C2",
+            "D2",
+            "E2",
+            "A3",
+            "B3",
+            "C3",
+            "D3",
+            "E3",
+            "A4",
+            "B4",
+            "C4",
+            "D4",
+            "E4"
           ],
           "bulges": [],
           "loops": []

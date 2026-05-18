@@ -1,4 +1,9 @@
-{ inputs, pkgs, ... }:
+{
+  inputs,
+  lib,
+  pkgs,
+  ...
+}:
 {
   overlays = [
     (final: prev: { ruff = (import inputs.nixpkgs-unstable { system = prev.stdenv.system; }).ruff; })
@@ -14,4 +19,8 @@
     ruff
     zlib
   ];
+  env.LD_LIBRARY_PATH = "${lib.makeLibraryPath [
+    pkgs.stdenv.cc.cc.lib
+    pkgs.zlib
+  ]}";
 }
