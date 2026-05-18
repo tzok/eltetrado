@@ -16,6 +16,7 @@ from rnapolis.common import BaseInteractions, BpSeq, Entry, GlycosidicBond
 from rnapolis.tertiary import Atom, BasePair3D, Mapping2D3D, Residue3D, Structure3D
 
 from eltetrado.model import (
+    HelixHandedness,
     ONZ,
     ONZM,
     Direction,
@@ -24,6 +25,7 @@ from eltetrado.model import (
     Ion,
     LoopClassification,
     LoopType,
+    TetradPolarity,
 )
 
 logging.basicConfig(level=os.environ.get("LOGLEVEL", "INFO"))
@@ -177,6 +179,53 @@ def get_signed_angle(
     return numpy.degrees(numpy.arctan2(det, dot_prod))
 
 
+def normalize_vector(vector: numpy.ndarray) -> numpy.ndarray:
+    norm = numpy.linalg.norm(vector)
+    if norm == 0.0:
+        raise ValueError("Cannot normalize a zero-length vector")
+    return vector / norm
+
+
+def calculate_angle_around_axis(
+    vector: numpy.ndarray, axis: numpy.ndarray, reference: numpy.ndarray
+) -> float:
+    axis = normalize_vector(axis)
+    reference_proj = reference - numpy.dot(reference, axis) * axis
+    vector_proj = vector - numpy.dot(vector, axis) * axis
+
+    reference_proj = normalize_vector(reference_proj)
+    vector_proj = normalize_vector(vector_proj)
+    orthogonal = normalize_vector(numpy.cross(axis, reference_proj))
+
+    return float(
+        numpy.arctan2(
+            numpy.dot(vector_proj, orthogonal),
+            numpy.dot(vector_proj, reference_proj),
+        )
+    )
+
+
+def residue_base_centroid(residue: Residue3D) -> numpy.ndarray:
+    coords = collect_nucleobase_atoms((residue,))
+    if not coords:
+        raise ValueError(f"Missing nucleobase atoms for residue {residue.full_name}")
+    return numpy.mean(coords, axis=0)
+
+
+def residue_backbone_anchor(residue: Residue3D) -> numpy.ndarray:
+    atom_names = ("C3'", "C4'", "C5'", "C1'", "O4'", "O5'", "O3'")
+    coords = []
+
+    for atom_name in atom_names:
+        atom = residue.find_atom(atom_name)
+        if atom is not None:
+            coords.append(atom.coordinates)
+
+    if coords:
+        return numpy.mean(coords, axis=0)
+    return residue_base_centroid(residue)
+
+
 def calculate_quadruplex_twist_centroids(
     tetrad1_all_coords: numpy.ndarray,
     tetrad2_all_coords: numpy.ndarray,
@@ -234,6 +283,20 @@ def calculate_quadruplex_twist_centroids(
 
     # D. Return the average
     return numpy.mean(twists)
+
+
+def generate_tetrad_label(index: int) -> str:
+    if index < 0:
+        raise ValueError("Tetrad index must be non-negative")
+
+    label = ""
+    index += 1
+
+    while index > 0:
+        index, remainder = divmod(index - 1, 26)
+        label = chr(ord("A") + remainder) + label
+
+    return label
 
 
 @dataclass(order=True)
@@ -665,6 +728,9 @@ class Quadruplex:
     tracts: List[Tract] = field(init=False)
     bulges: List[Residue3D] = field(init=False)
     loops: List[Loop] = field(init=False)
+    path: List[str] = field(init=False)
+    handedness: Optional[HelixHandedness] = field(init=False)
+    tetrad_polarities: List[Optional[TetradPolarity]] = field(init=False)
     loop_class: Optional[LoopClassification] = field(init=False)
 
     def __post_init__(self):
@@ -673,6 +739,9 @@ class Quadruplex:
         self.tracts = self.__find_tracts()
         self.bulges = self.__find_bulges()
         self.loops = self.__find_loops()
+        self.handedness = self.__find_handedness()
+        self.tetrad_polarities = self.__find_tetrad_polarities()
+        self.path = self.__find_path()
         self.loop_class = self.__classify_by_loops()
 
     def __classify_onzm(self) -> Optional[ONZM]:
@@ -722,23 +791,105 @@ class Quadruplex:
         )
 
     def __find_tracts(self) -> List[Tract]:
-        tracts = [
-            [self.tetrads[0].nt1],
-            [self.tetrads[0].nt2],
-            [self.tetrads[0].nt3],
-            [self.tetrads[0].nt4],
+        return [Tract(nts) for nts in self.__build_tracts(self.__first_tetrad_column_order())]
+
+    def __build_tracts(
+        self, first_tetrad_order: List[Residue3D]
+    ) -> List[List[Residue3D]]:
+        tracts = [[nt] for nt in first_tetrad_order]
+
+        for tetrad_pair in self.tetrad_pairs:
+            nt_dict = {
+                tetrad_pair.tetrad1.nt1: tetrad_pair.tetrad2_nts_best_order[0],
+                tetrad_pair.tetrad1.nt2: tetrad_pair.tetrad2_nts_best_order[1],
+                tetrad_pair.tetrad1.nt3: tetrad_pair.tetrad2_nts_best_order[2],
+                tetrad_pair.tetrad1.nt4: tetrad_pair.tetrad2_nts_best_order[3],
+            }
+            for tract in tracts:
+                tract.append(nt_dict[tract[-1]])
+
+        return tracts
+
+    def __first_tetrad_column_order(self) -> List[Residue3D]:
+        tetrad = self.tetrads[0]
+        center, normal = self.__tetrad_geometry(tetrad)
+        first_nt = min(tetrad.nucleotides, key=lambda nt: self.global_index[nt])
+        normal = self.__orient_tetrad_normal(0, tetrad, normal, first_nt)
+        reference = residue_base_centroid(first_nt) - center
+        angles = {
+            nt: calculate_angle_around_axis(
+                residue_base_centroid(nt) - center,
+                normal,
+                reference,
+            )
+            for nt in tetrad.nucleotides
+        }
+        anchor_angle = angles[first_nt]
+
+        return sorted(
+            tetrad.nucleotides,
+            key=lambda nt: ((angles[nt] - anchor_angle) % (2.0 * math.pi)),
+        )
+
+    def __tetrad_geometry(self, tetrad: Tetrad) -> Tuple[numpy.ndarray, numpy.ndarray]:
+        atom_coords = collect_nucleobase_atoms(tetrad.nucleotides)
+        return get_plane_vectors(numpy.array(atom_coords))
+
+    def __orient_tetrad_normal(
+        self,
+        tetrad_index: int,
+        tetrad: Tetrad,
+        normal: numpy.ndarray,
+        reference_nt: Residue3D,
+    ) -> numpy.ndarray:
+        direction = self.__strand_progression_vector(tetrad_index, tetrad, reference_nt)
+        if direction is not None and numpy.dot(normal, direction) < 0:
+            return -normal
+        return normal
+
+    def __strand_progression_vector(
+        self, tetrad_index: int, tetrad: Tetrad, residue: Residue3D
+    ) -> Optional[numpy.ndarray]:
+        if tetrad_index < len(self.tetrad_pairs):
+            stacked = self.tetrad_pairs[tetrad_index].stacked.get(residue)
+            if stacked is not None:
+                return residue_backbone_anchor(stacked) - residue_backbone_anchor(residue)
+
+        if tetrad_index > 0:
+            stacked = self.tetrad_pairs[tetrad_index - 1].stacked.get(residue)
+            if stacked is not None:
+                return residue_backbone_anchor(residue) - residue_backbone_anchor(stacked)
+
+        return self.__local_backbone_direction(residue)
+
+    def __local_backbone_direction(self, residue: Residue3D) -> Optional[numpy.ndarray]:
+        nucleotides = [
+            nt
+            for nt in self.structure3d.residues
+            if nt.is_nucleotide and nt.chain == residue.chain
         ]
-        if len(self.tetrad_pairs) > 0:
-            for tetrad_pair in self.tetrad_pairs:
-                nt_dict = {
-                    tetrad_pair.tetrad1.nt1: tetrad_pair.tetrad2_nts_best_order[0],
-                    tetrad_pair.tetrad1.nt2: tetrad_pair.tetrad2_nts_best_order[1],
-                    tetrad_pair.tetrad1.nt3: tetrad_pair.tetrad2_nts_best_order[2],
-                    tetrad_pair.tetrad1.nt4: tetrad_pair.tetrad2_nts_best_order[3],
-                }
-                for i in range(4):
-                    tracts[i].append(nt_dict[tracts[i][-1]])
-        return [Tract(nts) for nts in tracts]
+        nucleotides.sort(key=lambda nt: self.global_index[nt])
+
+        try:
+            position = nucleotides.index(residue)
+        except ValueError:
+            return None
+
+        if position + 1 < len(nucleotides):
+            return residue_backbone_anchor(nucleotides[position + 1]) - residue_backbone_anchor(
+                residue
+            )
+        if position > 0:
+            return residue_backbone_anchor(residue) - residue_backbone_anchor(
+                nucleotides[position - 1]
+            )
+
+        atom_o3 = residue.find_atom("O3'")
+        atom_o5 = residue.find_atom("O5'")
+        if atom_o3 is not None and atom_o5 is not None:
+            return atom_o3.coordinates - atom_o5.coordinates
+
+        return None
 
     def __find_loops(self) -> List[Loop]:
         if len(self.tetrads) == 1:
@@ -776,6 +927,106 @@ class Quadruplex:
                         loop_type = self.__detect_loop_type(nprev, ncur)
                         loops.append(Loop(nts, loop_type))
         return loops
+
+    def __find_path(self) -> List[str]:
+        labels = {}
+
+        for tetrad_index, _ in enumerate(self.tetrads):
+            tetrad_label = generate_tetrad_label(tetrad_index)
+            for tract_index, tract in enumerate(self.tracts, start=1):
+                labels[tract.nucleotides[tetrad_index]] = f"{tetrad_label}{tract_index}"
+
+        return [
+            labels[nt]
+            for nt in sorted(labels.keys(), key=lambda nt: self.global_index[nt])
+        ]
+
+    def __find_handedness(self) -> Optional[HelixHandedness]:
+        if len(self.tetrads) < 2:
+            return None
+
+        centers = [self.__tetrad_geometry(tetrad)[0] for tetrad in self.tetrads]
+        axis = centers[-1] - centers[0]
+
+        if numpy.linalg.norm(axis) == 0.0:
+            axis = centers[1] - centers[0]
+        if numpy.linalg.norm(axis) == 0.0:
+            return None
+
+        axis = normalize_vector(axis)
+        progression = self.__strand_progression_vector(0, self.tetrads[0], self.tracts[0].nucleotides[0])
+        if progression is not None and numpy.dot(axis, progression) < 0:
+            axis = -axis
+
+        twists = []
+        for i in range(1, len(self.tetrads)):
+            center_prev = centers[i - 1]
+            center_cur = centers[i]
+            for tract in self.tracts:
+                prev_anchor = residue_backbone_anchor(tract.nucleotides[i - 1])
+                cur_anchor = residue_backbone_anchor(tract.nucleotides[i])
+                twists.append(
+                    get_signed_angle(
+                        prev_anchor - center_prev,
+                        cur_anchor - center_cur,
+                        axis,
+                    )
+                )
+
+        if not twists:
+            return None
+
+        mean_twist = float(numpy.mean(twists))
+        if math.isclose(mean_twist, 0.0, abs_tol=1.0e-6):
+            return None
+        return HelixHandedness.RIGHT if mean_twist > 0.0 else HelixHandedness.LEFT
+
+    def __find_tetrad_polarities(self) -> List[Optional[TetradPolarity]]:
+        polarities: List[Optional[TetradPolarity]] = []
+
+        for i, tetrad in enumerate(self.tetrads):
+            column1 = self.tracts[0].nucleotides[i]
+            center, normal = self.__tetrad_geometry(tetrad)
+            normal = self.__orient_tetrad_normal(i, tetrad, normal, column1)
+            reference = residue_base_centroid(column1) - center
+            successor = self.__hydrogen_bond_successor_map(tetrad)
+
+            if len(successor) != 4 or column1 not in successor:
+                polarities.append(None)
+                continue
+
+            next_nt = successor[column1]
+            angle_column1 = calculate_angle_around_axis(
+                residue_base_centroid(column1) - center,
+                normal,
+                reference,
+            )
+            angle_next = calculate_angle_around_axis(
+                residue_base_centroid(next_nt) - center,
+                normal,
+                reference,
+            )
+            delta = (angle_next - angle_column1) % (2.0 * math.pi)
+            polarities.append(
+                TetradPolarity.ANTICLOCKWISE
+                if delta < math.pi
+                else TetradPolarity.CLOCKWISE
+            )
+
+        return polarities
+
+    def __hydrogen_bond_successor_map(
+        self, tetrad: Tetrad
+    ) -> Dict[Residue3D, Residue3D]:
+        successor = {}
+
+        for pair in [tetrad.pair_12, tetrad.pair_23, tetrad.pair_34, tetrad.pair_41]:
+            if pair.lw.value[1:] == "WH":
+                successor[pair.nt1_3d] = pair.nt2_3d
+            elif pair.lw.value[1:] == "HW":
+                successor[pair.nt2_3d] = pair.nt1_3d
+
+        return successor
 
     def __detect_loop_type(
         self, nt_first: Residue3D, nt_last: Residue3D
@@ -911,7 +1162,10 @@ class Quadruplex:
         builder = ""
         if len(self.tetrads) == 1:
             builder += "  single tetrad\n"
+            builder += self.__topology_details_str()
             builder += str(self.tetrads[0])
+            builder += "    Path:\n"
+            builder += f"      {', '.join(self.path)}\n"
         else:
             builder += f"  {self.onzm.value if self.onzm is not None else 'R'}"
             builder += f" {','.join(map(lambda gba: gba.value, self.gba_classes))}"
@@ -922,6 +1176,7 @@ class Quadruplex:
             else:
                 builder += " n/a"
             builder += f" quadruplex with {len(self.tetrads)} tetrads\n"
+            builder += self.__topology_details_str()
             builder += str(self.tetrad_pairs[0].tetrad1)
             for tetrad_pair in self.tetrad_pairs:
                 builder += str(tetrad_pair)
@@ -930,6 +1185,9 @@ class Quadruplex:
                 builder += "\n    Tracts:\n"
                 for tract in self.tracts:
                     builder += f"{tract}\n"
+            if self.path:
+                builder += "\n    Path:\n"
+                builder += f"      {', '.join(self.path)}\n"
             if self.loops:
                 builder += "\n    Loops:\n"
                 for loop in self.loops:
@@ -940,6 +1198,21 @@ class Quadruplex:
                     "      " + ", ".join(nt.full_name for nt in self.bulges) + "\n"
                 )
             builder += "\n"
+        return builder
+
+    def __topology_details_str(self) -> str:
+        builder = ""
+
+        if self.handedness is not None:
+            builder += f"    Handedness: {self.handedness.value}\n"
+        if self.tetrad_polarities:
+            builder += "    Tetrad polarities: "
+            builder += ", ".join(
+                polarity.value if polarity is not None else "n/a"
+                for polarity in self.tetrad_polarities
+            )
+            builder += "\n"
+
         return builder
 
 

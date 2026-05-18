@@ -1,6 +1,8 @@
 Chain order: A C B D E H F G
 n4-helix with 4 tetrads
   Op* VIII n/a quadruplex with 4 tetrads
+    Handedness: right
+    Tetrad polarities: clockwise, anticlockwise, anticlockwise, clockwise
     A.BGM2 C.BGM2 B.BGM2 D.BGM2 cWH cWH cWH cWH O+ VIIIb planarity=0.13 ions_channel=K,K 
       direction=parallel rise=3.58 twist=25.9
     A.G3 C.G3 B.G3 D.G3 cHW cHW cHW cHW O- VIIIa planarity=0.21 ions_channel=K 
@@ -11,15 +13,20 @@ n4-helix with 4 tetrads
 
     Tracts:
       A.BGM2, A.G3, A.G5, A.U6
-      C.BGM2, C.G3, C.G5, C.U6
-      B.BGM2, B.G3, B.G5, B.U6
       D.BGM2, D.G3, D.G5, D.U6
+      B.BGM2, B.G3, B.G5, B.U6
+      C.BGM2, C.G3, C.G5, C.U6
+
+    Path:
+      A1, B1, C1, D1, A4, B4, C4, D4, A3, B3, C3, D3, A2, B2, C2, D2
 
     Bulges:
-      A.U4, C.U4, B.U4, D.U4
+      A.U4, D.U4, B.U4, C.U4
 
 n4-helix with 4 tetrads
   Op* VIII n/a quadruplex with 4 tetrads
+    Handedness: right
+    Tetrad polarities: clockwise, anticlockwise, anticlockwise, clockwise
     E.BGM2 G.BGM2 F.BGM2 H.BGM2 cWH cWH cWH cWH O- VIIIb planarity=0.14 ions_channel=K,K 
       direction=parallel rise=3.56 twist=26.2
     E.G3 G.G3 F.G3 H.G3 cHW cHW cHW cHW O+ VIIIa planarity=0.22 ions_channel=K 
@@ -30,12 +37,15 @@ n4-helix with 4 tetrads
 
     Tracts:
       E.BGM2, E.G3, E.G5, E.U6
-      G.BGM2, G.G3, G.G5, G.U6
-      F.BGM2, F.G3, F.G5, F.U6
       H.BGM2, H.G3, H.G5, H.U6
+      F.BGM2, F.G3, F.G5, F.U6
+      G.BGM2, G.G3, G.G5, G.U6
+
+    Path:
+      A1, B1, C1, D1, A2, B2, C2, D2, A3, B3, C3, D3, A4, B4, C4, D4
 
     Bulges:
-      E.U4, F.U4, H.U4
+      E.U4, H.U4, F.U4
 
 UGGUG-UUGGUG-UUGGUG-UUGGUG-UUGGUG-UUGGUG-UUGGUG-UUGGGU
 .([.{-[.)(.{-].[).}-(.]].}-).((.[-{.{).]-(.}[.{-).)]}}
