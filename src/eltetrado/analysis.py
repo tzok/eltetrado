@@ -831,7 +831,7 @@ class Quadruplex:
 
         return sorted(
             tetrad.nucleotides,
-            key=lambda nt: ((angles[nt] - anchor_angle) % (2.0 * math.pi)),
+            key=lambda nt: (angles[nt] - anchor_angle) % (2.0 * math.pi),
         )
 
     def __tetrad_geometry(self, tetrad: Tetrad) -> Tuple[numpy.ndarray, numpy.ndarray]:
