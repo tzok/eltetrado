@@ -17,7 +17,4 @@
     ruff
     zlib
   ];
-  enterShell = ''
-    export PYTHONPATH=src/
-  '';
 }
