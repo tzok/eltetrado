@@ -2,10 +2,7 @@
 {
   languages.python.uv = {
     enable = true;
-    sync = {
-      enable = true;
-      arguments = [ "--locked" ];
-    };
+    sync.enable = true;
   };
   packages = with pkgs; [
     graphviz

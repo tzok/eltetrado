@@ -791,7 +791,10 @@ class Quadruplex:
         )
 
     def __find_tracts(self) -> List[Tract]:
-        return [Tract(nts) for nts in self.__build_tracts(self.__first_tetrad_column_order())]
+        return [
+            Tract(nts)
+            for nts in self.__build_tracts(self.__first_tetrad_column_order())
+        ]
 
     def __build_tracts(
         self, first_tetrad_order: List[Residue3D]
@@ -853,12 +856,16 @@ class Quadruplex:
         if tetrad_index < len(self.tetrad_pairs):
             stacked = self.tetrad_pairs[tetrad_index].stacked.get(residue)
             if stacked is not None:
-                return residue_backbone_anchor(stacked) - residue_backbone_anchor(residue)
+                return residue_backbone_anchor(stacked) - residue_backbone_anchor(
+                    residue
+                )
 
         if tetrad_index > 0:
             stacked = self.tetrad_pairs[tetrad_index - 1].stacked.get(residue)
             if stacked is not None:
-                return residue_backbone_anchor(residue) - residue_backbone_anchor(stacked)
+                return residue_backbone_anchor(residue) - residue_backbone_anchor(
+                    stacked
+                )
 
         return self.__local_backbone_direction(residue)
 
@@ -876,9 +883,9 @@ class Quadruplex:
             return None
 
         if position + 1 < len(nucleotides):
-            return residue_backbone_anchor(nucleotides[position + 1]) - residue_backbone_anchor(
-                residue
-            )
+            return residue_backbone_anchor(
+                nucleotides[position + 1]
+            ) - residue_backbone_anchor(residue)
         if position > 0:
             return residue_backbone_anchor(residue) - residue_backbone_anchor(
                 nucleotides[position - 1]
@@ -954,7 +961,9 @@ class Quadruplex:
             return None
 
         axis = normalize_vector(axis)
-        progression = self.__strand_progression_vector(0, self.tetrads[0], self.tracts[0].nucleotides[0])
+        progression = self.__strand_progression_vector(
+            0, self.tetrads[0], self.tracts[0].nucleotides[0]
+        )
         if progression is not None and numpy.dot(axis, progression) < 0:
             axis = -axis
 

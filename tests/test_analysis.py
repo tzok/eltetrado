@@ -93,7 +93,9 @@ def test_2ms9_is_left_handed():
 
     assert quadruplex.handedness is not None
     assert quadruplex.handedness.value == "left"
-    assert [p.value if p is not None else None for p in quadruplex.tetrad_polarities] == [
+    assert [
+        p.value if p is not None else None for p in quadruplex.tetrad_polarities
+    ] == [
         "clockwise",
         "clockwise",
         "anticlockwise",
