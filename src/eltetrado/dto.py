@@ -83,9 +83,12 @@ class LoopClassificationDTO:
 class QuadruplexDTO:
     tetrads: List[TetradDTO]
     onzm: Optional[str]
+    handedness: Optional[str]
+    tetradPolarities: List[Optional[str]]
     loopClassification: Optional[LoopClassificationDTO]
     gbaClassification: List[str]
     tracts: List[List[str]]
+    path: List[str]
     bulges: List[str]
     loops: List[LoopDTO]
 
@@ -209,6 +212,8 @@ def convert_quadruplexes(quadruplexes: List[Quadruplex]) -> List[QuadruplexDTO]:
         QuadruplexDTO(
             convert_tetrads(q),
             q.onzm.value if q.onzm else None,
+            q.handedness.value if q.handedness else None,
+            [p.value if p else None for p in q.tetrad_polarities],
             (
                 LoopClassificationDTO(
                     q.loop_class.value, q.loop_class.loop_progression()
@@ -223,6 +228,7 @@ def convert_quadruplexes(quadruplexes: List[Quadruplex]) -> List[QuadruplexDTO]:
                 nts_(q.tracts[2].nucleotides),
                 nts_(q.tracts[3].nucleotides),
             ],
+            q.path,
             [nt.full_name for nt in q.bulges],
             [
                 LoopDTO(

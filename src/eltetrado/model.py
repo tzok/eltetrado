@@ -102,6 +102,16 @@ class ONZM(Enum):
         raise RuntimeError(f"Failed to match {value} to an ONZM class")
 
 
+class TetradPolarity(Enum):
+    CLOCKWISE = "clockwise"
+    ANTICLOCKWISE = "anticlockwise"
+
+
+class HelixHandedness(Enum):
+    RIGHT = "right"
+    LEFT = "left"
+
+
 class GbaTetradClassification(Enum):
     Ia = "Ia"
     IIa = "IIa"

@@ -134,3 +134,45 @@ def test_6a85():
         dto.dotBracket.line2
         == ".(([[{.<ABCDE.F.-..{)(][.<ABCDE.F.-..}{)G].>abcde.f.-..)}]g}.>abcde.f.."
     )
+
+
+def test_6fc9_path_is_serialized():
+    cif = handle_input_file("tests/files/6fc9-assembly-1.cif.gz")
+    structure3d = rnapolis.parser.read_3d_structure(cif, nucleic_acid_only=False)
+    base_interactions = rnapolis.annotator.extract_base_interactions(structure3d)
+    analysis = eltetrado(base_interactions, structure3d, False)
+    dto = generate_dto(analysis)
+
+    assert dto.helices[0].quadruplexes[0].handedness == "right"
+    assert dto.helices[0].quadruplexes[0].tetradPolarities == [
+        "clockwise",
+        "anticlockwise",
+    ]
+    assert dto.helices[0].quadruplexes[0].path == [
+        "A1",
+        "B1",
+        "B4",
+        "A4",
+        "A3",
+        "B3",
+        "B2",
+        "A2",
+    ]
+
+
+def test_2ms9_handedness_and_polarity_are_serialized():
+    cif = handle_input_file("tests/files/2ms9.cif")
+    structure3d = rnapolis.parser.read_3d_structure(cif, nucleic_acid_only=False)
+    base_interactions = rnapolis.annotator.extract_base_interactions(structure3d)
+    analysis = eltetrado(base_interactions, structure3d, False)
+    dto = generate_dto(analysis)
+
+    quadruplex = dto.helices[0].quadruplexes[0]
+
+    assert quadruplex.handedness == "left"
+    assert quadruplex.tetradPolarities == [
+        "clockwise",
+        "clockwise",
+        "anticlockwise",
+        "anticlockwise",
+    ]

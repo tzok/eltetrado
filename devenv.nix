@@ -1,8 +1,11 @@
-{ pkgs, ... }:
+{ inputs, pkgs, ... }:
 {
-  languages.python = {
+  overlays = [
+    (final: prev: { ruff = (import inputs.nixpkgs-unstable { system = prev.stdenv.system; }).ruff; })
+  ];
+  languages.python.uv = {
     enable = true;
-    poetry.enable = true;
+    sync.enable = true;
   };
   packages = with pkgs; [
     graphviz
@@ -11,7 +14,4 @@
     ruff
     zlib
   ];
-  enterShell = ''
-    export PYTHONPATH=src/
-  '';
 }

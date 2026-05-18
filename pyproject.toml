@@ -1,13 +1,12 @@
-[tool.poetry]
+[project]
 name = "eltetrado"
-version = "1.8.1"
+version = "1.9.0"
 description = "Find and classify tetrads and quadruplexes in DNA/RNA 3D structure"
-authors = ["Tomasz Żok <tomasz.zok@cs.put.poznan.pl>"]
 readme = "README.md"
+requires-python = ">=3.12"
 license = "MIT"
-homepage = "https://github.com/tzok/eltetrado"
-repository = "https://github.com/tzok/eltetrado"
-documentation = "https://github.com/tzok/eltetrado"
+license-files = ["LICENSE"]
+authors = [{ name = "Tomasz Żok", email = "tomasz.zok@cs.put.poznan.pl" }]
 keywords = ["bioinformatics", "rna", "dna", "quadruplex", "tetrad"]
 classifiers = [
     "Development Status :: 5 - Production/Stable",
@@ -18,22 +17,23 @@ classifiers = [
     "Programming Language :: Python :: 3",
     "Topic :: Scientific/Engineering :: Bio-Informatics",
 ]
-packages = [
-    { include = "eltetrado", from = "src" }
-]
-scripts = { eltetrado = "eltetrado.cli:eltetrado_cli", has_tetrad = "eltetrado.cli:has_tetrad_cli" }
+dependencies = ["mmcif", "numpy", "orjson", "rnapolis"]
 
-[tool.poetry.dependencies]
-python = "^3.12"
-mmcif = "*"
-numpy = "*"
-orjson = "*"
-rnapolis = "*"
+[project.urls]
+Homepage = "https://github.com/tzok/eltetrado"
+Repository = "https://github.com/tzok/eltetrado"
+Documentation = "https://github.com/tzok/eltetrado"
 
-[tool.poetry.group.dev.dependencies]
-ruff = "*"
-pytest = "*"
+[project.scripts]
+eltetrado = "eltetrado.cli:eltetrado_cli"
+has_tetrad = "eltetrado.cli:has_tetrad_cli"
+
+[dependency-groups]
+dev = ["pytest", "ruff"]
+
+[tool.uv.build-backend]
+source-exclude = ["*.helix", "example.fasta"]
 
 [build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
+requires = ["uv_build>=0.9.30,<0.10.0"]
+build-backend = "uv_build"
