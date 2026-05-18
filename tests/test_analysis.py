@@ -4,8 +4,9 @@ import rnapolis.annotator
 import rnapolis.parser
 from rnapolis.adapter import ExternalTool, parse_external_output
 
+import eltetrado.analysis as analysis_module
 from eltetrado.analysis import eltetrado
-from eltetrado.cli import handle_input_file
+from eltetrado.cli import handle_input_file, read_secondary_structure_from_dssr
 
 
 def test_5zev_tracts():
@@ -83,6 +84,43 @@ def test_6fc9_path():
     ]
 
 
+def test_path_tetrad_letters_follow_5p_order_in_5v3f():
+    cif = handle_input_file("tests/files/5v3f-assembly-1.cif.gz")
+    structure3d = rnapolis.parser.read_3d_structure(cif, 1)
+    structure2d = read_secondary_structure_from_dssr(
+        structure3d, 1, "tests/files/5v3f-assembly-1.json"
+    )
+    analysis = eltetrado(structure2d, structure3d, False)
+
+    assert analysis.helices[0].quadruplexes[0].path == [
+        "A1",
+        "B1",
+        "C1",
+        "A4",
+        "B4",
+        "C4",
+        "A3",
+        "B3",
+        "C3",
+        "A2",
+        "B2",
+        "C2",
+    ]
+
+
+def test_path_starts_with_a1_in_5zev():
+    cif = handle_input_file("tests/files/5zev-assembly1.cif.gz")
+    structure3d = rnapolis.parser.read_3d_structure(cif, 1, nucleic_acid_only=False)
+    base_interactions = parse_external_output(
+        ["tests/files/5zev-assembly1.json"], ExternalTool.DSSR, structure3d
+    )
+    analysis = eltetrado(base_interactions, structure3d, False)
+
+    path = analysis.helices[0].quadruplexes[0].path
+
+    assert path[0] == "A1"
+
+
 def test_2ms9_is_left_handed():
     cif = handle_input_file("tests/files/2ms9.cif")
     structure3d = rnapolis.parser.read_3d_structure(cif, nucleic_acid_only=False)
@@ -101,3 +139,29 @@ def test_2ms9_is_left_handed():
         "anticlockwise",
         "anticlockwise",
     ]
+
+
+def test_incomplete_tetrad_residue_does_not_crash_geometry(monkeypatch):
+    cif = handle_input_file("tests/files/6fc9-assembly-1.cif.gz")
+    structure3d = rnapolis.parser.read_3d_structure(cif, nucleic_acid_only=False)
+    base_interactions = rnapolis.annotator.extract_base_interactions(structure3d)
+
+    original = analysis_module.residue_topology_point
+
+    def patched_residue_topology_point(residue):
+        if residue.full_name == "A.DG1":
+            return None
+        return original(residue)
+
+    monkeypatch.setattr(
+        analysis_module,
+        "residue_topology_point",
+        patched_residue_topology_point,
+    )
+
+    analysis = eltetrado(base_interactions, structure3d, False)
+
+    quadruplex = analysis.helices[0].quadruplexes[0]
+
+    assert quadruplex.path
+    assert len(quadruplex.tetrad_polarities) == len(quadruplex.tetrads)
