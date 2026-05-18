@@ -176,3 +176,28 @@ def test_2ms9_handedness_and_polarity_are_serialized():
         "anticlockwise",
         "anticlockwise",
     ]
+
+
+def test_serialized_path_tetrad_letters_follow_5p_order_in_5v3f():
+    cif = handle_input_file("tests/files/5v3f-assembly-1.cif.gz")
+    structure3d = rnapolis.parser.read_3d_structure(cif, 1)
+    structure2d = read_secondary_structure_from_dssr(
+        structure3d, 1, "tests/files/5v3f-assembly-1.json"
+    )
+    analysis = eltetrado(structure2d, structure3d, False)
+    dto = generate_dto(analysis)
+
+    assert dto.helices[0].quadruplexes[0].path == [
+        "A1",
+        "B1",
+        "C1",
+        "A4",
+        "B4",
+        "C4",
+        "A3",
+        "B3",
+        "C3",
+        "A2",
+        "B2",
+        "C2",
+    ]

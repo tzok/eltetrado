@@ -205,11 +205,33 @@ def calculate_angle_around_axis(
     )
 
 
-def residue_base_centroid(residue: Residue3D) -> numpy.ndarray:
+def collect_residue_base_like_atoms(residue: Residue3D) -> List[numpy.ndarray]:
+    coords = []
+
+    for atom in residue.atoms:
+        if atom.name.startswith("H"):
+            continue
+        if atom.name in Residue3D.phosphate_atoms or atom.name in Residue3D.sugar_atoms:
+            continue
+        coords.append(atom.coordinates)
+
+    return coords
+
+
+def residue_topology_point(residue: Residue3D) -> Optional[numpy.ndarray]:
     coords = collect_nucleobase_atoms((residue,))
     if not coords:
-        raise ValueError(f"Missing nucleobase atoms for residue {residue.full_name}")
+        coords = collect_residue_base_like_atoms(residue)
+    if not coords:
+        return None
     return numpy.mean(coords, axis=0)
+
+
+def residue_base_centroid(residue: Residue3D) -> numpy.ndarray:
+    point = residue_topology_point(residue)
+    if point is None:
+        raise ValueError(f"Missing nucleobase atoms for residue {residue.full_name}")
+    return point
 
 
 def residue_backbone_anchor(residue: Residue3D) -> numpy.ndarray:
@@ -223,7 +245,12 @@ def residue_backbone_anchor(residue: Residue3D) -> numpy.ndarray:
 
     if coords:
         return numpy.mean(coords, axis=0)
-    return residue_base_centroid(residue)
+    point = residue_topology_point(residue)
+    if point is not None:
+        return point
+    if residue.atoms:
+        return residue.atoms[0].coordinates
+    raise ValueError(f"Missing anchor atoms for residue {residue.full_name}")
 
 
 def calculate_quadruplex_twist_centroids(
@@ -815,18 +842,33 @@ class Quadruplex:
 
     def __first_tetrad_column_order(self) -> List[Residue3D]:
         tetrad = self.tetrads[0]
-        center, normal = self.__tetrad_geometry(tetrad)
+        geometry = self.__tetrad_geometry(tetrad)
+        if geometry is None:
+            return list(tetrad.nucleotides)
+
+        center, normal = geometry
         first_nt = min(tetrad.nucleotides, key=lambda nt: self.global_index[nt])
         normal = self.__orient_tetrad_normal(0, tetrad, normal, first_nt)
-        reference = residue_base_centroid(first_nt) - center
-        angles = {
-            nt: calculate_angle_around_axis(
-                residue_base_centroid(nt) - center,
-                normal,
-                reference,
-            )
-            for nt in tetrad.nucleotides
-        }
+
+        reference_point = residue_topology_point(first_nt)
+        if reference_point is None:
+            return list(tetrad.nucleotides)
+
+        reference = reference_point - center
+        angles = {}
+        try:
+            for nt in tetrad.nucleotides:
+                point = residue_topology_point(nt)
+                if point is None:
+                    return list(tetrad.nucleotides)
+                angles[nt] = calculate_angle_around_axis(
+                    point - center,
+                    normal,
+                    reference,
+                )
+        except ValueError:
+            return list(tetrad.nucleotides)
+
         anchor_angle = angles[first_nt]
 
         return sorted(
@@ -834,9 +876,22 @@ class Quadruplex:
             key=lambda nt: (angles[nt] - anchor_angle) % (2.0 * math.pi),
         )
 
-    def __tetrad_geometry(self, tetrad: Tetrad) -> Tuple[numpy.ndarray, numpy.ndarray]:
+    def __tetrad_geometry(
+        self, tetrad: Tetrad
+    ) -> Optional[Tuple[numpy.ndarray, numpy.ndarray]]:
         atom_coords = collect_nucleobase_atoms(tetrad.nucleotides)
-        return get_plane_vectors(numpy.array(atom_coords))
+        if len(atom_coords) >= 3:
+            return get_plane_vectors(numpy.array(atom_coords))
+
+        points = [
+            point
+            for point in (residue_topology_point(nt) for nt in tetrad.nucleotides)
+            if point is not None
+        ]
+        if len(points) >= 3:
+            return get_plane_vectors(numpy.array(points))
+
+        return None
 
     def __orient_tetrad_normal(
         self,
@@ -937,9 +992,9 @@ class Quadruplex:
 
     def __find_path(self) -> List[str]:
         labels = {}
+        tetrad_labels = self.__tetrad_labels_by_5p_order()
 
-        for tetrad_index, _ in enumerate(self.tetrads):
-            tetrad_label = generate_tetrad_label(tetrad_index)
+        for tetrad_index, tetrad_label in enumerate(tetrad_labels):
             for tract_index, tract in enumerate(self.tracts, start=1):
                 labels[tract.nucleotides[tetrad_index]] = f"{tetrad_label}{tract_index}"
 
@@ -948,11 +1003,25 @@ class Quadruplex:
             for nt in sorted(labels.keys(), key=lambda nt: self.global_index[nt])
         ]
 
+    def __tetrad_labels_by_5p_order(self) -> List[str]:
+        tetrad_indices = sorted(
+            range(len(self.tetrads)),
+            key=lambda i: min(
+                self.global_index[nt] for nt in self.tetrads[i].nucleotides
+            ),
+        )
+        labels = [""] * len(self.tetrads)
+
+        for label_index, tetrad_index in enumerate(tetrad_indices):
+            labels[tetrad_index] = generate_tetrad_label(label_index)
+
+        return labels
+
     def __find_handedness(self) -> Optional[HelixHandedness]:
         if len(self.tetrads) < 2:
             return None
 
-        centers = [self.__tetrad_geometry(tetrad)[0] for tetrad in self.tetrads]
+        centers = [tetrad.center() for tetrad in self.tetrads]
         axis = centers[-1] - centers[0]
 
         if numpy.linalg.norm(axis) == 0.0:
@@ -995,27 +1064,36 @@ class Quadruplex:
 
         for i, tetrad in enumerate(self.tetrads):
             column1 = self.tracts[0].nucleotides[i]
-            center, normal = self.__tetrad_geometry(tetrad)
+            geometry = self.__tetrad_geometry(tetrad)
+            if geometry is None:
+                polarities.append(None)
+                continue
+
+            center, normal = geometry
             normal = self.__orient_tetrad_normal(i, tetrad, normal, column1)
-            reference = residue_base_centroid(column1) - center
             successor = self.__hydrogen_bond_successor_map(tetrad)
 
             if len(successor) != 4 or column1 not in successor:
                 polarities.append(None)
                 continue
 
+            reference_point = residue_topology_point(column1)
             next_nt = successor[column1]
-            angle_column1 = calculate_angle_around_axis(
-                residue_base_centroid(column1) - center,
-                normal,
-                reference,
-            )
-            angle_next = calculate_angle_around_axis(
-                residue_base_centroid(next_nt) - center,
-                normal,
-                reference,
-            )
-            delta = (angle_next - angle_column1) % (2.0 * math.pi)
+            next_point = residue_topology_point(next_nt)
+            if reference_point is None or next_point is None:
+                polarities.append(None)
+                continue
+
+            try:
+                delta = calculate_angle_around_axis(
+                    next_point - center,
+                    normal,
+                    reference_point - center,
+                ) % (2.0 * math.pi)
+            except ValueError:
+                polarities.append(None)
+                continue
+
             polarities.append(
                 TetradPolarity.ANTICLOCKWISE
                 if delta < math.pi
