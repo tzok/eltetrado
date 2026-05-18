@@ -1,13 +1,10 @@
 { pkgs, ... }:
 {
-  languages.python = {
+  languages.python.uv = {
     enable = true;
-    uv = {
+    sync = {
       enable = true;
-      sync = {
-        enable = true;
-        arguments = [ "--locked" ];
-      };
+      arguments = [ "--locked" ];
     };
   };
   packages = with pkgs; [
