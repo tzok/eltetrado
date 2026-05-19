@@ -700,6 +700,7 @@ class TetradPair:
     tetrad. The reported ``rise`` and ``twist`` therefore describe adjacent stack
     geometry, not arbitrary build-order intervals used by g4composer.
     """
+
     tetrad1: Tetrad
     tetrad2: Tetrad
     stacked: Dict[Residue3D, Residue3D]
@@ -1594,6 +1595,7 @@ class Analysis:
         winning permutation provides the residue-to-residue mapping later used to
         build tracts and adjacent ``TetradPair`` objects.
         """
+
         def is_next_by_stacking(nt1: Residue3D, nt2: Residue3D) -> bool:
             return nt2 in self.mapping.stacking_graph.get(nt1, [])
 
@@ -1699,6 +1701,7 @@ class Analysis:
         adjacent pair geometry, and helix grouping. It is intentionally separate
         from tetrad 5' labeling and from g4composer build order.
         """
+
         def next_tetrad_scoring(
             ti: Tetrad, tj: Tetrad, candidates: Iterable[Tetrad]
         ) -> Tuple[int, int, int, int, int]:
