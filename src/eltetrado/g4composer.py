@@ -103,7 +103,8 @@ def export_residues(analysis: Analysis, quadruplex: Quadruplex) -> List[Residue3
     return [
         residue
         for residue in sorted(
-            analysis.structure3d.residues, key=lambda residue: analysis.global_index[residue]
+            analysis.structure3d.residues,
+            key=lambda residue: analysis.global_index[residue],
         )
         if residue.is_nucleotide and residue.chain in chains
     ]
@@ -197,13 +198,19 @@ def remap_path_entry_to_clockwise(entry: str) -> str:
 
 def export_rise(quadruplex: Quadruplex) -> str:
     intervals = build_intervals(quadruplex)
-    values = [format_number(sum(step.signed_rise for step in interval)) for interval in intervals]
+    values = [
+        format_number(sum(step.signed_rise for step in interval))
+        for interval in intervals
+    ]
     return ";".join(values)
 
 
 def export_twist(quadruplex: Quadruplex) -> str:
     intervals = build_intervals(quadruplex)
-    values = [format_number(sum(step.signed_twist for step in interval)) for interval in intervals]
+    values = [
+        format_number(sum(step.signed_twist for step in interval))
+        for interval in intervals
+    ]
     return ";".join(values)
 
 
@@ -228,7 +235,9 @@ def build_intervals(quadruplex: Quadruplex) -> List[List[SignedStep]]:
 def tetrads_in_build_order(quadruplex: Quadruplex) -> List[Tetrad]:
     label_to_tetrad = {
         label: tetrad
-        for tetrad, label in zip(quadruplex.tetrads, quadruplex.tetrad_labels_by_5p_order())
+        for tetrad, label in zip(
+            quadruplex.tetrads, quadruplex.tetrad_labels_by_5p_order()
+        )
     }
     build_labels = []
     for path_entry in quadruplex.path:
@@ -238,7 +247,9 @@ def tetrads_in_build_order(quadruplex: Quadruplex) -> List[Tetrad]:
     return [label_to_tetrad[label] for label in build_labels]
 
 
-def signed_pair_steps(quadruplex: Quadruplex) -> Dict[Tuple[Tetrad, Tetrad], SignedStep]:
+def signed_pair_steps(
+    quadruplex: Quadruplex,
+) -> Dict[Tuple[Tetrad, Tetrad], SignedStep]:
     steps = {}
     for pair in quadruplex.tetrad_pairs:
         rise = signed_rise_for_pair(pair.tetrad1, pair.tetrad2)
@@ -264,7 +275,11 @@ def path_steps_between(
             if neighbor in visited:
                 continue
             queue.append(
-                (neighbor, steps + [pair_steps[(current, neighbor)]], visited + [neighbor])
+                (
+                    neighbor,
+                    steps + [pair_steps[(current, neighbor)]],
+                    visited + [neighbor],
+                )
             )
 
     raise ValueError("Failed to derive g4composer build traversal between tetrads")
@@ -291,8 +306,12 @@ def signed_twist_for_pair(tetrad1: Tetrad, tetrad2: Tetrad) -> float:
     if not tetrad1_all_coords or not tetrad2_all_coords:
         return math.nan
 
-    nt_list1 = [numpy.array(collect_nucleobase_atoms((nt,))) for nt in tetrad1.nucleotides]
-    nt_list2 = [numpy.array(collect_nucleobase_atoms((nt,))) for nt in tetrad2.nucleotides]
+    nt_list1 = [
+        numpy.array(collect_nucleobase_atoms((nt,))) for nt in tetrad1.nucleotides
+    ]
+    nt_list2 = [
+        numpy.array(collect_nucleobase_atoms((nt,))) for nt in tetrad2.nucleotides
+    ]
     if any(len(coords) == 0 for coords in nt_list1 + nt_list2):
         return math.nan
 
@@ -316,9 +335,14 @@ def format_number(value: float) -> str:
 
 
 def write_g4composer(
-    analysis: Analysis, input_path: str, output_path: str, quadruplex: Optional[Quadruplex] = None
+    analysis: Analysis,
+    input_path: str,
+    output_path: str,
+    quadruplex: Optional[Quadruplex] = None,
 ) -> None:
-    selected = quadruplex if quadruplex is not None else select_single_quadruplex(analysis)
+    selected = (
+        quadruplex if quadruplex is not None else select_single_quadruplex(analysis)
+    )
     entry = generate_g4composer_entry(analysis, selected, input_name(input_path))
     with open(output_path, "w") as handle:
         handle.write(entry.serialize())

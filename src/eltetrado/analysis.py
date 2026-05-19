@@ -304,7 +304,9 @@ def sugar_pseudorotation(residue: Residue3D) -> float:
         return math.nan
 
     numerator = (nu4 + nu1) - (nu3 + nu0)
-    denominator = 2.0 * nu2 * (math.sin(math.radians(36.0)) + math.sin(math.radians(72.0)))
+    denominator = (
+        2.0 * nu2 * (math.sin(math.radians(36.0)) + math.sin(math.radians(72.0)))
+    )
 
     if math.isclose(denominator, 0.0, abs_tol=1.0e-12):
         return math.nan

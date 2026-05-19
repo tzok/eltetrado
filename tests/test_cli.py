@@ -105,8 +105,7 @@ def test_g4composer_export_for_6fc9(tmp_path, capfd):
         assert out == f.read()
 
     assert (
-        output_path.read_text()
-        == "name        6fc9-assembly-1\n"
+        output_path.read_text() == "name        6fc9-assembly-1\n"
         "sequence    ggttggcgcgaagcattcgcgggttgg\n"
         "structure   ^^..^^...............^^..^^\n"
         "chi         S...S................S...S.\n"
