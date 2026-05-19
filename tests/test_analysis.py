@@ -7,6 +7,7 @@ from rnapolis.adapter import ExternalTool, parse_external_output
 import eltetrado.analysis as analysis_module
 from eltetrado.analysis import eltetrado
 from eltetrado.cli import handle_input_file, read_secondary_structure_from_dssr
+from eltetrado.g4composer import generate_g4composer_entry
 
 
 def test_5zev_tracts():
@@ -165,3 +166,19 @@ def test_incomplete_tetrad_residue_does_not_crash_geometry(monkeypatch):
 
     assert quadruplex.path
     assert len(quadruplex.tetrad_polarities) == len(quadruplex.tetrads)
+
+
+def test_g4composer_non_linear_intervals_follow_build_order():
+    cif = handle_input_file("tests/files/5zev-assembly1.cif.gz")
+    structure3d = rnapolis.parser.read_3d_structure(cif, 1, nucleic_acid_only=False)
+    base_interactions = parse_external_output(
+        ["tests/files/5zev-assembly1.json"], ExternalTool.DSSR, structure3d
+    )
+    analysis = eltetrado(base_interactions, structure3d, False)
+
+    quadruplex = analysis.helices[0].quadruplexes[0]
+    entry = generate_g4composer_entry(analysis, quadruplex, "5zev-assembly1")
+
+    assert entry.orient == "A-;B-;C-"
+    assert entry.rise == "-2.9;6.3"
+    assert entry.twist == "-43.9;75.6"
