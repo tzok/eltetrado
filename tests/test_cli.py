@@ -111,10 +111,10 @@ def test_g4composer_export_for_6fc9(tmp_path, capfd):
         "structure   ^^..^^...............^^..^^\n"
         "chi         S...S................S...S.\n"
         "sugar       SSNNSSSSNSSSSSSNNSSSSNSNNSS\n"
-        "orient      A+;B+\n"
+        "orient      A+;B-\n"
         "rise        3.4\n"
         "twist       28.6\n"
-        "path        A1;B1;B4;A4;A3;B3;B2;A2\n"
+        "path        A1;B1;B2;A2;A3;B3;B4;A4\n"
     )
 
 

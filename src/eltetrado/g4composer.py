@@ -58,7 +58,7 @@ def eligible_quadruplexes(analysis: Analysis) -> List[Quadruplex]:
         quadruplex
         for helix in analysis.helices
         for quadruplex in helix.quadruplexes
-        if len(quadruplex.tetrads) >= 2
+        if len(quadruplex.tetrads) >= 2 and len(export_chains(quadruplex)) == 1
     ]
 
 
@@ -66,11 +66,11 @@ def select_single_quadruplex(analysis: Analysis) -> Quadruplex:
     quadruplexes = eligible_quadruplexes(analysis)
     if not quadruplexes:
         raise ValueError(
-            "g4composer export requires exactly one quadruplex with at least 2 tetrads, found none"
+            "g4composer export requires exactly one unimolecular quadruplex with at least 2 tetrads, found none"
         )
     if len(quadruplexes) > 1:
         raise ValueError(
-            f"g4composer export requires exactly one quadruplex with at least 2 tetrads, found {len(quadruplexes)}"
+            f"g4composer export requires exactly one unimolecular quadruplex with at least 2 tetrads, found {len(quadruplexes)}"
         )
     return quadruplexes[0]
 
@@ -94,14 +94,12 @@ def generate_g4composer_entry(
         orient=export_orient(quadruplex, build_order, tetrad_to_label),
         rise=export_rise(quadruplex),
         twist=export_twist(quadruplex),
-        path=";".join(quadruplex.path),
+        path=export_path(quadruplex),
     )
 
 
 def export_residues(analysis: Analysis, quadruplex: Quadruplex) -> List[Residue3D]:
-    chains = {
-        nt.chain for tetrad in quadruplex.tetrads for nt in tetrad.nucleotides if nt.is_nucleotide
-    }
+    chains = export_chains(quadruplex)
     return [
         residue
         for residue in sorted(
@@ -109,6 +107,17 @@ def export_residues(analysis: Analysis, quadruplex: Quadruplex) -> List[Residue3
         )
         if residue.is_nucleotide and residue.chain in chains
     ]
+
+
+def export_chains(quadruplex: Quadruplex) -> List[str]:
+    return sorted(
+        {
+            nt.chain
+            for tetrad in quadruplex.tetrads
+            for nt in tetrad.nucleotides
+            if nt.is_nucleotide
+        }
+    )
 
 
 def export_sequence(residues: Sequence[Residue3D]) -> str:
@@ -151,36 +160,39 @@ def export_orient(
     build_order: Sequence[Tetrad],
     tetrad_to_label: Dict[Tetrad, str],
 ) -> str:
-    centers_and_normals = {}
-    for index, tetrad in enumerate(quadruplex.tetrads):
-        geometry = quadruplex.tetrad_geometry(tetrad)
-        if geometry is None:
-            centers_and_normals[tetrad] = (None, None)
-            continue
-        center, normal = geometry
-        reference_nt = quadruplex.tracts[0].nucleotides[index]
-        normal = quadruplex.oriented_tetrad_normal(index, tetrad, normal, reference_nt)
-        centers_and_normals[tetrad] = (center, normal)
-
-    if len(build_order) > 1:
-        first_center = centers_and_normals[build_order[0]][0]
-        second_center = centers_and_normals[build_order[1]][0]
-        stacking_direction = (
-            second_center - first_center
-            if first_center is not None and second_center is not None
-            else None
-        )
-    else:
-        stacking_direction = None
-
+    polarity_by_tetrad = {
+        tetrad: polarity
+        for tetrad, polarity in zip(quadruplex.tetrads, quadruplex.tetrad_polarities)
+    }
     values = []
     for tetrad in build_order:
-        _, normal = centers_and_normals[tetrad]
-        sign = "+"
-        if normal is not None and stacking_direction is not None:
-            sign = "+" if numpy.dot(normal, stacking_direction) >= 0 else "-"
+        polarity = polarity_by_tetrad.get(tetrad)
+        if polarity is None:
+            raise ValueError(
+                f"g4composer export requires tetrad polarity for {tetrad_to_label[tetrad]}"
+            )
+        sign = "+" if polarity.value == "clockwise" else "-"
         values.append(f"{tetrad_to_label[tetrad]}{sign}")
     return ";".join(values)
+
+
+def export_path(quadruplex: Quadruplex) -> str:
+    return ";".join(remap_path_entry_to_clockwise(entry) for entry in quadruplex.path)
+
+
+def remap_path_entry_to_clockwise(entry: str) -> str:
+    label = "".join(ch for ch in entry if ch.isalpha())
+    column = "".join(ch for ch in entry if ch.isdigit())
+    if column == "1":
+        return entry
+    clockwise_column = {
+        "2": "4",
+        "3": "3",
+        "4": "2",
+    }.get(column)
+    if clockwise_column is None:
+        raise ValueError(f"Unsupported g4composer path column: {entry}")
+    return f"{label}{clockwise_column}"
 
 
 def export_rise(quadruplex: Quadruplex) -> str:

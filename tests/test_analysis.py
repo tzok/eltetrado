@@ -179,6 +179,6 @@ def test_g4composer_non_linear_intervals_follow_build_order():
     quadruplex = analysis.helices[0].quadruplexes[0]
     entry = generate_g4composer_entry(analysis, quadruplex, "5zev-assembly1")
 
-    assert entry.orient == "A-;B-;C-"
+    assert entry.orient == "A-;B+;C-"
     assert entry.rise == "-2.9;6.3"
     assert entry.twist == "-43.9;75.6"
