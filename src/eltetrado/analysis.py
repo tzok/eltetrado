@@ -693,6 +693,13 @@ class Tetrad:
 
 @dataclass
 class TetradPair:
+    """Describe one adjacent stacked tetrad pair.
+
+    ``tetrad2_nts_best_order`` reorders the second tetrad so residue ``i`` in the
+    first tetrad is the residue that best continues the same tract in the second
+    tetrad. The reported ``rise`` and ``twist`` therefore describe adjacent stack
+    geometry, not arbitrary build-order intervals used by g4composer.
+    """
     tetrad1: Tetrad
     tetrad2: Tetrad
     stacked: Dict[Residue3D, Residue3D]
@@ -748,6 +755,7 @@ class TetradPair:
         return math.nan
 
     def __calculate_twist(self) -> float:
+        """Measure twist after aligning tetrad 2 to the best tract continuation."""
         # Collect all nucleobase atoms for tetrad 1
         tetrad1_all_coords = collect_nucleobase_atoms(self.tetrad1.nucleotides)
         # Collect all nucleobase atoms for tetrad 2
@@ -1579,6 +1587,13 @@ class Analysis:
     def __calculate_tetrad_scores(
         self,
     ) -> Dict[Tetrad, Dict[Tetrad, Tuple[int, Tuple, Tuple]]]:
+        """Score every tetrad pair to decide how tetrads should be connected.
+
+        Each candidate correspondence combines two independent signals:
+        sequential proximity in 5' order and observed stacking interactions. The
+        winning permutation provides the residue-to-residue mapping later used to
+        build tracts and adjacent ``TetradPair`` objects.
+        """
         def is_next_by_stacking(nt1: Residue3D, nt2: Residue3D) -> bool:
             return nt2 in self.mapping.stacking_graph.get(nt1, [])
 
@@ -1678,6 +1693,12 @@ class Analysis:
         return tetrad_scores
 
     def __find_tetrad_pairs(self) -> List[TetradPair]:
+        """Construct a best adjacent-stack path through the detected tetrads.
+
+        The resulting order is the internal stack order used for tract extension,
+        adjacent pair geometry, and helix grouping. It is intentionally separate
+        from tetrad 5' labeling and from g4composer build order.
+        """
         def next_tetrad_scoring(
             ti: Tetrad, tj: Tetrad, candidates: Iterable[Tetrad]
         ) -> Tuple[int, int, int, int, int]:

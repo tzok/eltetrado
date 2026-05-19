@@ -45,7 +45,10 @@ with `--input` and a path to a PDB or PDBx/mmCIF file.
 
 By default, ElTetrado outputs textual results on the standard output. A
 JSON version of the output can be obtained with `--output` switch
-followed by a path where the file is supposed to be created.
+followed by a path where the file is supposed to be created. ElTetrado
+can also export a plain-text input file for g4composer with
+`--g4composer-output`, but this currently requires exactly one
+unimolecular quadruplex with at least two tetrads.
 
 ElTetrado prepares visualization of the whole structure and of each
 N4-helices, quadruplexes and tetrads. This can be supplemented with
@@ -55,8 +58,9 @@ file, you can easily change them without knowledge of R language. If you
 want ElTetrado to not visualize anything, pass `--no-image` switch to
 it.
 
-    usage: eltetrado [-h] [-i INPUT] [-o OUTPUT] [-m MODEL] [--no-reorder]
-                     [--complete-2d] [--image DIR] [-e [EXTERNAL_FILES ...]]
+    usage: eltetrado [-h] [-i INPUT] [-o OUTPUT]
+                     [--g4composer-output G4COMPOSER_OUTPUT] [-m MODEL]
+                     [--no-reorder] [--complete-2d] [--image DIR] [-e [EXTERNAL_FILES ...]]
                      [--tool {fr3d,dssr,rnaview,bpnet,maxit,barnaba,mc-annotate,dnatco}]
                      [-v]
 
@@ -64,6 +68,10 @@ it.
       -h, --help            show this help message and exit
       -i, --input INPUT     path to input PDB or PDBx/mmCIF file
       -o, --output OUTPUT   (optional) path for output JSON file
+      --g4composer-output G4COMPOSER_OUTPUT
+                            (optional) path for g4composer plain-text export;
+                            requires exactly one unimolecular quadruplex and
+                            exports the full involved chain
       -m, --model MODEL     (optional) model number to process
       --no-reorder          chains of bi- and tetramolecular quadruplexes should
                             be reordered to be able to have them classified; when
@@ -93,6 +101,41 @@ the order of chains in the input file. Therefore, if M preceded N then
 nucleotides in M will be indexed from 0 to 59 and in N from 60 to 74.
 Otherwise, nucleotides in N will be indexed from 0 to 14 and in M from
 15 to 74.
+
+# g4composer export
+
+The g4composer exporter uses the same structural analysis as the main
+ElTetrado output, but it applies g4composer-specific conventions at
+export time:
+
+- Only a single unimolecular quadruplex with at least two tetrads is supported.
+- The exported residue span covers the whole chain containing the quadruplex,
+  including 5' and 3' flanking single strands.
+- Tetrad letters (`A`, `B`, `C`, ...) still follow tetrad 5' order.
+- Core ElTetrado path columns are numbered anticlockwise after the `1`
+  column anchor, but g4composer path columns are numbered clockwise. This
+  affects only the exported g4composer `path`, not ElTetrado's internal
+  topology model or JSON `path`.
+- `orient` is exported from ElTetrado tetrad polarities:
+  `clockwise -> +`, `anticlockwise -> -`.
+- `rise` and `twist` are exported as signed traversal values between
+  consecutive build-order tetrads. When build order differs from adjacent
+  stack order, ElTetrado traverses the stack graph and negates a step when
+  the traversal goes against the stored adjacent-pair direction.
+
+Example g4composer export:
+
+```text
+name        6tc8
+sequence    gggatgggacacaggggacggg
+structure   ^^...^^^.....^^^^..^^^
+chi         S....S.......S.....S..
+sugar       SSSSSSSSSSSSSSSSSSSSSS
+orient      A+;B-;C+
+rise        3.4;-6.8
+twist       19;-46
+path        A1;B1;B4;A4;C4;C1;B2;A2;C2;B3;A3;C3
+```
 
 When `--no-reorder` is present, this initial assignment is used.
 Otherwise, ElTetrado exhaustively checks all permutations of chains’

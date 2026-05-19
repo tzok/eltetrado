@@ -1,3 +1,19 @@
+"""Generate plain-text exports for g4composer.
+
+This module has to bridge several ordering conventions used elsewhere in ElTetrado:
+
+- ``analysis.global_index`` defines nucleotide 5'->3' order across chains,
+- ``quadruplex.tetrads`` / ``quadruplex.tetrad_pairs`` follow adjacent stack order,
+- tetrad letters in ``quadruplex.path`` are assigned by tetrad 5'->3' order,
+- g4composer builds a quadruplex in the order implied by first appearance of
+  tetrad letters in ``path``,
+- g4composer path columns are numbered clockwise, whereas ElTetrado tracts are
+  numbered anticlockwise after the first column anchor.
+
+The exporter therefore keeps ElTetrado topology intact, but remaps it at export
+time into g4composer's build-order and path-numbering conventions.
+"""
+
 import math
 import os
 from dataclasses import dataclass
@@ -54,6 +70,11 @@ def input_name(path: str) -> str:
 
 
 def eligible_quadruplexes(analysis: Analysis) -> List[Quadruplex]:
+    """Return g4composer-eligible quadruplexes.
+
+    g4composer currently supports a single unimolecular quadruplex only, so we
+    filter out quadruplexes built from multiple chains here.
+    """
     return [
         quadruplex
         for helix in analysis.helices
@@ -99,6 +120,12 @@ def generate_g4composer_entry(
 
 
 def export_residues(analysis: Analysis, quadruplex: Quadruplex) -> List[Residue3D]:
+    """Export full nucleotide chains participating in the selected quadruplex.
+
+    g4composer expects the quadruplex together with its 5' and 3' flanking
+    single-stranded context, so we export every nucleotide from the involved
+    chain(s), not only residues that belong to tetrads.
+    """
     chains = export_chains(quadruplex)
     return [
         residue
@@ -161,6 +188,13 @@ def export_orient(
     build_order: Sequence[Tetrad],
     tetrad_to_label: Dict[Tetrad, str],
 ) -> str:
+    """Map tetrad polarities onto g4composer orientation signs.
+
+    ElTetrado already exposes tetrad polarity as ``clockwise`` or
+    ``anticlockwise``. g4composer uses the same concept but encodes it as ``+``
+    and ``-`` respectively, emitted in g4composer build order rather than stack
+    order.
+    """
     polarity_by_tetrad = {
         tetrad: polarity
         for tetrad, polarity in zip(quadruplex.tetrads, quadruplex.tetrad_polarities)
@@ -178,6 +212,12 @@ def export_orient(
 
 
 def export_path(quadruplex: Quadruplex) -> str:
+    """Convert ElTetrado path numbering into g4composer path numbering.
+
+    Both formats share tetrad letters and preserve ``A1`` as the anchor, but
+    g4composer numbers the remaining columns clockwise whereas ElTetrado tracts
+    are numbered anticlockwise.
+    """
     return ";".join(remap_path_entry_to_clockwise(entry) for entry in quadruplex.path)
 
 
@@ -221,6 +261,14 @@ class SignedStep:
 
 
 def build_intervals(quadruplex: Quadruplex) -> List[List[SignedStep]]:
+    """Build signed traversal intervals between consecutive build-order tetrads.
+
+    g4composer ``rise`` and ``twist`` are exported between consecutive tetrads in
+    build order (A->B, B->C, ...), but the underlying geometry in ElTetrado is
+    defined on adjacent stacked tetrad pairs. When build order differs from stack
+    order, an interval may therefore traverse one or more stack edges, possibly
+    in reverse. Reverse traversal negates the adjacent-pair metric.
+    """
     build_order = tetrads_in_build_order(quadruplex)
     if len(build_order) < 2:
         return []
@@ -233,6 +281,12 @@ def build_intervals(quadruplex: Quadruplex) -> List[List[SignedStep]]:
 
 
 def tetrads_in_build_order(quadruplex: Quadruplex) -> List[Tetrad]:
+    """Infer g4composer build order from the exported path.
+
+    Tetrad labels are assigned by 5'->3' tetrad order, not by stack order. The
+    g4composer build order is the order in which those labels first appear in the
+    path, e.g. ``A1;B1;B4;A4;C4;...`` implies build order ``A, B, C``.
+    """
     label_to_tetrad = {
         label: tetrad
         for tetrad, label in zip(
@@ -250,6 +304,7 @@ def tetrads_in_build_order(quadruplex: Quadruplex) -> List[Tetrad]:
 def signed_pair_steps(
     quadruplex: Quadruplex,
 ) -> Dict[Tuple[Tetrad, Tetrad], SignedStep]:
+    """Cache signed adjacent-stack metrics for both traversal directions."""
     steps = {}
     for pair in quadruplex.tetrad_pairs:
         rise = signed_rise_for_pair(pair.tetrad1, pair.tetrad2)
@@ -264,6 +319,11 @@ def path_steps_between(
     end: Tetrad,
     pair_steps: Dict[Tuple[Tetrad, Tetrad], SignedStep],
 ) -> List[SignedStep]:
+    """Traverse the stack graph between two build-order tetrads.
+
+    The returned step list is later summed to produce g4composer ``rise`` and
+    ``twist`` for a single build-order interval.
+    """
     graph = adjacency(pair_steps.keys())
     queue: List[Tuple[Tetrad, List[SignedStep], List[Tetrad]]] = [(start, [], [start])]
 
@@ -293,6 +353,7 @@ def adjacency(edges: Iterable[Tuple[Tetrad, Tetrad]]) -> Dict[Tetrad, List[Tetra
 
 
 def signed_rise_for_pair(tetrad1: Tetrad, tetrad2: Tetrad) -> float:
+    """Return the signed rise for one adjacent stacked tetrad pair."""
     coords1 = numpy.array(collect_nucleobase_atoms(tetrad1.nucleotides))
     coords2 = numpy.array(collect_nucleobase_atoms(tetrad2.nucleotides))
     if len(coords1) == 0 or len(coords2) == 0:
@@ -301,6 +362,13 @@ def signed_rise_for_pair(tetrad1: Tetrad, tetrad2: Tetrad) -> float:
 
 
 def signed_twist_for_pair(tetrad1: Tetrad, tetrad2: Tetrad) -> float:
+    """Return the centroid-based twist for one adjacent stacked tetrad pair.
+
+    This helper measures the mean angular offset of the four matched base
+    centroids between two stacked tetrads. In the g4composer exporter, interval
+    sign is inherited from stack-graph traversal direction rather than from this
+    helper directly.
+    """
     tetrad1_all_coords = collect_nucleobase_atoms(tetrad1.nucleotides)
     tetrad2_all_coords = collect_nucleobase_atoms(tetrad2.nucleotides)
     if not tetrad1_all_coords or not tetrad2_all_coords:

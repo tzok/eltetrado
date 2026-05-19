@@ -97,7 +97,11 @@ def test_2awe():
 
 def test_5v3f():
     """
-    In 5V3F there are O+ and O- tetrads and the two-line dot-bracket has to take that into account
+    In 5V3F there are O+ and O- tetrads and the two-line dot-bracket has to take that into account.
+
+    The sugar line in ``quadruplexDotBracket`` follows the same sequence layout
+    and uses ``N``/``S``/``?`` for sugar pucker, with ``-`` preserved at chain
+    breaks.
     """
     cif = handle_input_file("tests/files/5v3f-assembly-1.cif.gz")
     structure3d = rnapolis.parser.read_3d_structure(cif, 1)

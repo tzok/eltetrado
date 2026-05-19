@@ -169,6 +169,12 @@ def test_incomplete_tetrad_residue_does_not_crash_geometry(monkeypatch):
 
 
 def test_g4composer_non_linear_intervals_follow_build_order():
+    """Document a nonlinear build-order case used by the g4composer exporter.
+
+    In 5ZEV the adjacent stack order is B-A-C, while the g4composer build order
+    inferred from the path is A-B-C. The first exported interval therefore
+    traverses the stack graph in reverse, which flips the sign of rise/twist.
+    """
     cif = handle_input_file("tests/files/5zev-assembly1.cif.gz")
     structure3d = rnapolis.parser.read_3d_structure(cif, 1, nucleic_acid_only=False)
     base_interactions = parse_external_output(

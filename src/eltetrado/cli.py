@@ -26,7 +26,7 @@ def eltetrado_cli(args=sys.argv[1:]):
     parser.add_argument("-o", "--output", help="(optional) path for output JSON file")
     parser.add_argument(
         "--g4composer-output",
-        help="(optional) path for g4composer plain-text export",
+        help="(optional) path for g4composer plain-text export; requires exactly one unimolecular quadruplex and exports the full involved chain",
     )
     parser.add_argument(
         "-m", "--model", help="(optional) model number to process", default=1, type=int
