@@ -13,7 +13,14 @@ from typing import IO, Dict, FrozenSet, Iterable, List, Optional, Set, Tuple
 import numpy
 import numpy.typing
 from rnapolis.common import BaseInteractions, BpSeq, Entry, GlycosidicBond
-from rnapolis.tertiary import Atom, BasePair3D, Mapping2D3D, Residue3D, Structure3D
+from rnapolis.tertiary import (
+    Atom,
+    BasePair3D,
+    Mapping2D3D,
+    Residue3D,
+    Structure3D,
+    torsion_angle,
+)
 
 from eltetrado.model import (
     HelixHandedness,
@@ -25,6 +32,7 @@ from eltetrado.model import (
     Ion,
     LoopClassification,
     LoopType,
+    SugarPucker,
     TetradPolarity,
 )
 
@@ -125,7 +133,8 @@ def calculate_rise(coords_base_A: numpy.ndarray, coords_base_B: numpy.ndarray) -
         n_B = -n_B
 
     # 3. Compute Average Normal
-    # This represents the "intermediate" director axis between the two bases
+    # This represents the "intermediate" director axis between the two bases.
+    # For the signed variant, orient the axis from A to B.
     n_avg = n_A + n_B
     n_avg = n_avg / numpy.linalg.norm(n_avg)  # Normalize to unit vector
 
@@ -139,6 +148,30 @@ def calculate_rise(coords_base_A: numpy.ndarray, coords_base_B: numpy.ndarray) -
     # We usually care about the absolute distance, though sign indicates
     # if B is "above" or "below" A relative to the normal.
     return abs(rise)
+
+
+def calculate_signed_rise(
+    coords_base_A: numpy.ndarray, coords_base_B: numpy.ndarray
+) -> float:
+    c_A, n_A = get_plane_vectors(coords_base_A)
+    c_B, n_B = get_plane_vectors(coords_base_B)
+
+    if numpy.dot(n_A, n_B) < 0:
+        n_B = -n_B
+
+    axis = n_A + n_B
+    vector_connect = c_B - c_A
+
+    if numpy.linalg.norm(axis) < 1.0e-6:
+        axis = vector_connect
+    if numpy.linalg.norm(axis) < 1.0e-6:
+        return 0.0
+
+    axis = normalize_vector(axis)
+    if numpy.dot(axis, vector_connect) < 0:
+        axis = -axis
+
+    return float(numpy.dot(vector_connect, axis))
 
 
 def get_signed_angle(
@@ -251,6 +284,47 @@ def residue_backbone_anchor(residue: Residue3D) -> numpy.ndarray:
     if residue.atoms:
         return residue.atoms[0].coordinates
     raise ValueError(f"Missing anchor atoms for residue {residue.full_name}")
+
+
+def sugar_torsion(residue: Residue3D, atom_names: Tuple[str, str, str, str]) -> float:
+    atoms = [residue.find_atom(atom_name) for atom_name in atom_names]
+    if any(atom is None for atom in atoms):
+        return math.nan
+    return torsion_angle(atoms[0], atoms[1], atoms[2], atoms[3])
+
+
+def sugar_pseudorotation(residue: Residue3D) -> float:
+    nu0 = sugar_torsion(residue, ("C4'", "O4'", "C1'", "C2'"))
+    nu1 = sugar_torsion(residue, ("O4'", "C1'", "C2'", "C3'"))
+    nu2 = sugar_torsion(residue, ("C1'", "C2'", "C3'", "C4'"))
+    nu3 = sugar_torsion(residue, ("C2'", "C3'", "C4'", "O4'"))
+    nu4 = sugar_torsion(residue, ("C3'", "C4'", "O4'", "C1'"))
+
+    if any(math.isnan(nu) for nu in (nu0, nu1, nu2, nu3, nu4)):
+        return math.nan
+
+    numerator = (nu4 + nu1) - (nu3 + nu0)
+    denominator = (
+        2.0 * nu2 * (math.sin(math.radians(36.0)) + math.sin(math.radians(72.0)))
+    )
+
+    if math.isclose(denominator, 0.0, abs_tol=1.0e-12):
+        return math.nan
+
+    angle = math.degrees(math.atan2(numerator, denominator))
+    if angle < 0.0:
+        angle += 360.0
+    return angle
+
+
+def classify_sugar_pucker(residue: Residue3D) -> Optional[SugarPucker]:
+    phase = sugar_pseudorotation(residue)
+    if math.isnan(phase):
+        return None
+
+    if phase >= 315.0 or phase < 135.0:
+        return SugarPucker.NORTH
+    return SugarPucker.SOUTH
 
 
 def calculate_quadruplex_twist_centroids(
@@ -619,6 +693,14 @@ class Tetrad:
 
 @dataclass
 class TetradPair:
+    """Describe one adjacent stacked tetrad pair.
+
+    ``tetrad2_nts_best_order`` reorders the second tetrad so residue ``i`` in the
+    first tetrad is the residue that best continues the same tract in the second
+    tetrad. The reported ``rise`` and ``twist`` therefore describe adjacent stack
+    geometry, not arbitrary build-order intervals used by g4composer.
+    """
+
     tetrad1: Tetrad
     tetrad2: Tetrad
     stacked: Dict[Residue3D, Residue3D]
@@ -674,6 +756,7 @@ class TetradPair:
         return math.nan
 
     def __calculate_twist(self) -> float:
+        """Measure twist after aligning tetrad 2 to the best tract continuation."""
         # Collect all nucleobase atoms for tetrad 1
         tetrad1_all_coords = collect_nucleobase_atoms(self.tetrad1.nucleotides)
         # Collect all nucleobase atoms for tetrad 2
@@ -1016,6 +1099,23 @@ class Quadruplex:
             labels[tetrad_index] = generate_tetrad_label(label_index)
 
         return labels
+
+    def tetrad_labels_by_5p_order(self) -> List[str]:
+        return self.__tetrad_labels_by_5p_order()
+
+    def tetrad_geometry(
+        self, tetrad: Tetrad
+    ) -> Optional[Tuple[numpy.ndarray, numpy.ndarray]]:
+        return self.__tetrad_geometry(tetrad)
+
+    def oriented_tetrad_normal(
+        self,
+        tetrad_index: int,
+        tetrad: Tetrad,
+        normal: numpy.ndarray,
+        reference_nt: Residue3D,
+    ) -> numpy.ndarray:
+        return self.__orient_tetrad_normal(tetrad_index, tetrad, normal, reference_nt)
 
     def __find_handedness(self) -> Optional[HelixHandedness]:
         if len(self.tetrads) < 2:
@@ -1385,6 +1485,7 @@ class Analysis:
     tetrad_pairs: List[TetradPair] = field(init=False)
     helices: List[Helix] = field(init=False)
     ions: List[Atom] = field(init=False)
+    sugar_puckers: Dict[Residue3D, Optional[SugarPucker]] = field(init=False)
     sequence: str = field(init=False)
     line1: str = field(init=False)
     line2: str = field(init=False)
@@ -1401,6 +1502,11 @@ class Analysis:
         self.tetrad_scores = self.__calculate_tetrad_scores()
         self.tetrad_pairs = self.__find_tetrad_pairs()
         self.helices = self.__find_helices()
+        self.sugar_puckers = {
+            residue: classify_sugar_pucker(residue)
+            for residue in self.structure3d.residues
+            if residue.is_nucleotide
+        }
 
         if not self.no_reorder:
             self.__find_best_chain_order()
@@ -1482,6 +1588,14 @@ class Analysis:
     def __calculate_tetrad_scores(
         self,
     ) -> Dict[Tetrad, Dict[Tetrad, Tuple[int, Tuple, Tuple]]]:
+        """Score every tetrad pair to decide how tetrads should be connected.
+
+        Each candidate correspondence combines two independent signals:
+        sequential proximity in 5' order and observed stacking interactions. The
+        winning permutation provides the residue-to-residue mapping later used to
+        build tracts and adjacent ``TetradPair`` objects.
+        """
+
         def is_next_by_stacking(nt1: Residue3D, nt2: Residue3D) -> bool:
             return nt2 in self.mapping.stacking_graph.get(nt1, [])
 
@@ -1581,6 +1695,13 @@ class Analysis:
         return tetrad_scores
 
     def __find_tetrad_pairs(self) -> List[TetradPair]:
+        """Construct a best adjacent-stack path through the detected tetrads.
+
+        The resulting order is the internal stack order used for tract extension,
+        adjacent pair geometry, and helix grouping. It is intentionally separate
+        from tetrad 5' labeling and from g4composer build order.
+        """
+
         def next_tetrad_scoring(
             ti: Tetrad, tj: Tetrad, candidates: Iterable[Tetrad]
         ) -> Tuple[int, int, int, int, int]:

@@ -27,6 +27,7 @@ class NucleotideDTO:
     shortName: str
     chi: float
     glycosidicBond: Optional[str]
+    sugarPucker: Optional[str]
 
 
 @dataclass
@@ -111,6 +112,7 @@ class QuadruplexDotBracketDTO:
     sequence: str
     structure: str
     chi: str
+    sugar: str
     loop: str
 
 
@@ -141,6 +143,11 @@ def convert_nucleotides(analysis: Analysis) -> List[NucleotideDTO]:
             nt.one_letter_name,
             math.degrees(nt.chi),
             nt.chi_class.value if nt.chi_class else None,
+            (
+                analysis.sugar_puckers[nt].value
+                if analysis.sugar_puckers.get(nt) is not None
+                else None
+            ),
         )
         for nt in analysis.structure3d.residues
         if nt.is_nucleotide
@@ -341,6 +348,7 @@ def convert_quadruplex_dot_bracket(analysis: Analysis) -> QuadruplexDotBracketDT
             raise ValueError(f"Unexpected ONZ value: {tetrad.onz}")
 
     chi_line = list(re.sub(r"[^-]", ".", sequence))
+    sugar_line = list(re.sub(r"[^-]", ".", sequence))
 
     for nt in analysis.structure3d.residues:
         if nt.is_nucleotide and nt in analysis.global_index:
@@ -349,6 +357,15 @@ def convert_quadruplex_dot_bracket(analysis: Analysis) -> QuadruplexDotBracketDT
                 if nt.chi_class == GlycosidicBond.anti
                 else "s"
                 if nt.chi_class == GlycosidicBond.syn
+                else "?"
+            )
+            sugar_line[mapping[nt]] = (
+                "N"
+                if analysis.sugar_puckers.get(nt) is not None
+                and analysis.sugar_puckers[nt].value == "North"
+                else "S"
+                if analysis.sugar_puckers.get(nt) is not None
+                and analysis.sugar_puckers[nt].value == "South"
                 else "?"
             )
 
@@ -376,7 +393,11 @@ def convert_quadruplex_dot_bracket(analysis: Analysis) -> QuadruplexDotBracketDT
                 loop_line[mapping[nt]] = "b"
 
     return QuadruplexDotBracketDTO(
-        sequence, "".join(structure), "".join(chi_line), "".join(loop_line)
+        sequence,
+        "".join(structure),
+        "".join(chi_line),
+        "".join(sugar_line),
+        "".join(loop_line),
     )
 
 

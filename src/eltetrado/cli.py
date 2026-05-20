@@ -17,12 +17,17 @@ from rnapolis.tertiary import Structure3D
 from eltetrado import __version__
 from eltetrado.analysis import Visualizer, eltetrado, has_tetrad
 from eltetrado.dto import generate_dto
+from eltetrado.g4composer import write_g4composer
 
 
 def eltetrado_cli(args=sys.argv[1:]):
     parser = argparse.ArgumentParser()
     parser.add_argument("-i", "--input", help="path to input PDB or PDBx/mmCIF file")
     parser.add_argument("-o", "--output", help="(optional) path for output JSON file")
+    parser.add_argument(
+        "--g4composer-output",
+        help="(optional) path for g4composer plain-text export; requires exactly one unimolecular quadruplex and exports the full involved chain",
+    )
     parser.add_argument(
         "-m", "--model", help="(optional) model number to process", default=1, type=int
     )
@@ -141,6 +146,12 @@ def eltetrado_cli(args=sys.argv[1:]):
 
         with open(args.output, "wb") as jsonfile:
             jsonfile.write(orjson.dumps(dto))
+
+    if args.g4composer_output:
+        try:
+            write_g4composer(analysis, args.input, args.g4composer_output)
+        except ValueError as exc:
+            parser.error(str(exc))
 
 
 def has_tetrad_cli(args=sys.argv[1:]):

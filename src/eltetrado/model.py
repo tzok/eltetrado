@@ -112,6 +112,11 @@ class HelixHandedness(Enum):
     LEFT = "left"
 
 
+class SugarPucker(Enum):
+    NORTH = "North"
+    SOUTH = "South"
+
+
 class GbaTetradClassification(Enum):
     Ia = "Ia"
     IIa = "IIa"

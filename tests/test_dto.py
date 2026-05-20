@@ -16,6 +16,8 @@ def test_convert_nucleotides():
     analysis = eltetrado(base_interactions, structure3d, False)
     nucleotides = convert_nucleotides(analysis)
     assert len(nucleotides) == 27
+    assert all(hasattr(nt, "sugarPucker") for nt in nucleotides)
+    assert any(nt.sugarPucker == "South" for nt in nucleotides)
 
 
 def test_ions():
@@ -95,7 +97,11 @@ def test_2awe():
 
 def test_5v3f():
     """
-    In 5V3F there are O+ and O- tetrads and the two-line dot-bracket has to take that into account
+    In 5V3F there are O+ and O- tetrads and the two-line dot-bracket has to take that into account.
+
+    The sugar line in ``quadruplexDotBracket`` follows the same sequence layout
+    and uses ``N``/``S``/``?`` for sugar pucker, with ``-`` preserved at chain
+    breaks.
     """
     cif = handle_input_file("tests/files/5v3f-assembly-1.cif.gz")
     structure3d = rnapolis.parser.read_3d_structure(cif, 1)
@@ -109,6 +115,8 @@ def test_5v3f():
     )
     assert dto.dotBracket.line1 == ".......([{..)].(.[{.).]}.}....-.([{..)].(.[{.).]}.}"
     assert dto.dotBracket.line2 == ".......([(..[{.).]}.{.)].}....-.([(..[{.).]}.{.)].}"
+    assert len(dto.quadruplexDotBracket.sugar) == len(dto.quadruplexDotBracket.sequence)
+    assert set(dto.quadruplexDotBracket.sugar) <= {"N", "S", "?", "-"}
 
 
 def test_6a85():
