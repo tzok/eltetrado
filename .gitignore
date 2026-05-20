@@ -16,6 +16,7 @@ x3dna-dssr
 .devenv*
 devenv.local.nix
 devenv.local.yaml
+devenv.lock
 
 # direnv
 .direnv
