@@ -179,7 +179,9 @@ def export_structure(
 def canonical_dot_bracket(analysis: Analysis, residues: Sequence[Residue3D]) -> str:
     """Return a canonical-base-pair-only dot-bracket string for the export span."""
     residue_to_index = {residue: i + 1 for i, residue in enumerate(residues)}
-    entries = [Entry(i + 1, residue.one_letter_name, 0) for i, residue in enumerate(residues)]
+    entries = [
+        Entry(i + 1, residue.one_letter_name, 0) for i, residue in enumerate(residues)
+    ]
     seen = set()
 
     for base_pair in analysis.canonical():

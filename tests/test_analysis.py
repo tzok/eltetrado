@@ -7,7 +7,11 @@ from rnapolis.adapter import ExternalTool, parse_external_output
 import eltetrado.analysis as analysis_module
 from eltetrado.analysis import eltetrado
 from eltetrado.cli import handle_input_file, read_secondary_structure_from_dssr
-from eltetrado.g4composer import canonical_dot_bracket, export_residues, generate_g4composer_entry
+from eltetrado.g4composer import (
+    canonical_dot_bracket,
+    export_residues,
+    generate_g4composer_entry,
+)
 
 
 def test_5zev_tracts():
