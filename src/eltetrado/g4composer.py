@@ -20,7 +20,7 @@ from dataclasses import dataclass
 from typing import Dict, Iterable, List, Optional, Sequence, Tuple
 
 import numpy
-from rnapolis.common import GlycosidicBond, Molecule
+from rnapolis.common import Entry, GlycosidicBond, Molecule, BpSeq
 from rnapolis.tertiary import Residue3D
 
 from eltetrado.analysis import (
@@ -109,7 +109,7 @@ def generate_g4composer_entry(
     return G4ComposerEntry(
         name=name,
         sequence=export_sequence(residues),
-        structure=export_structure(quadruplex, residues),
+        structure=export_structure(analysis, quadruplex, residues),
         chi=export_chi(residues),
         sugar=export_sugar(analysis, residues),
         orient=export_orient(quadruplex, build_order, tetrad_to_label),
@@ -159,9 +159,44 @@ def export_sequence(residues: Sequence[Residue3D]) -> str:
     return "".join(letters)
 
 
-def export_structure(quadruplex: Quadruplex, residues: Sequence[Residue3D]) -> str:
+def export_structure(
+    analysis: Analysis, quadruplex: Quadruplex, residues: Sequence[Residue3D]
+) -> str:
+    """Overlay tetrad markers on canonical-base-pair brackets.
+
+    g4composer uses one structure line, so we keep canonical base-pair context in
+    the exported chain span and then overwrite tetrad residues with ``^`` to make
+    quadruplex participation explicit.
+    """
+    structure = list(canonical_dot_bracket(analysis, residues))
     tetrad_residues = {nt for tetrad in quadruplex.tetrads for nt in tetrad.nucleotides}
-    return "".join("^" if residue in tetrad_residues else "." for residue in residues)
+    for i, residue in enumerate(residues):
+        if residue in tetrad_residues:
+            structure[i] = "^"
+    return "".join(structure)
+
+
+def canonical_dot_bracket(analysis: Analysis, residues: Sequence[Residue3D]) -> str:
+    """Return a canonical-base-pair-only dot-bracket string for the export span."""
+    residue_to_index = {residue: i + 1 for i, residue in enumerate(residues)}
+    entries = [Entry(i + 1, residue.one_letter_name, 0) for i, residue in enumerate(residues)]
+    seen = set()
+
+    for base_pair in analysis.canonical():
+        nt1 = base_pair.nt1_3d
+        nt2 = base_pair.nt2_3d
+        if nt1 not in residue_to_index or nt2 not in residue_to_index:
+            continue
+        key = tuple(sorted((residue_to_index[nt1], residue_to_index[nt2])))
+        if key in seen:
+            continue
+        seen.add(key)
+        i = residue_to_index[nt1]
+        j = residue_to_index[nt2]
+        entries[i - 1].pair = j
+        entries[j - 1].pair = i
+
+    return BpSeq(entries).fcfs.structure
 
 
 def export_chi(residues: Sequence[Residue3D]) -> str:

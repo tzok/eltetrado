@@ -7,7 +7,7 @@ from rnapolis.adapter import ExternalTool, parse_external_output
 import eltetrado.analysis as analysis_module
 from eltetrado.analysis import eltetrado
 from eltetrado.cli import handle_input_file, read_secondary_structure_from_dssr
-from eltetrado.g4composer import generate_g4composer_entry
+from eltetrado.g4composer import canonical_dot_bracket, export_residues, generate_g4composer_entry
 
 
 def test_5zev_tracts():
@@ -188,3 +188,19 @@ def test_g4composer_non_linear_intervals_follow_build_order():
     assert entry.orient == "A-;B+;C-"
     assert entry.rise == "-2.9;6.3"
     assert entry.twist == "-43.9;75.6"
+
+
+def test_g4composer_structure_keeps_canonical_brackets_for_flanks():
+    cif = handle_input_file("tests/files/6fc9-assembly-1.cif.gz")
+    structure3d = rnapolis.parser.read_3d_structure(cif, nucleic_acid_only=False)
+    base_interactions = rnapolis.annotator.extract_base_interactions(structure3d)
+    analysis = eltetrado(base_interactions, structure3d, False)
+
+    quadruplex = analysis.helices[0].quadruplexes[0]
+    residues = export_residues(analysis, quadruplex)
+
+    assert canonical_dot_bracket(analysis, residues) == "......((((((...))))))......"
+
+    entry = generate_g4composer_entry(analysis, quadruplex, "6fc9-assembly-1")
+
+    assert entry.structure == "^^..^^((((((...))))))^^..^^"
