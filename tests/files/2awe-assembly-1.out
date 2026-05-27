@@ -4,11 +4,11 @@ n4-helix with 4 tetrads
     Handedness: right
     Tetrad polarities: clockwise, anticlockwise, anticlockwise, clockwise
     A.BGM2 C.BGM2 B.BGM2 D.BGM2 cWH cWH cWH cWH O+ VIIIb planarity=0.13 ions_channel=K,K 
-      direction=parallel rise=3.58 twist=25.9
+      direction=parallel rise=3.58 twist=14.02
     A.G3 C.G3 B.G3 D.G3 cHW cHW cHW cHW O- VIIIa planarity=0.21 ions_channel=K 
-      direction=parallel rise=3.44 twist=53.57
+      direction=parallel rise=3.44 twist=53.6
     A.G5 C.G5 B.G5 D.G5 cHW cHW cHW cHW O- VIIIa planarity=0.22 ions_channel=K 
-      direction=parallel rise=3.48 twist=-36.2
+      direction=parallel rise=3.48 twist=-37.86
     A.U6 C.U6 B.U6 D.U6 cWH cWH cWH cWH O+ VIIIa planarity=0.37  ions_outside=A.U6: [SR] C.U6: [K]
 
     Tracts:
@@ -28,11 +28,11 @@ n4-helix with 4 tetrads
     Handedness: right
     Tetrad polarities: clockwise, anticlockwise, anticlockwise, clockwise
     E.BGM2 G.BGM2 F.BGM2 H.BGM2 cWH cWH cWH cWH O- VIIIb planarity=0.14 ions_channel=K,K 
-      direction=parallel rise=3.56 twist=26.2
+      direction=parallel rise=3.56 twist=14.34
     E.G3 G.G3 F.G3 H.G3 cHW cHW cHW cHW O+ VIIIa planarity=0.22 ions_channel=K 
-      direction=parallel rise=3.45 twist=53.11
+      direction=parallel rise=3.45 twist=53.2
     E.G5 G.G5 F.G5 H.G5 cHW cHW cHW cHW O+ VIIIa planarity=0.24 ions_channel=K 
-      direction=parallel rise=3.49 twist=-37.9
+      direction=parallel rise=3.49 twist=-39.5
     E.U6 G.U6 F.U6 H.U6 cWH cWH cWH cWH O- VIIIa planarity=0.41  ions_outside=F.U6: [K] G.U6: [K]
 
     Tracts:

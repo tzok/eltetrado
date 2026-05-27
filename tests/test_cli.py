@@ -112,7 +112,7 @@ def test_g4composer_export_for_6fc9(tmp_path, capfd):
         "sugar       SSNNSSSSNSSSSSSNNSSSSNSNNSS\n"
         "orient      A+;B-\n"
         "rise        3.4\n"
-        "twist       28.6\n"
+        "twist       18.7\n"
         "path        A1;B1;B2;A2;A3;B3;B4;A4\n"
     )
 
