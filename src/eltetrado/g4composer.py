@@ -27,7 +27,6 @@ from eltetrado.analysis import (
     Analysis,
     Quadruplex,
     Tetrad,
-    calculate_quadruplex_twist_centroids,
     calculate_signed_rise,
     collect_nucleobase_atoms,
 )
@@ -345,7 +344,7 @@ def signed_pair_steps(
     steps = {}
     for pair in quadruplex.tetrad_pairs:
         rise = signed_rise_for_pair(pair.tetrad1, pair.tetrad2)
-        twist = signed_twist_for_pair(pair.tetrad1, pair.tetrad2)
+        twist = pair.twist
         steps[(pair.tetrad1, pair.tetrad2)] = SignedStep(rise, twist)
         steps[(pair.tetrad2, pair.tetrad1)] = SignedStep(-rise, -twist)
     return steps
@@ -396,38 +395,6 @@ def signed_rise_for_pair(tetrad1: Tetrad, tetrad2: Tetrad) -> float:
     if len(coords1) == 0 or len(coords2) == 0:
         return math.nan
     return calculate_signed_rise(coords1, coords2)
-
-
-def signed_twist_for_pair(tetrad1: Tetrad, tetrad2: Tetrad) -> float:
-    """Return the centroid-based twist for one adjacent stacked tetrad pair.
-
-    This helper measures the mean angular offset of the four matched base
-    centroids between two stacked tetrads. In the g4composer exporter, interval
-    sign is inherited from stack-graph traversal direction rather than from this
-    helper directly.
-    """
-    tetrad1_all_coords = collect_nucleobase_atoms(tetrad1.nucleotides)
-    tetrad2_all_coords = collect_nucleobase_atoms(tetrad2.nucleotides)
-    if not tetrad1_all_coords or not tetrad2_all_coords:
-        return math.nan
-
-    nt_list1 = [
-        numpy.array(collect_nucleobase_atoms((nt,))) for nt in tetrad1.nucleotides
-    ]
-    nt_list2 = [
-        numpy.array(collect_nucleobase_atoms((nt,))) for nt in tetrad2.nucleotides
-    ]
-    if any(len(coords) == 0 for coords in nt_list1 + nt_list2):
-        return math.nan
-
-    return float(
-        calculate_quadruplex_twist_centroids(
-            numpy.array(tetrad1_all_coords),
-            numpy.array(tetrad2_all_coords),
-            nt_list1,
-            nt_list2,
-        )
-    )
 
 
 def format_number(value: float) -> str:

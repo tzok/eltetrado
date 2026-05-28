@@ -45,10 +45,7 @@ with `--input` and a path to a PDB or PDBx/mmCIF file.
 
 By default, ElTetrado outputs textual results on the standard output. A
 JSON version of the output can be obtained with `--output` switch
-followed by a path where the file is supposed to be created. ElTetrado
-can also export a plain-text input file for g4composer with
-`--g4composer-output`, but this currently requires exactly one
-unimolecular quadruplex with at least two tetrads.
+followed by a path where the file is supposed to be created.
 
 ElTetrado prepares visualization of the whole structure and of each
 N4-helices, quadruplexes and tetrads. This can be supplemented with
@@ -60,7 +57,8 @@ it.
 
     usage: eltetrado [-h] [-i INPUT] [-o OUTPUT]
                      [--g4composer-output G4COMPOSER_OUTPUT] [-m MODEL]
-                     [--no-reorder] [--complete-2d] [--image DIR] [-e [EXTERNAL_FILES ...]]
+                     [--no-reorder] [--complete-2d] [--image DIR]
+                     [-e [EXTERNAL_FILES ...]]
                      [--tool {fr3d,dssr,rnaview,bpnet,maxit,barnaba,mc-annotate,dnatco}]
                      [-v]
 
@@ -102,41 +100,6 @@ nucleotides in M will be indexed from 0 to 59 and in N from 60 to 74.
 Otherwise, nucleotides in N will be indexed from 0 to 14 and in M from
 15 to 74.
 
-# g4composer export
-
-The g4composer exporter uses the same structural analysis as the main
-ElTetrado output, but it applies g4composer-specific conventions at
-export time:
-
-- Only a single unimolecular quadruplex with at least two tetrads is supported.
-- The exported residue span covers the whole chain containing the quadruplex,
-  including 5' and 3' flanking single strands.
-- Tetrad letters (`A`, `B`, `C`, ...) still follow tetrad 5' order.
-- Core ElTetrado path columns are numbered anticlockwise after the `1`
-  column anchor, but g4composer path columns are numbered clockwise. This
-  affects only the exported g4composer `path`, not ElTetrado's internal
-  topology model or JSON `path`.
-- `orient` is exported from ElTetrado tetrad polarities:
-  `clockwise -> +`, `anticlockwise -> -`.
-- `rise` and `twist` are exported as signed traversal values between
-  consecutive build-order tetrads. When build order differs from adjacent
-  stack order, ElTetrado traverses the stack graph and negates a step when
-  the traversal goes against the stored adjacent-pair direction.
-
-Example g4composer export:
-
-```text
-name        6tc8
-sequence    gggatgggacacaggggacggg
-structure   ^^...^^^.....^^^^..^^^
-chi         S....S.......S.....S..
-sugar       SSSSSSSSSSSSSSSSSSSSSS
-orient      A+;B-;C+
-rise        3.4;-6.8
-twist       19;-46
-path        A1;B1;B4;A4;C4;C1;B2;A2;C2;B3;A3;C3
-```
-
 When `--no-reorder` is present, this initial assignment is used.
 Otherwise, ElTetrado exhaustively checks all permutations of chains’
 orders. Every permutation check induces recalculation of the global and
@@ -154,6 +117,47 @@ The table keeps low values for preferred classes i.e. `O+` is 0, `O-` is
 orders, ElTetrado computes sum of scores for tetrads classification
 induced by 5’-3’ indexing. We select permutation with the minimum value.
 
+# g4composer export
+
+The g4composer exporter uses the same structural analysis as the main
+ElTetrado output, but it applies g4composer-specific conventions at
+export time:
+
+- Only a single unimolecular quadruplex with at least two tetrads is
+  supported.
+- The exported residue span covers the whole chain containing the
+  quadruplex, including 5’ and 3’ flanking single strands.
+- Tetrad letters (`A`, `B`, `C`, …) still follow tetrad 5’ order.
+- Core ElTetrado path columns are numbered anticlockwise after the `1`
+  column anchor, but g4composer path columns are numbered clockwise.
+  This affects only the exported g4composer `path`, not ElTetrado’s
+  internal topology model or JSON `path`.
+- `orient` is exported from ElTetrado tetrad polarities:
+  `clockwise -> +`, `anticlockwise -> -`.
+- `rise` and `twist` are exported as signed traversal values between
+  consecutive build-order tetrads. When build order differs from
+  adjacent stack order, ElTetrado traverses the stack graph and negates
+  a step when the traversal goes against the stored adjacent-pair
+  direction.
+- Adjacent-pair `twist` is measured from the best-fit signed rotation of
+  the four tract-matched `C1'` atoms after projection onto the plane
+  perpendicular to the common inter-tetrad axis. Missing `C1'` atoms
+  yield an undefined twist.
+
+Example g4composer export:
+
+``` text
+name        6tc8
+sequence    gggatgggacacaggggacggg
+structure   ^^...^^^.....^^^^..^^^
+chi         S....S.......S.....S..
+sugar       SSSSSSSSSSSSSSSSSSSSSS
+orient      A+;B-;C+
+rise        3.4;-6.8
+twist       19;-46
+path        A1;B1;B4;A4;C4;C1;B2;A2;C2;B3;A3;C3
+```
+
 # Examples
 
 ## 2HY9: Human telomere DNA quadruplex structure in K+ solution hybrid-1 form
@@ -169,9 +173,9 @@ induced by 5’-3’ indexing. We select permutation with the minimum value.
         Handedness: right
         Tetrad polarities: clockwise, anticlockwise, anticlockwise
         1.DG4 1.DG22 1.DG18 1.DG10 cWH cWH cWH cWH O- Vb planarity=0.06  
-          direction=hybrid rise=3.15 twist=28.48
+          direction=hybrid rise=3.15 twist=18.78
         1.DG5 1.DG23 1.DG17 1.DG11 cHW cHW cHW cHW O+ Va planarity=0.05  
-          direction=hybrid rise=3.08 twist=29.27
+          direction=hybrid rise=3.08 twist=27.86
         1.DG6 1.DG24 1.DG16 1.DG12 cHW cHW cHW cHW O+ Va planarity=0.05  
 
         Tracts:
@@ -212,7 +216,8 @@ Click to see the output JSON
       "fullName": "1.DA1",
       "shortName": "A",
       "chi": 22.30828283085781,
-      "glycosidicBond": "syn"
+      "glycosidicBond": "syn",
+      "sugarPucker": "North"
     },
     {
       "index": 2,
@@ -223,7 +228,8 @@ Click to see the output JSON
       "fullName": "1.DA2",
       "shortName": "A",
       "chi": -123.05454402191421,
-      "glycosidicBond": "anti"
+      "glycosidicBond": "anti",
+      "sugarPucker": "North"
     },
     {
       "index": 3,
@@ -234,7 +240,8 @@ Click to see the output JSON
       "fullName": "1.DA3",
       "shortName": "A",
       "chi": -94.96579955603106,
-      "glycosidicBond": "anti"
+      "glycosidicBond": "anti",
+      "sugarPucker": "North"
     },
     {
       "index": 4,
@@ -245,7 +252,8 @@ Click to see the output JSON
       "fullName": "1.DG4",
       "shortName": "G",
       "chi": 79.28363721639316,
-      "glycosidicBond": "syn"
+      "glycosidicBond": "syn",
+      "sugarPucker": "North"
     },
     {
       "index": 5,
@@ -256,7 +264,8 @@ Click to see the output JSON
       "fullName": "1.DG5",
       "shortName": "G",
       "chi": -126.01709201555563,
-      "glycosidicBond": "anti"
+      "glycosidicBond": "anti",
+      "sugarPucker": "North"
     },
     {
       "index": 6,
@@ -267,7 +276,8 @@ Click to see the output JSON
       "fullName": "1.DG6",
       "shortName": "G",
       "chi": -127.26656202302102,
-      "glycosidicBond": "anti"
+      "glycosidicBond": "anti",
+      "sugarPucker": "South"
     },
     {
       "index": 7,
@@ -278,7 +288,8 @@ Click to see the output JSON
       "fullName": "1.DT7",
       "shortName": "T",
       "chi": -63.10830751967371,
-      "glycosidicBond": "anti"
+      "glycosidicBond": "anti",
+      "sugarPucker": "South"
     },
     {
       "index": 8,
@@ -289,7 +300,8 @@ Click to see the output JSON
       "fullName": "1.DT8",
       "shortName": "T",
       "chi": -138.79520345559828,
-      "glycosidicBond": "anti"
+      "glycosidicBond": "anti",
+      "sugarPucker": "North"
     },
     {
       "index": 9,
@@ -300,7 +312,8 @@ Click to see the output JSON
       "fullName": "1.DA9",
       "shortName": "A",
       "chi": -148.83990757408878,
-      "glycosidicBond": "anti"
+      "glycosidicBond": "anti",
+      "sugarPucker": "North"
     },
     {
       "index": 10,
@@ -311,7 +324,8 @@ Click to see the output JSON
       "fullName": "1.DG10",
       "shortName": "G",
       "chi": 58.77875250191579,
-      "glycosidicBond": "syn"
+      "glycosidicBond": "syn",
+      "sugarPucker": "North"
     },
     {
       "index": 11,
@@ -322,7 +336,8 @@ Click to see the output JSON
       "fullName": "1.DG11",
       "shortName": "G",
       "chi": -123.85746807924986,
-      "glycosidicBond": "anti"
+      "glycosidicBond": "anti",
+      "sugarPucker": "North"
     },
     {
       "index": 12,
@@ -333,7 +348,8 @@ Click to see the output JSON
       "fullName": "1.DG12",
       "shortName": "G",
       "chi": -84.36679807284759,
-      "glycosidicBond": "anti"
+      "glycosidicBond": "anti",
+      "sugarPucker": "South"
     },
     {
       "index": 13,
@@ -344,7 +360,8 @@ Click to see the output JSON
       "fullName": "1.DT13",
       "shortName": "T",
       "chi": -30.819029132834157,
-      "glycosidicBond": "anti"
+      "glycosidicBond": "anti",
+      "sugarPucker": "North"
     },
     {
       "index": 14,
@@ -355,7 +372,8 @@ Click to see the output JSON
       "fullName": "1.DT14",
       "shortName": "T",
       "chi": -168.51776782812965,
-      "glycosidicBond": "anti"
+      "glycosidicBond": "anti",
+      "sugarPucker": "North"
     },
     {
       "index": 15,
@@ -366,7 +384,8 @@ Click to see the output JSON
       "fullName": "1.DA15",
       "shortName": "A",
       "chi": -105.72881577106517,
-      "glycosidicBond": "anti"
+      "glycosidicBond": "anti",
+      "sugarPucker": "South"
     },
     {
       "index": 16,
@@ -377,7 +396,8 @@ Click to see the output JSON
       "fullName": "1.DG16",
       "shortName": "G",
       "chi": 74.3227942181243,
-      "glycosidicBond": "syn"
+      "glycosidicBond": "syn",
+      "sugarPucker": "South"
     },
     {
       "index": 17,
@@ -388,7 +408,8 @@ Click to see the output JSON
       "fullName": "1.DG17",
       "shortName": "G",
       "chi": 81.08424926936044,
-      "glycosidicBond": "syn"
+      "glycosidicBond": "syn",
+      "sugarPucker": "South"
     },
     {
       "index": 18,
@@ -399,7 +420,8 @@ Click to see the output JSON
       "fullName": "1.DG18",
       "shortName": "G",
       "chi": -122.90397217111551,
-      "glycosidicBond": "anti"
+      "glycosidicBond": "anti",
+      "sugarPucker": "North"
     },
     {
       "index": 19,
@@ -410,7 +432,8 @@ Click to see the output JSON
       "fullName": "1.DT19",
       "shortName": "T",
       "chi": -102.98239337113938,
-      "glycosidicBond": "anti"
+      "glycosidicBond": "anti",
+      "sugarPucker": "South"
     },
     {
       "index": 20,
@@ -421,7 +444,8 @@ Click to see the output JSON
       "fullName": "1.DT20",
       "shortName": "T",
       "chi": -112.15146018497148,
-      "glycosidicBond": "anti"
+      "glycosidicBond": "anti",
+      "sugarPucker": "North"
     },
     {
       "index": 21,
@@ -432,7 +456,8 @@ Click to see the output JSON
       "fullName": "1.DA21",
       "shortName": "A",
       "chi": -89.07113063649612,
-      "glycosidicBond": "anti"
+      "glycosidicBond": "anti",
+      "sugarPucker": "North"
     },
     {
       "index": 22,
@@ -443,7 +468,8 @@ Click to see the output JSON
       "fullName": "1.DG22",
       "shortName": "G",
       "chi": 83.44318693001902,
-      "glycosidicBond": "syn"
+      "glycosidicBond": "syn",
+      "sugarPucker": "South"
     },
     {
       "index": 23,
@@ -454,7 +480,8 @@ Click to see the output JSON
       "fullName": "1.DG23",
       "shortName": "G",
       "chi": -115.41210237198395,
-      "glycosidicBond": "anti"
+      "glycosidicBond": "anti",
+      "sugarPucker": "North"
     },
     {
       "index": 24,
@@ -465,7 +492,8 @@ Click to see the output JSON
       "fullName": "1.DG24",
       "shortName": "G",
       "chi": -111.14845782593532,
-      "glycosidicBond": "anti"
+      "glycosidicBond": "anti",
+      "sugarPucker": "North"
     },
     {
       "index": 25,
@@ -476,7 +504,8 @@ Click to see the output JSON
       "fullName": "1.DA25",
       "shortName": "A",
       "chi": -58.323530637551954,
-      "glycosidicBond": "anti"
+      "glycosidicBond": "anti",
+      "sugarPucker": "South"
     },
     {
       "index": 26,
@@ -487,7 +516,8 @@ Click to see the output JSON
       "fullName": "1.DA26",
       "shortName": "A",
       "chi": -90.84065243137135,
-      "glycosidicBond": "anti"
+      "glycosidicBond": "anti",
+      "sugarPucker": "North"
     }
   ],
   "basePairs": [
@@ -717,14 +747,14 @@ Click to see the output JSON
           "tetrad2": "1.DG5-1.DG23-1.DG17-1.DG11",
           "direction": "hybrid",
           "rise": 3.150278534585139,
-          "twist": 28.481078816046786
+          "twist": 18.779470679029647
         },
         {
           "tetrad1": "1.DG5-1.DG23-1.DG17-1.DG11",
           "tetrad2": "1.DG6-1.DG24-1.DG16-1.DG12",
           "direction": "hybrid",
           "rise": 3.0769001101988023,
-          "twist": 29.26743815869744
+          "twist": 27.8635274108319
         }
       ]
     }
@@ -738,6 +768,7 @@ Click to see the output JSON
     "sequence": "AAAGGGTTAGGGTTAGGGTTAGGGAA",
     "structure": "...qRS...Qrs...SRq...Qrs..",
     "chi": "saasaaaaasaaaaassaaaasaaaa",
+    "sugar": "NNNNNSSNNNNSNNSSSNSNNSNNSN",
     "loop": "......ppp...lll...LLL....."
   }
 }
@@ -758,13 +789,13 @@ Click to see the output JSON
         Handedness: right
         Tetrad polarities: anticlockwise, clockwise, clockwise, clockwise, clockwise
         A.U1006 AC.U1006 AA.U1006 AB.U1006 cWH cWH cWH cWH O- VIIIa planarity=0.34  ions_outside=A.U1006: [SR] AA.U1006: [SR] AB.U1006: [SR] AC.U1006: [SR]
-          direction=parallel rise=3.35 twist=-37.92
+          direction=parallel rise=3.35 twist=-39.96
         A.G1005 AC.G1005 AA.G1005 AB.G1005 cHW cHW cHW cHW O+ VIIIa planarity=0.23  
-          direction=parallel rise=3.41 twist=27.05
+          direction=parallel rise=3.41 twist=25.9
         A.G1004 AC.G1004 AA.G1004 AB.G1004 cHW cHW cHW cHW O+ VIIIa planarity=0.11 ions_channel=SR 
-          direction=parallel rise=3.31 twist=35.0
+          direction=parallel rise=3.31 twist=35.81
         A.G1003 AC.G1003 AA.G1003 AB.G1003 cHW cHW cHW cHW O+ VIIIa planarity=0.15 ions_channel=SR 
-          direction=parallel rise=3.33 twist=27.49
+          direction=parallel rise=3.33 twist=27.12
         A.G1002 AC.G1002 AA.G1002 AB.G1002 cHW cHW cHW cHW O+ VIIIa planarity=0.16  ions_outside=AB.G1002: [CA] AC.G1002: [CA] AA.G1002: [CA] A.G1002: [CA]
 
         Tracts:
@@ -774,19 +805,19 @@ Click to see the output JSON
           AB.U1006, AB.G1005, AB.G1004, AB.G1003, AB.G1002
 
         Path:
-          E1, D1, C1, B1, A1, E4, D4, C4, B4, A4, E3, D3, C3, B3, A3, E2, D2, C2, B2, A2
+          A1, B1, C1, D1, E1, A4, B4, C4, D4, E4, A3, B3, C3, D3, E3, A2, B2, C2, D2, E2
 
       Op* VIII n/a quadruplex with 5 tetrads
         Handedness: right
         Tetrad polarities: anticlockwise, anticlockwise, anticlockwise, anticlockwise, clockwise
         B.G2002 BC.G2002 BA.G2002 BB.G2002 cWH cWH cWH cWH O+ VIIIa planarity=0.19  
-          direction=parallel rise=3.4 twist=27.97
+          direction=parallel rise=3.4 twist=27.41
         B.G2003 BC.G2003 BA.G2003 BB.G2003 cWH cWH cWH cWH O+ VIIIa planarity=0.16 ions_channel=SR ions_outside=B.G2003: [CA] BA.G2003: [CA] BB.G2003: [CA] BC.G2003: [CA]
-          direction=parallel rise=3.29 twist=33.99
+          direction=parallel rise=3.29 twist=35.04
         B.G2004 BC.G2004 BA.G2004 BB.G2004 cWH cWH cWH cWH O+ VIIIa planarity=0.06 ions_channel=SR 
-          direction=parallel rise=3.35 twist=26.1
+          direction=parallel rise=3.35 twist=25.15
         B.G2005 BC.G2005 BA.G2005 BB.G2005 cWH cWH cWH cWH O+ VIIIa planarity=0.22  
-          direction=parallel rise=6.89 twist=-40.98
+          direction=parallel rise=6.89 twist=-43.41
         B.U2006 BC.U2006 BA.U2006 BB.U2006 cHW cHW cHW cHW O- VIIIa planarity=0.5 ions_channel=NA,NA 
 
         Tracts:
@@ -835,7 +866,8 @@ Click to see the output JSON
       "fullName": "A.U1001",
       "shortName": "U",
       "chi": -141.92671313255752,
-      "glycosidicBond": "anti"
+      "glycosidicBond": "anti",
+      "sugarPucker": "North"
     },
     {
       "index": 2,
@@ -846,7 +878,8 @@ Click to see the output JSON
       "fullName": "A.G1002",
       "shortName": "G",
       "chi": -165.93034671112116,
-      "glycosidicBond": "anti"
+      "glycosidicBond": "anti",
+      "sugarPucker": "North"
     },
     {
       "index": 3,
@@ -857,7 +890,8 @@ Click to see the output JSON
       "fullName": "A.G1003",
       "shortName": "G",
       "chi": -121.5652426033226,
-      "glycosidicBond": "anti"
+      "glycosidicBond": "anti",
+      "sugarPucker": "South"
     },
     {
       "index": 4,
@@ -868,7 +902,8 @@ Click to see the output JSON
       "fullName": "A.G1004",
       "shortName": "G",
       "chi": -156.00957673923344,
-      "glycosidicBond": "anti"
+      "glycosidicBond": "anti",
+      "sugarPucker": "North"
     },
     {
       "index": 5,
@@ -879,7 +914,8 @@ Click to see the output JSON
       "fullName": "A.G1005",
       "shortName": "G",
       "chi": -148.10051684016415,
-      "glycosidicBond": "anti"
+      "glycosidicBond": "anti",
+      "sugarPucker": "North"
     },
     {
       "index": 6,
@@ -890,7 +926,8 @@ Click to see the output JSON
       "fullName": "A.U1006",
       "shortName": "U",
       "chi": -137.28005568139983,
-      "glycosidicBond": "anti"
+      "glycosidicBond": "anti",
+      "sugarPucker": "South"
     },
     {
       "index": 13,
@@ -901,7 +938,8 @@ Click to see the output JSON
       "fullName": "AA.U1001",
       "shortName": "U",
       "chi": -141.9267131325575,
-      "glycosidicBond": "anti"
+      "glycosidicBond": "anti",
+      "sugarPucker": "North"
     },
     {
       "index": 14,
@@ -912,7 +950,8 @@ Click to see the output JSON
       "fullName": "AA.G1002",
       "shortName": "G",
       "chi": -165.93034671112113,
-      "glycosidicBond": "anti"
+      "glycosidicBond": "anti",
+      "sugarPucker": "North"
     },
     {
       "index": 15,
@@ -923,7 +962,8 @@ Click to see the output JSON
       "fullName": "AA.G1003",
       "shortName": "G",
       "chi": -121.56524260332266,
-      "glycosidicBond": "anti"
+      "glycosidicBond": "anti",
+      "sugarPucker": "South"
     },
     {
       "index": 16,
@@ -934,7 +974,8 @@ Click to see the output JSON
       "fullName": "AA.G1004",
       "shortName": "G",
       "chi": -156.0095767392335,
-      "glycosidicBond": "anti"
+      "glycosidicBond": "anti",
+      "sugarPucker": "North"
     },
     {
       "index": 17,
@@ -945,7 +986,8 @@ Click to see the output JSON
       "fullName": "AA.G1005",
       "shortName": "G",
       "chi": -148.10051684016406,
-      "glycosidicBond": "anti"
+      "glycosidicBond": "anti",
+      "sugarPucker": "North"
     },
     {
       "index": 18,
@@ -956,7 +998,8 @@ Click to see the output JSON
       "fullName": "AA.U1006",
       "shortName": "U",
       "chi": -137.2800556813998,
-      "glycosidicBond": "anti"
+      "glycosidicBond": "anti",
+      "sugarPucker": "South"
     },
     {
       "index": 7,
@@ -967,7 +1010,8 @@ Click to see the output JSON
       "fullName": "AB.U1001",
       "shortName": "U",
       "chi": -141.92671313255744,
-      "glycosidicBond": "anti"
+      "glycosidicBond": "anti",
+      "sugarPucker": "North"
     },
     {
       "index": 8,
@@ -978,7 +1022,8 @@ Click to see the output JSON
       "fullName": "AB.G1002",
       "shortName": "G",
       "chi": -165.93034671112113,
-      "glycosidicBond": "anti"
+      "glycosidicBond": "anti",
+      "sugarPucker": "North"
     },
     {
       "index": 9,
@@ -989,7 +1034,8 @@ Click to see the output JSON
       "fullName": "AB.G1003",
       "shortName": "G",
       "chi": -121.56524260332263,
-      "glycosidicBond": "anti"
+      "glycosidicBond": "anti",
+      "sugarPucker": "South"
     },
     {
       "index": 10,
@@ -1000,7 +1046,8 @@ Click to see the output JSON
       "fullName": "AB.G1004",
       "shortName": "G",
       "chi": -156.00957673923347,
-      "glycosidicBond": "anti"
+      "glycosidicBond": "anti",
+      "sugarPucker": "North"
     },
     {
       "index": 11,
@@ -1011,7 +1058,8 @@ Click to see the output JSON
       "fullName": "AB.G1005",
       "shortName": "G",
       "chi": -148.10051684016406,
-      "glycosidicBond": "anti"
+      "glycosidicBond": "anti",
+      "sugarPucker": "North"
     },
     {
       "index": 12,
@@ -1022,7 +1070,8 @@ Click to see the output JSON
       "fullName": "AB.U1006",
       "shortName": "U",
       "chi": -137.28005568139977,
-      "glycosidicBond": "anti"
+      "glycosidicBond": "anti",
+      "sugarPucker": "South"
     },
     {
       "index": 19,
@@ -1033,7 +1082,8 @@ Click to see the output JSON
       "fullName": "AC.U1001",
       "shortName": "U",
       "chi": -141.92671313255747,
-      "glycosidicBond": "anti"
+      "glycosidicBond": "anti",
+      "sugarPucker": "North"
     },
     {
       "index": 20,
@@ -1044,7 +1094,8 @@ Click to see the output JSON
       "fullName": "AC.G1002",
       "shortName": "G",
       "chi": -165.93034671112116,
-      "glycosidicBond": "anti"
+      "glycosidicBond": "anti",
+      "sugarPucker": "North"
     },
     {
       "index": 21,
@@ -1055,7 +1106,8 @@ Click to see the output JSON
       "fullName": "AC.G1003",
       "shortName": "G",
       "chi": -121.56524260332263,
-      "glycosidicBond": "anti"
+      "glycosidicBond": "anti",
+      "sugarPucker": "South"
     },
     {
       "index": 22,
@@ -1066,7 +1118,8 @@ Click to see the output JSON
       "fullName": "AC.G1004",
       "shortName": "G",
       "chi": -156.00957673923352,
-      "glycosidicBond": "anti"
+      "glycosidicBond": "anti",
+      "sugarPucker": "North"
     },
     {
       "index": 23,
@@ -1077,7 +1130,8 @@ Click to see the output JSON
       "fullName": "AC.G1005",
       "shortName": "G",
       "chi": -148.1005168401641,
-      "glycosidicBond": "anti"
+      "glycosidicBond": "anti",
+      "sugarPucker": "North"
     },
     {
       "index": 24,
@@ -1088,7 +1142,8 @@ Click to see the output JSON
       "fullName": "AC.U1006",
       "shortName": "U",
       "chi": -137.28005568139986,
-      "glycosidicBond": "anti"
+      "glycosidicBond": "anti",
+      "sugarPucker": "South"
     },
     {
       "index": 25,
@@ -1099,7 +1154,8 @@ Click to see the output JSON
       "fullName": "B.U2001",
       "shortName": "U",
       "chi": -146.4615316869476,
-      "glycosidicBond": "anti"
+      "glycosidicBond": "anti",
+      "sugarPucker": "North"
     },
     {
       "index": 26,
@@ -1110,7 +1166,8 @@ Click to see the output JSON
       "fullName": "B.G2002",
       "shortName": "G",
       "chi": -170.79660912745996,
-      "glycosidicBond": "anti"
+      "glycosidicBond": "anti",
+      "sugarPucker": "North"
     },
     {
       "index": 27,
@@ -1121,7 +1178,8 @@ Click to see the output JSON
       "fullName": "B.G2003",
       "shortName": "G",
       "chi": -117.68718110874113,
-      "glycosidicBond": "anti"
+      "glycosidicBond": "anti",
+      "sugarPucker": "South"
     },
     {
       "index": 28,
@@ -1132,7 +1190,8 @@ Click to see the output JSON
       "fullName": "B.G2004",
       "shortName": "G",
       "chi": -153.88587375071324,
-      "glycosidicBond": "anti"
+      "glycosidicBond": "anti",
+      "sugarPucker": "North"
     },
     {
       "index": 29,
@@ -1143,7 +1202,8 @@ Click to see the output JSON
       "fullName": "B.G2005",
       "shortName": "G",
       "chi": -148.85199128456694,
-      "glycosidicBond": "anti"
+      "glycosidicBond": "anti",
+      "sugarPucker": "North"
     },
     {
       "index": 30,
@@ -1154,7 +1214,8 @@ Click to see the output JSON
       "fullName": "B.U2006",
       "shortName": "U",
       "chi": -159.43730655241544,
-      "glycosidicBond": "anti"
+      "glycosidicBond": "anti",
+      "sugarPucker": "North"
     },
     {
       "index": 37,
@@ -1165,7 +1226,8 @@ Click to see the output JSON
       "fullName": "BA.U2001",
       "shortName": "U",
       "chi": -146.46153168694764,
-      "glycosidicBond": "anti"
+      "glycosidicBond": "anti",
+      "sugarPucker": "North"
     },
     {
       "index": 38,
@@ -1176,7 +1238,8 @@ Click to see the output JSON
       "fullName": "BA.G2002",
       "shortName": "G",
       "chi": -170.7966091274599,
-      "glycosidicBond": "anti"
+      "glycosidicBond": "anti",
+      "sugarPucker": "North"
     },
     {
       "index": 39,
@@ -1187,7 +1250,8 @@ Click to see the output JSON
       "fullName": "BA.G2003",
       "shortName": "G",
       "chi": -117.68718110874113,
-      "glycosidicBond": "anti"
+      "glycosidicBond": "anti",
+      "sugarPucker": "South"
     },
     {
       "index": 40,
@@ -1198,7 +1262,8 @@ Click to see the output JSON
       "fullName": "BA.G2004",
       "shortName": "G",
       "chi": -153.88587375071322,
-      "glycosidicBond": "anti"
+      "glycosidicBond": "anti",
+      "sugarPucker": "North"
     },
     {
       "index": 41,
@@ -1209,7 +1274,8 @@ Click to see the output JSON
       "fullName": "BA.G2005",
       "shortName": "G",
       "chi": -148.851991284567,
-      "glycosidicBond": "anti"
+      "glycosidicBond": "anti",
+      "sugarPucker": "North"
     },
     {
       "index": 42,
@@ -1220,7 +1286,8 @@ Click to see the output JSON
       "fullName": "BA.U2006",
       "shortName": "U",
       "chi": -159.43730655241544,
-      "glycosidicBond": "anti"
+      "glycosidicBond": "anti",
+      "sugarPucker": "North"
     },
     {
       "index": 43,
@@ -1231,7 +1298,8 @@ Click to see the output JSON
       "fullName": "BB.U2001",
       "shortName": "U",
       "chi": -146.4615316869476,
-      "glycosidicBond": "anti"
+      "glycosidicBond": "anti",
+      "sugarPucker": "North"
     },
     {
       "index": 44,
@@ -1242,7 +1310,8 @@ Click to see the output JSON
       "fullName": "BB.G2002",
       "shortName": "G",
       "chi": -170.79660912745993,
-      "glycosidicBond": "anti"
+      "glycosidicBond": "anti",
+      "sugarPucker": "North"
     },
     {
       "index": 45,
@@ -1253,7 +1322,8 @@ Click to see the output JSON
       "fullName": "BB.G2003",
       "shortName": "G",
       "chi": -117.68718110874106,
-      "glycosidicBond": "anti"
+      "glycosidicBond": "anti",
+      "sugarPucker": "South"
     },
     {
       "index": 46,
@@ -1264,7 +1334,8 @@ Click to see the output JSON
       "fullName": "BB.G2004",
       "shortName": "G",
       "chi": -153.8858737507132,
-      "glycosidicBond": "anti"
+      "glycosidicBond": "anti",
+      "sugarPucker": "North"
     },
     {
       "index": 47,
@@ -1275,7 +1346,8 @@ Click to see the output JSON
       "fullName": "BB.G2005",
       "shortName": "G",
       "chi": -148.85199128456696,
-      "glycosidicBond": "anti"
+      "glycosidicBond": "anti",
+      "sugarPucker": "North"
     },
     {
       "index": 48,
@@ -1286,7 +1358,8 @@ Click to see the output JSON
       "fullName": "BB.U2006",
       "shortName": "U",
       "chi": -159.43730655241544,
-      "glycosidicBond": "anti"
+      "glycosidicBond": "anti",
+      "sugarPucker": "North"
     },
     {
       "index": 31,
@@ -1297,7 +1370,8 @@ Click to see the output JSON
       "fullName": "BC.U2001",
       "shortName": "U",
       "chi": -146.4615316869476,
-      "glycosidicBond": "anti"
+      "glycosidicBond": "anti",
+      "sugarPucker": "North"
     },
     {
       "index": 32,
@@ -1308,7 +1382,8 @@ Click to see the output JSON
       "fullName": "BC.G2002",
       "shortName": "G",
       "chi": -170.79660912745993,
-      "glycosidicBond": "anti"
+      "glycosidicBond": "anti",
+      "sugarPucker": "North"
     },
     {
       "index": 33,
@@ -1319,7 +1394,8 @@ Click to see the output JSON
       "fullName": "BC.G2003",
       "shortName": "G",
       "chi": -117.68718110874121,
-      "glycosidicBond": "anti"
+      "glycosidicBond": "anti",
+      "sugarPucker": "South"
     },
     {
       "index": 34,
@@ -1330,7 +1406,8 @@ Click to see the output JSON
       "fullName": "BC.G2004",
       "shortName": "G",
       "chi": -153.88587375071322,
-      "glycosidicBond": "anti"
+      "glycosidicBond": "anti",
+      "sugarPucker": "North"
     },
     {
       "index": 35,
@@ -1341,7 +1418,8 @@ Click to see the output JSON
       "fullName": "BC.G2005",
       "shortName": "G",
       "chi": -148.85199128456694,
-      "glycosidicBond": "anti"
+      "glycosidicBond": "anti",
+      "sugarPucker": "North"
     },
     {
       "index": 36,
@@ -1352,7 +1430,8 @@ Click to see the output JSON
       "fullName": "BC.U2006",
       "shortName": "U",
       "chi": -159.43730655241544,
-      "glycosidicBond": "anti"
+      "glycosidicBond": "anti",
+      "sugarPucker": "North"
     }
   ],
   "basePairs": [
@@ -1820,26 +1899,26 @@ Click to see the output JSON
             ]
           ],
           "path": [
-            "E1",
-            "D1",
-            "C1",
-            "B1",
             "A1",
-            "E4",
-            "D4",
-            "C4",
-            "B4",
+            "B1",
+            "C1",
+            "D1",
+            "E1",
             "A4",
-            "E3",
-            "D3",
-            "C3",
-            "B3",
+            "B4",
+            "C4",
+            "D4",
+            "E4",
             "A3",
-            "E2",
-            "D2",
-            "C2",
+            "B3",
+            "C3",
+            "D3",
+            "E3",
+            "A2",
             "B2",
-            "A2"
+            "C2",
+            "D2",
+            "E2"
           ],
           "bulges": [],
           "loops": []
@@ -2006,63 +2085,63 @@ Click to see the output JSON
           "tetrad2": "A.G1005-AC.G1005-AA.G1005-AB.G1005",
           "direction": "parallel",
           "rise": 3.3539318181818345,
-          "twist": -37.9220816533747
+          "twist": -39.962531742191715
         },
         {
           "tetrad1": "A.G1005-AC.G1005-AA.G1005-AB.G1005",
           "tetrad2": "A.G1004-AC.G1004-AA.G1004-AB.G1004",
           "direction": "parallel",
           "rise": 3.412909090909082,
-          "twist": 27.046885537946945
+          "twist": 25.896144446319223
         },
         {
           "tetrad1": "A.G1004-AC.G1004-AA.G1004-AB.G1004",
           "tetrad2": "A.G1003-AC.G1003-AA.G1003-AB.G1003",
           "direction": "parallel",
           "rise": 3.3061818181818126,
-          "twist": 34.99709346862177
+          "twist": 35.81115298630442
         },
         {
           "tetrad1": "A.G1003-AC.G1003-AA.G1003-AB.G1003",
           "tetrad2": "A.G1002-AC.G1002-AA.G1002-AB.G1002",
           "direction": "parallel",
           "rise": 3.3308181818181843,
-          "twist": 27.48554182421778
+          "twist": 27.115159719868057
         },
         {
           "tetrad1": "A.G1002-AC.G1002-AA.G1002-AB.G1002",
           "tetrad2": "B.G2002-BC.G2002-BA.G2002-BB.G2002",
           "direction": "parallel",
           "rise": 3.349181818181819,
-          "twist": -18.629974333033623
+          "twist": -28.99318031267558
         },
         {
           "tetrad1": "B.G2002-BC.G2002-BA.G2002-BB.G2002",
           "tetrad2": "B.G2003-BC.G2003-BA.G2003-BB.G2003",
           "direction": "parallel",
           "rise": 3.3993636363636277,
-          "twist": 27.970515314496566
+          "twist": 27.410084968596863
         },
         {
           "tetrad1": "B.G2003-BC.G2003-BA.G2003-BB.G2003",
           "tetrad2": "B.G2004-BC.G2004-BA.G2004-BB.G2004",
           "direction": "parallel",
           "rise": 3.289363636363646,
-          "twist": 33.98648268341131
+          "twist": 35.04072146975963
         },
         {
           "tetrad1": "B.G2004-BC.G2004-BA.G2004-BB.G2004",
           "tetrad2": "B.G2005-BC.G2005-BA.G2005-BB.G2005",
           "direction": "parallel",
           "rise": 3.346909090909092,
-          "twist": 26.097046696319186
+          "twist": 25.14999794993814
         },
         {
           "tetrad1": "B.G2005-BC.G2005-BA.G2005-BB.G2005",
           "tetrad2": "B.U2006-BC.U2006-BA.U2006-BB.U2006",
           "direction": "parallel",
           "rise": 6.888965909090907,
-          "twist": -40.976824341202736
+          "twist": -43.406094922623346
         }
       ]
     }
@@ -2076,6 +2155,7 @@ Click to see the output JSON
     "sequence": "UGGGGU-UGGGGU-UGGGGU-UGGGGU-UGGGGU-UGGGGU-UGGGGU-UGGGGU",
     "structure": ".QRSTu-.qrstU-.QRSTu-.qrstU-.VWXYz-.vwxyZ-.VWXYz-.vwxyZ",
     "chi": "aaaaaa-aaaaaa-aaaaaa-aaaaaa-aaaaaa-aaaaaa-aaaaaa-aaaaaa",
+    "sugar": "NNSNNS-NNSNNS-NNSNNS-NNSNNS-NNSNNN-NNSNNN-NNSNNN-NNSNNN",
     "loop": "......-......-......-......-......-......-......-......"
   }
 }

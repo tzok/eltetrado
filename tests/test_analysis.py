@@ -1,11 +1,13 @@
+import math
 from pathlib import Path
 
+import numpy
 import rnapolis.annotator
 import rnapolis.parser
 from rnapolis.adapter import ExternalTool, parse_external_output
 
 import eltetrado.analysis as analysis_module
-from eltetrado.analysis import eltetrado
+from eltetrado.analysis import calculate_best_fit_rotation_around_axis, eltetrado
 from eltetrado.cli import handle_input_file, read_secondary_structure_from_dssr
 from eltetrado.g4composer import (
     canonical_dot_bracket,
@@ -146,6 +148,87 @@ def test_2ms9_is_left_handed():
     ]
 
 
+def test_best_fit_rotation_around_axis_reports_signed_rotation():
+    axis = numpy.array([0.0, 0.0, 1.0])
+    points1 = numpy.array(
+        [
+            [1.0, 0.0, 0.0],
+            [0.0, 1.0, 0.0],
+            [-1.0, 0.0, 0.0],
+            [0.0, -1.0, 0.0],
+        ]
+    )
+    angle = math.radians(30.0)
+    rotation = numpy.array(
+        [
+            [math.cos(angle), -math.sin(angle), 0.0],
+            [math.sin(angle), math.cos(angle), 0.0],
+            [0.0, 0.0, 1.0],
+        ]
+    )
+    points2 = points1 @ rotation.T + numpy.array([0.0, 0.0, 2.5])
+
+    twist = calculate_best_fit_rotation_around_axis(points1, points2, axis)
+
+    assert math.isclose(twist, 30.0, abs_tol=1.0e-6)
+
+
+def test_best_fit_rotation_around_axis_handles_distorted_rectangle():
+    axis = numpy.array([0.0, 0.0, 1.0])
+    points1 = numpy.array(
+        [
+            [2.0, 0.1, 0.0],
+            [0.3, 1.2, 0.0],
+            [-1.8, -0.2, 0.0],
+            [-0.4, -1.0, 0.0],
+        ]
+    )
+    angle = math.radians(-45.0)
+    rotation = numpy.array(
+        [
+            [math.cos(angle), -math.sin(angle), 0.0],
+            [math.sin(angle), math.cos(angle), 0.0],
+            [0.0, 0.0, 1.0],
+        ]
+    )
+    distortion = numpy.array(
+        [
+            [0.05, -0.03, 0.0],
+            [-0.02, 0.04, 0.0],
+            [0.01, 0.02, 0.0],
+            [-0.04, -0.01, 0.0],
+        ]
+    )
+    points2 = points1 @ rotation.T + distortion + numpy.array([0.0, 0.0, -3.0])
+
+    twist = calculate_best_fit_rotation_around_axis(points1, points2, axis)
+
+    assert math.isclose(twist, -45.0, abs_tol=2.0)
+
+
+def test_tetrad_pair_twist_is_nan_when_c1prime_is_missing(monkeypatch):
+    cif = handle_input_file("tests/files/6fc9-assembly-1.cif.gz")
+    structure3d = rnapolis.parser.read_3d_structure(cif, nucleic_acid_only=False)
+    base_interactions = rnapolis.annotator.extract_base_interactions(structure3d)
+
+    original = analysis_module.residue_c1prime_coordinates
+
+    def patched_residue_c1prime_coordinates(residue):
+        if residue.full_name == "A.DG1":
+            return None
+        return original(residue)
+
+    monkeypatch.setattr(
+        analysis_module,
+        "residue_c1prime_coordinates",
+        patched_residue_c1prime_coordinates,
+    )
+
+    analysis = eltetrado(base_interactions, structure3d, False)
+
+    assert math.isnan(analysis.helices[0].quadruplexes[0].tetrad_pairs[0].twist)
+
+
 def test_incomplete_tetrad_residue_does_not_crash_geometry(monkeypatch):
     cif = handle_input_file("tests/files/6fc9-assembly-1.cif.gz")
     structure3d = rnapolis.parser.read_3d_structure(cif, nucleic_acid_only=False)
@@ -191,7 +274,7 @@ def test_g4composer_non_linear_intervals_follow_build_order():
 
     assert entry.orient == "A-;B+;C-"
     assert entry.rise == "-2.9;6.3"
-    assert entry.twist == "-43.9;75.6"
+    assert entry.twist == "-31.8;63.5"
 
 
 def test_g4composer_structure_keeps_canonical_brackets_for_flanks():

@@ -238,6 +238,40 @@ def calculate_angle_around_axis(
     )
 
 
+def calculate_best_fit_rotation_around_axis(
+    points1: numpy.ndarray, points2: numpy.ndarray, axis: numpy.ndarray
+) -> float:
+    """Return the signed best-fit rotation between matched point sets."""
+    if len(points1) != len(points2) or len(points1) == 0:
+        return math.nan
+
+    try:
+        axis = normalize_vector(axis)
+    except ValueError:
+        return math.nan
+
+    centered1 = points1 - numpy.mean(points1, axis=0)
+    centered2 = points2 - numpy.mean(points2, axis=0)
+
+    projected1 = centered1 - numpy.outer(centered1 @ axis, axis)
+    projected2 = centered2 - numpy.outer(centered2 @ axis, axis)
+
+    if numpy.sum(projected1 * projected1) < 1.0e-12:
+        return math.nan
+    if numpy.sum(projected2 * projected2) < 1.0e-12:
+        return math.nan
+
+    sine = float(numpy.sum(numpy.cross(projected1, projected2) @ axis))
+    cosine = float(numpy.sum(projected1 * projected2))
+
+    if math.isclose(sine, 0.0, abs_tol=1.0e-12) and math.isclose(
+        cosine, 0.0, abs_tol=1.0e-12
+    ):
+        return math.nan
+
+    return math.degrees(math.atan2(sine, cosine))
+
+
 def collect_residue_base_like_atoms(residue: Residue3D) -> List[numpy.ndarray]:
     coords = []
 
@@ -265,6 +299,14 @@ def residue_base_centroid(residue: Residue3D) -> numpy.ndarray:
     if point is None:
         raise ValueError(f"Missing nucleobase atoms for residue {residue.full_name}")
     return point
+
+
+def residue_c1prime_coordinates(residue: Residue3D) -> Optional[numpy.ndarray]:
+    for atom_name in ("C1'", "C1*"):
+        atom = residue.find_atom(atom_name)
+        if atom is not None:
+            return atom.coordinates
+    return None
 
 
 def residue_backbone_anchor(residue: Residue3D) -> numpy.ndarray:
@@ -334,7 +376,7 @@ def calculate_quadruplex_twist_centroids(
     nt_list2: List[numpy.ndarray],
 ) -> float:
     """
-    Calculates the Twist using nucleobase centroids.
+    Calculate the legacy centroid-based twist using matched base centroids.
 
     Parameters:
     - tetrad1_all_coords: (N x 3) array of all atoms in tetrad 1 (for fitting the plane).
@@ -344,26 +386,16 @@ def calculate_quadruplex_twist_centroids(
                 (Must be ordered: a stacks on u, b on v, etc.)
 
     Returns:
-    float: The average twist angle in degrees.
+    float: The average signed twist angle in degrees.
     """
-    # A. Get Global Geometries (Tetrad Centers and Normals)
-    c_T1, n_T1 = get_plane_vectors(tetrad1_all_coords)
-    c_T2, n_T2 = get_plane_vectors(tetrad2_all_coords)
+    # A. Get Global Geometries (Tetrad Centers and Common Axis)
+    c_T1 = numpy.mean(tetrad1_all_coords, axis=0)
+    c_T2 = numpy.mean(tetrad2_all_coords, axis=0)
+    axis = calculate_tetrad_common_axis(tetrad1_all_coords, tetrad2_all_coords)
+    if axis is None:
+        return math.nan
 
-    # B. Define the Helical Axis
-    # Align n_T2 to point roughly same way as n_T1
-    if numpy.dot(n_T1, n_T2) < 0:
-        n_T2 = -n_T2
-
-    # Average normal
-    axis = n_T1 + n_T2
-    axis = axis / numpy.linalg.norm(axis)
-
-    # Ensure axis points "Up" from T1 to T2 (Rising direction)
-    if numpy.dot(axis, c_T2 - c_T1) < 0:
-        axis = -axis
-
-    # C. Calculate Twist for each stacked pair
+    # B. Calculate Twist for each stacked pair
     twists = []
 
     # We assume the lists are ordered [a, b, c, d] and [u, v, w, x]
@@ -382,8 +414,45 @@ def calculate_quadruplex_twist_centroids(
         angle = get_signed_angle(v1, v2, axis)
         twists.append(angle)
 
-    # D. Return the average
+    # C. Return the average
     return numpy.mean(twists)
+
+
+def calculate_tetrad_common_axis(
+    tetrad1_all_coords: numpy.ndarray, tetrad2_all_coords: numpy.ndarray
+) -> Optional[numpy.ndarray]:
+    c_T1, n_T1 = get_plane_vectors(tetrad1_all_coords)
+    c_T2, n_T2 = get_plane_vectors(tetrad2_all_coords)
+
+    if numpy.dot(n_T1, n_T2) < 0:
+        n_T2 = -n_T2
+
+    axis = n_T1 + n_T2
+    if numpy.linalg.norm(axis) < 1.0e-6:
+        return None
+
+    axis = normalize_vector(axis)
+    if numpy.dot(axis, c_T2 - c_T1) < 0:
+        axis = -axis
+    return axis
+
+
+def calculate_quadruplex_twist_c1primes(
+    tetrad1_all_coords: numpy.ndarray,
+    tetrad2_all_coords: numpy.ndarray,
+    tetrad1_c1primes: numpy.ndarray,
+    tetrad2_c1primes: numpy.ndarray,
+) -> float:
+    """Calculate twist from the best-fit rotation of matched C1' points."""
+    axis = calculate_tetrad_common_axis(tetrad1_all_coords, tetrad2_all_coords)
+    if axis is None:
+        return math.nan
+
+    return calculate_best_fit_rotation_around_axis(
+        tetrad1_c1primes,
+        tetrad2_c1primes,
+        axis,
+    )
 
 
 def generate_tetrad_label(index: int) -> str:
@@ -756,7 +825,7 @@ class TetradPair:
         return math.nan
 
     def __calculate_twist(self) -> float:
-        """Measure twist after aligning tetrad 2 to the best tract continuation."""
+        """Measure twist from the best-fit rotation of matched C1' atoms."""
         # Collect all nucleobase atoms for tetrad 1
         tetrad1_all_coords = collect_nucleobase_atoms(self.tetrad1.nucleotides)
         # Collect all nucleobase atoms for tetrad 2
@@ -765,29 +834,25 @@ class TetradPair:
         if not tetrad1_all_coords or not tetrad2_all_coords:
             return math.nan
 
-        # Collect nucleobase atoms for each nucleotide in tetrad 1
-        nt_list1 = []
+        tetrad1_c1primes = []
         for nt in self.tetrad1.nucleotides:
-            nt_coords = collect_nucleobase_atoms((nt,))
-            if nt_coords:
-                nt_list1.append(numpy.array(nt_coords))
-            else:
+            c1prime = residue_c1prime_coordinates(nt)
+            if c1prime is None:
                 return math.nan
+            tetrad1_c1primes.append(c1prime)
 
-        # Collect nucleobase atoms for each nucleotide in tetrad 2 (in best order)
-        nt_list2 = []
+        tetrad2_c1primes = []
         for nt in self.tetrad2_nts_best_order:
-            nt_coords = collect_nucleobase_atoms((nt,))
-            if nt_coords:
-                nt_list2.append(numpy.array(nt_coords))
-            else:
+            c1prime = residue_c1prime_coordinates(nt)
+            if c1prime is None:
                 return math.nan
+            tetrad2_c1primes.append(c1prime)
 
-        return calculate_quadruplex_twist_centroids(
+        return calculate_quadruplex_twist_c1primes(
             numpy.array(tetrad1_all_coords),
             numpy.array(tetrad2_all_coords),
-            nt_list1,
-            nt_list2,
+            numpy.array(tetrad1_c1primes),
+            numpy.array(tetrad2_c1primes),
         )
 
     def __str__(self):
