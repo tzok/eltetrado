@@ -13,6 +13,12 @@ n4-helix with 2 tetrads
       A.DG22, A.DG23
       A.DG6, A.DG5
 
+    Strand polarities:
+      A.DG1+, A.DG2+
+      A.DG27-, A.DG26-
+      A.DG22+, A.DG23+
+      A.DG6-, A.DG5-
+
     Path:
       A1, B1, B4, A4, A3, B3, B2, A2
 

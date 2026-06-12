@@ -15,6 +15,12 @@ n4-helix with 3 tetrads
       B.G3, B.G5, B.U6
       C.G3, C.G5, C.U6
 
+    Strand polarities:
+      A.G3+, A.G5+, A.U6- (inverted strand polarity)
+      D.G3+, D.G5+, D.U6- (inverted strand polarity)
+      B.G3+, B.G5+, B.U6- (inverted strand polarity)
+      C.G3+, C.G5+, C.U6- (inverted strand polarity)
+
     Path:
       A1, B1, C1, A2, B2, C2, A3, B3, C3, A4, B4, C4
 
@@ -36,6 +42,12 @@ n4-helix with 3 tetrads
       H.G3, H.G5, H.U6
       F.G3, F.G5, F.U6
       G.G3, G.G5, G.U6
+
+    Strand polarities:
+      E.G3+, E.G5+, E.U6- (inverted strand polarity)
+      H.G3+, H.G5+, H.U6- (inverted strand polarity)
+      F.G3+, F.G5+, F.U6- (inverted strand polarity)
+      G.G3+, G.G5+, G.U6- (inverted strand polarity)
 
     Path:
       A1, B1, C1, A4, B4, C4, A3, B3, C3, A2, B2, C2

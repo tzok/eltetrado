@@ -86,6 +86,7 @@ class QuadruplexDTO:
     onzm: Optional[str]
     handedness: Optional[str]
     tetradPolarities: List[Optional[str]]
+    strandPolarities: List[List[Optional[str]]]
     loopClassification: Optional[LoopClassificationDTO]
     gbaClassification: List[str]
     tracts: List[List[str]]
@@ -221,6 +222,10 @@ def convert_quadruplexes(quadruplexes: List[Quadruplex]) -> List[QuadruplexDTO]:
             q.onzm.value if q.onzm else None,
             q.handedness.value if q.handedness else None,
             [p.value if p else None for p in q.tetrad_polarities],
+            [
+                [p.value if p is not None else None for p in tract_polarities]
+                for tract_polarities in q.strand_polarities
+            ],
             (
                 LoopClassificationDTO(
                     q.loop_class.value, q.loop_class.loop_progression()

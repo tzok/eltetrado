@@ -8,6 +8,7 @@ from rnapolis.adapter import ExternalTool, parse_external_output
 
 import eltetrado.analysis as analysis_module
 from eltetrado.analysis import calculate_best_fit_rotation_around_axis, eltetrado
+from eltetrado.model import StrandPolarity
 from eltetrado.cli import handle_input_file, read_secondary_structure_from_dssr
 from eltetrado.g4composer import (
     canonical_dot_bracket,
@@ -291,3 +292,99 @@ def test_g4composer_structure_keeps_canonical_brackets_for_flanks():
     entry = generate_g4composer_entry(analysis, quadruplex, "6fc9-assembly-1")
 
     assert entry.structure == "^^..^^((((((...))))))^^..^^"
+
+
+def test_6fc9_strand_polarities_are_consistent_within_tracts():
+    """
+    In a canonical antiparallel quadruplex (6fc9) every tract should have
+    a uniform strand polarity (no inverted polarity inside a single tract).
+    """
+    cif = handle_input_file("tests/files/6fc9-assembly-1.cif.gz")
+    structure3d = rnapolis.parser.read_3d_structure(cif, nucleic_acid_only=False)
+    base_interactions = rnapolis.annotator.extract_base_interactions(structure3d)
+    analysis = eltetrado(base_interactions, structure3d, False)
+
+    quadruplex = analysis.helices[0].quadruplexes[0]
+    assert len(quadruplex.strand_polarities) == len(quadruplex.tracts)
+
+    for tract_polarities in quadruplex.strand_polarities:
+        non_none = [p for p in tract_polarities if p is not None]
+        if non_none:
+            assert all(p == non_none[0] for p in non_none), (
+                "Expected uniform strand polarity within a tract, got mixed signs"
+            )
+
+
+def test_5de5_g20_has_minus_strand_polarity():
+    """
+    In 5DE5 (published inverted strand polarity example) every tract should
+    show inverted polarity and A.G20 in particular must be MINUS.
+    """
+    cif = handle_input_file("tests/files/5de5-assembly1.cif.gz")
+    structure3d = rnapolis.parser.read_3d_structure(cif, 1, nucleic_acid_only=False)
+    base_interactions = rnapolis.annotator.extract_base_interactions(structure3d)
+    analysis = eltetrado(base_interactions, structure3d, False)
+
+    quadruplex = analysis.helices[0].quadruplexes[0]
+    assert len(quadruplex.strand_polarities) == len(quadruplex.tracts)
+
+    # Every tract should have mixed signs (inverted strand polarity)
+    for tract_polarities in quadruplex.strand_polarities:
+        non_none = [p for p in tract_polarities if p is not None]
+        if non_none:
+            has_plus = any(p.value == "plus" for p in non_none)
+            has_minus = any(p.value == "minus" for p in non_none)
+            assert has_plus and has_minus, (
+                "Expected inverted strand polarity in 5DE5 tract"
+            )
+
+    # Find G20 specifically and assert it is MINUS
+    g20_polarity = None
+    for tract, tract_polarities in zip(quadruplex.tracts, quadruplex.strand_polarities):
+        for nt, polarity in zip(tract.nucleotides, tract_polarities):
+            if nt.full_name == "A.G20":
+                g20_polarity = polarity
+                break
+        if g20_polarity is not None:
+            break
+
+    assert g20_polarity is not None, "A.G20 not found in strand polarities"
+    assert g20_polarity.value == "minus", (
+        f"Expected A.G20 to be minus, got {g20_polarity.value}"
+    )
+
+
+def test_5v3f_most_5prime_guanine_is_plus():
+    """
+    In 5V3F the most 5' guanine (G8) should be the reference and drawn
+    upright (PLUS). Guanines with opposite strand direction (G16, G21, G26)
+    should be MINUS (inverted), matching the published convention.
+    """
+    cif = handle_input_file("tests/files/5v3f-assembly1.cif.gz")
+    structure3d = rnapolis.parser.read_3d_structure(cif, 1, nucleic_acid_only=False)
+    base_interactions = rnapolis.annotator.extract_base_interactions(structure3d)
+    analysis = eltetrado(base_interactions, structure3d, False)
+
+    # First quadruplex (chain A)
+    quadruplex = analysis.helices[0].quadruplexes[0]
+
+    # Build a mapping from full_name to polarity
+    polarity_map = {}
+    for tract, tract_polarities in zip(quadruplex.tracts, quadruplex.strand_polarities):
+        for nt, polarity in zip(tract.nucleotides, tract_polarities):
+            polarity_map[nt.full_name] = polarity
+
+    # Most 5' guanine should be PLUS (normal/upright)
+    assert polarity_map.get("A.G8") == StrandPolarity.PLUS
+    assert polarity_map.get("A.G9") == StrandPolarity.PLUS
+    assert polarity_map.get("A.G10") == StrandPolarity.PLUS
+
+    # These should be MINUS (inverted relative to the reference)
+    assert polarity_map.get("A.G16") == StrandPolarity.MINUS
+    assert polarity_map.get("A.G21") == StrandPolarity.MINUS
+    assert polarity_map.get("A.G26") == StrandPolarity.MINUS
+
+    # These should be PLUS (same direction as reference)
+    assert polarity_map.get("A.G14") == StrandPolarity.PLUS
+    assert polarity_map.get("A.G19") == StrandPolarity.PLUS
+    assert polarity_map.get("A.G24") == StrandPolarity.PLUS
