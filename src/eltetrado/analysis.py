@@ -1237,7 +1237,10 @@ class Quadruplex:
                 continue
             center, normal = geometry
             normal = self.__orient_tetrad_normal(
-                self.tetrads.index(tetrad), tetrad, normal, self.tracts[0].nucleotides[0]
+                self.tetrads.index(tetrad),
+                tetrad,
+                normal,
+                self.tracts[0].nucleotides[0],
             )
             normals.append(normal)
 

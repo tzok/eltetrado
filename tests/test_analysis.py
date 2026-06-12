@@ -348,5 +348,6 @@ def test_5de5_g20_has_minus_strand_polarity():
             break
 
     assert g20_polarity is not None, "A.G20 not found in strand polarities"
-    assert g20_polarity.value == "minus", f"Expected A.G20 to be minus, got {g20_polarity.value}"
-
+    assert g20_polarity.value == "minus", (
+        f"Expected A.G20 to be minus, got {g20_polarity.value}"
+    )
