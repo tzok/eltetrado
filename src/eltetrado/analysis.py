@@ -1271,36 +1271,40 @@ class Quadruplex:
         if axis is None:
             return [[None] * len(t.nucleotides) for t in self.tracts]
 
-        result = []
+        # Compute dot products for all nucleotides in all tetrads
+        all_dots: Dict[Residue3D, Optional[float]] = {}
         for tract in self.tracts:
-            dots = []
             for nt in tract.nucleotides:
                 v = residue_backbone_direction(nt)
                 if v is not None:
-                    dots.append(float(numpy.dot(v, axis)))
+                    all_dots[nt] = float(numpy.dot(v, axis))
                 else:
-                    dots.append(None)
+                    all_dots[nt] = None
 
-            valid = [d for d in dots if d is not None]
-            if not valid:
-                result.append([None] * len(tract.nucleotides))
-                continue
+        # Find the most 5' guanine with a clear dot product as the reference
+        threshold = 0.1
+        reference_dot: Optional[float] = None
+        for nt in sorted(all_dots.keys(), key=lambda n: self.global_index[n]):
+            d = all_dots[nt]
+            if d is not None and abs(d) > threshold:
+                reference_dot = d
+                break
 
-            threshold = 0.1
-            pos = sum(1 for d in valid if d > threshold)
-            neg = sum(1 for d in valid if d < -threshold)
+        if reference_dot is None:
+            return [[None] * len(t.nucleotides) for t in self.tracts]
 
-            if pos == 0 and neg == 0:
-                result.append([None] * len(tract.nucleotides))
-                continue
-
+        result = []
+        for tract in self.tracts:
             tract_polarities = []
-            for d in dots:
+            for nt in tract.nucleotides:
+                d = all_dots.get(nt)
                 if d is None:
                     tract_polarities.append(None)
-                elif d > threshold:
+                elif d * reference_dot > threshold * threshold:
+                    # Same direction as reference = normal/upright
                     tract_polarities.append(StrandPolarity.PLUS)
-                elif d < -threshold:
+                elif d * reference_dot < -threshold * threshold:
+                    # Opposite direction to reference = inverted
                     tract_polarities.append(StrandPolarity.MINUS)
                 else:
                     tract_polarities.append(None)

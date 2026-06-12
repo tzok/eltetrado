@@ -8,6 +8,7 @@ from rnapolis.adapter import ExternalTool, parse_external_output
 
 import eltetrado.analysis as analysis_module
 from eltetrado.analysis import calculate_best_fit_rotation_around_axis, eltetrado
+from eltetrado.model import StrandPolarity
 from eltetrado.cli import handle_input_file, read_secondary_structure_from_dssr
 from eltetrado.g4composer import (
     canonical_dot_bracket,
@@ -351,3 +352,39 @@ def test_5de5_g20_has_minus_strand_polarity():
     assert g20_polarity.value == "minus", (
         f"Expected A.G20 to be minus, got {g20_polarity.value}"
     )
+
+
+def test_5v3f_most_5prime_guanine_is_plus():
+    """
+    In 5V3F the most 5' guanine (G8) should be the reference and drawn
+    upright (PLUS). Guanines with opposite strand direction (G16, G21, G26)
+    should be MINUS (inverted), matching the published convention.
+    """
+    cif = handle_input_file("tests/files/5v3f-assembly1.cif.gz")
+    structure3d = rnapolis.parser.read_3d_structure(cif, 1, nucleic_acid_only=False)
+    base_interactions = rnapolis.annotator.extract_base_interactions(structure3d)
+    analysis = eltetrado(base_interactions, structure3d, False)
+
+    # First quadruplex (chain A)
+    quadruplex = analysis.helices[0].quadruplexes[0]
+
+    # Build a mapping from full_name to polarity
+    polarity_map = {}
+    for tract, tract_polarities in zip(quadruplex.tracts, quadruplex.strand_polarities):
+        for nt, polarity in zip(tract.nucleotides, tract_polarities):
+            polarity_map[nt.full_name] = polarity
+
+    # Most 5' guanine should be PLUS (normal/upright)
+    assert polarity_map.get("A.G8") == StrandPolarity.PLUS
+    assert polarity_map.get("A.G9") == StrandPolarity.PLUS
+    assert polarity_map.get("A.G10") == StrandPolarity.PLUS
+
+    # These should be MINUS (inverted relative to the reference)
+    assert polarity_map.get("A.G16") == StrandPolarity.MINUS
+    assert polarity_map.get("A.G21") == StrandPolarity.MINUS
+    assert polarity_map.get("A.G26") == StrandPolarity.MINUS
+
+    # These should be PLUS (same direction as reference)
+    assert polarity_map.get("A.G14") == StrandPolarity.PLUS
+    assert polarity_map.get("A.G19") == StrandPolarity.PLUS
+    assert polarity_map.get("A.G24") == StrandPolarity.PLUS
