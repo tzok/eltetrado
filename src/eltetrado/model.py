@@ -260,3 +260,8 @@ class Direction(Enum):
     parallel = "parallel"
     antiparallel = "antiparallel"
     hybrid = "hybrid"
+
+
+class StrandPolarity(Enum):
+    PLUS = "plus"
+    MINUS = "minus"

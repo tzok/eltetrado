@@ -291,3 +291,62 @@ def test_g4composer_structure_keeps_canonical_brackets_for_flanks():
     entry = generate_g4composer_entry(analysis, quadruplex, "6fc9-assembly-1")
 
     assert entry.structure == "^^..^^((((((...))))))^^..^^"
+
+
+def test_6fc9_strand_polarities_are_consistent_within_tracts():
+    """
+    In a canonical antiparallel quadruplex (6fc9) every tract should have
+    a uniform strand polarity (no inverted polarity inside a single tract).
+    """
+    cif = handle_input_file("tests/files/6fc9-assembly-1.cif.gz")
+    structure3d = rnapolis.parser.read_3d_structure(cif, nucleic_acid_only=False)
+    base_interactions = rnapolis.annotator.extract_base_interactions(structure3d)
+    analysis = eltetrado(base_interactions, structure3d, False)
+
+    quadruplex = analysis.helices[0].quadruplexes[0]
+    assert len(quadruplex.strand_polarities) == len(quadruplex.tracts)
+
+    for tract_polarities in quadruplex.strand_polarities:
+        non_none = [p for p in tract_polarities if p is not None]
+        if non_none:
+            assert all(p == non_none[0] for p in non_none), (
+                "Expected uniform strand polarity within a tract, got mixed signs"
+            )
+
+
+def test_5de5_g20_has_minus_strand_polarity():
+    """
+    In 5DE5 (published inverted strand polarity example) every tract should
+    show inverted polarity and A.G20 in particular must be MINUS.
+    """
+    cif = handle_input_file("tests/files/5de5-assembly1.cif.gz")
+    structure3d = rnapolis.parser.read_3d_structure(cif, 1, nucleic_acid_only=False)
+    base_interactions = rnapolis.annotator.extract_base_interactions(structure3d)
+    analysis = eltetrado(base_interactions, structure3d, False)
+
+    quadruplex = analysis.helices[0].quadruplexes[0]
+    assert len(quadruplex.strand_polarities) == len(quadruplex.tracts)
+
+    # Every tract should have mixed signs (inverted strand polarity)
+    for tract_polarities in quadruplex.strand_polarities:
+        non_none = [p for p in tract_polarities if p is not None]
+        if non_none:
+            has_plus = any(p.value == "plus" for p in non_none)
+            has_minus = any(p.value == "minus" for p in non_none)
+            assert has_plus and has_minus, (
+                "Expected inverted strand polarity in 5DE5 tract"
+            )
+
+    # Find G20 specifically and assert it is MINUS
+    g20_polarity = None
+    for tract, tract_polarities in zip(quadruplex.tracts, quadruplex.strand_polarities):
+        for nt, polarity in zip(tract.nucleotides, tract_polarities):
+            if nt.full_name == "A.G20":
+                g20_polarity = polarity
+                break
+        if g20_polarity is not None:
+            break
+
+    assert g20_polarity is not None, "A.G20 not found in strand polarities"
+    assert g20_polarity.value == "minus", f"Expected A.G20 to be minus, got {g20_polarity.value}"
+

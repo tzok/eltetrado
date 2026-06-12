@@ -32,6 +32,7 @@ from eltetrado.model import (
     Ion,
     LoopClassification,
     LoopType,
+    StrandPolarity,
     SugarPucker,
     TetradPolarity,
 )
@@ -326,6 +327,17 @@ def residue_backbone_anchor(residue: Residue3D) -> numpy.ndarray:
     if residue.atoms:
         return residue.atoms[0].coordinates
     raise ValueError(f"Missing anchor atoms for residue {residue.full_name}")
+
+
+def residue_backbone_direction(residue: Residue3D) -> Optional[numpy.ndarray]:
+    p = residue.find_atom("P")
+    c3 = residue.find_atom("C3'")
+    if p is not None and c3 is not None:
+        return c3.coordinates - p.coordinates
+    c5 = residue.find_atom("C5'")
+    if c5 is not None and c3 is not None:
+        return c3.coordinates - c5.coordinates
+    return None
 
 
 def sugar_torsion(residue: Residue3D, atom_names: Tuple[str, str, str, str]) -> float:
@@ -906,6 +918,7 @@ class Quadruplex:
     path: List[str] = field(init=False)
     handedness: Optional[HelixHandedness] = field(init=False)
     tetrad_polarities: List[Optional[TetradPolarity]] = field(init=False)
+    strand_polarities: List[List[Optional[StrandPolarity]]] = field(init=False)
     loop_class: Optional[LoopClassification] = field(init=False)
 
     def __post_init__(self):
@@ -916,6 +929,7 @@ class Quadruplex:
         self.loops = self.__find_loops()
         self.handedness = self.__find_handedness()
         self.tetrad_polarities = self.__find_tetrad_polarities()
+        self.strand_polarities = self.__find_strand_polarities()
         self.path = self.__find_path()
         self.loop_class = self.__classify_by_loops()
 
@@ -1186,20 +1200,11 @@ class Quadruplex:
         if len(self.tetrads) < 2:
             return None
 
-        centers = [tetrad.center() for tetrad in self.tetrads]
-        axis = centers[-1] - centers[0]
-
-        if numpy.linalg.norm(axis) == 0.0:
-            axis = centers[1] - centers[0]
-        if numpy.linalg.norm(axis) == 0.0:
+        axis = self.__compute_axis()
+        if axis is None:
             return None
 
-        axis = normalize_vector(axis)
-        progression = self.__strand_progression_vector(
-            0, self.tetrads[0], self.tracts[0].nucleotides[0]
-        )
-        if progression is not None and numpy.dot(axis, progression) < 0:
-            axis = -axis
+        centers = [tetrad.center() for tetrad in self.tetrads]
 
         twists = []
         for i in range(1, len(self.tetrads)):
@@ -1223,6 +1228,81 @@ class Quadruplex:
         if math.isclose(mean_twist, 0.0, abs_tol=1.0e-6):
             return None
         return HelixHandedness.RIGHT if mean_twist > 0.0 else HelixHandedness.LEFT
+
+    def __compute_axis(self) -> Optional[numpy.ndarray]:
+        normals = []
+        for tetrad in self.tetrads:
+            geometry = self.__tetrad_geometry(tetrad)
+            if geometry is None:
+                continue
+            center, normal = geometry
+            normal = self.__orient_tetrad_normal(
+                self.tetrads.index(tetrad), tetrad, normal, self.tracts[0].nucleotides[0]
+            )
+            normals.append(normal)
+
+        if not normals:
+            return None
+
+        # Ensure consistent orientation of all normals
+        for i in range(1, len(normals)):
+            if numpy.dot(normals[0], normals[i]) < 0:
+                normals[i] = -normals[i]
+
+        axis = numpy.mean(normals, axis=0)
+        if numpy.linalg.norm(axis) == 0.0:
+            return None
+        axis = normalize_vector(axis)
+
+        # Orient the axis using the first tract's backbone progression
+        if self.tracts:
+            progression = self.__strand_progression_vector(
+                0, self.tetrads[0], self.tracts[0].nucleotides[0]
+            )
+            if progression is not None and numpy.dot(axis, progression) < 0:
+                axis = -axis
+        return axis
+
+    def __find_strand_polarities(self) -> List[List[Optional[StrandPolarity]]]:
+        axis = self.__compute_axis()
+        if axis is None:
+            return [[None] * len(t.nucleotides) for t in self.tracts]
+
+        result = []
+        for tract in self.tracts:
+            dots = []
+            for nt in tract.nucleotides:
+                v = residue_backbone_direction(nt)
+                if v is not None:
+                    dots.append(float(numpy.dot(v, axis)))
+                else:
+                    dots.append(None)
+
+            valid = [d for d in dots if d is not None]
+            if not valid:
+                result.append([None] * len(tract.nucleotides))
+                continue
+
+            threshold = 0.1
+            pos = sum(1 for d in valid if d > threshold)
+            neg = sum(1 for d in valid if d < -threshold)
+
+            if pos == 0 and neg == 0:
+                result.append([None] * len(tract.nucleotides))
+                continue
+
+            tract_polarities = []
+            for d in dots:
+                if d is None:
+                    tract_polarities.append(None)
+                elif d > threshold:
+                    tract_polarities.append(StrandPolarity.PLUS)
+                elif d < -threshold:
+                    tract_polarities.append(StrandPolarity.MINUS)
+                else:
+                    tract_polarities.append(None)
+            result.append(tract_polarities)
+        return result
 
     def __find_tetrad_polarities(self) -> List[Optional[TetradPolarity]]:
         polarities: List[Optional[TetradPolarity]] = []
@@ -1437,6 +1517,28 @@ class Quadruplex:
                 builder += "\n    Tracts:\n"
                 for tract in self.tracts:
                     builder += f"{tract}\n"
+            if self.strand_polarities:
+                builder += "\n    Strand polarities:\n"
+                for tract_index, tract_polarities in enumerate(self.strand_polarities):
+                    if not tract_polarities:
+                        continue
+                    parts = []
+                    has_plus = any(p == StrandPolarity.PLUS for p in tract_polarities)
+                    has_minus = any(p == StrandPolarity.MINUS for p in tract_polarities)
+                    for nt, polarity in zip(
+                        self.tracts[tract_index].nucleotides,
+                        tract_polarities,
+                    ):
+                        suffix = ""
+                        if polarity == StrandPolarity.PLUS:
+                            suffix = "+"
+                        elif polarity == StrandPolarity.MINUS:
+                            suffix = "-"
+                        parts.append(f"{nt.full_name}{suffix}")
+                    line = "      " + ", ".join(parts)
+                    if has_plus and has_minus:
+                        line += " (inverted strand polarity)"
+                    builder += line + "\n"
             if self.path:
                 builder += "\n    Path:\n"
                 builder += f"      {', '.join(self.path)}\n"
@@ -1769,26 +1871,29 @@ class Analysis:
 
         def next_tetrad_scoring(
             ti: Tetrad, tj: Tetrad, candidates: Iterable[Tetrad]
-        ) -> Tuple[int, int, int, int, int]:
+        ) -> Tuple[int, float, int, int, int]:
             """
-            Provide a sorting key that expresses how “good” a follow-up tetrad *tj*
+            Provide a sorting key that expresses how "good" a follow-up tetrad *tj*
             is when the current end of a tentative helix is *ti*.
 
             The tuple is evaluated lexicographically by ``max(…, key=next_tetrad_scoring)``.
             Order of importance:
-              1. total alignment score           (4 = perfect)
-              2. sequential alignment component (0-4)
-              3. stacking  alignment component (0-4)
-              4. negative sum of *tj*’s scores to the remaining *candidates*
-                 – favours tetrads that are already **less** compatible with the
+              1. stacking alignment component  (0-4)
+              2. negative distance between tetrad centroids (favour closer tetrads)
+              3. sequential alignment component (0-4)
+              4. negative sum of *tj*'s scores to the remaining *candidates*
+                 - favours tetrads that are already **less** compatible with the
                    rest of the pool so we can grow one continuous helix first.
               5. deterministic tiebreaker = negative original index of *tj*
             """
             score_direct = self.tetrad_scores[ti].get(tj)
 
-            # direct scores (0–4 each)
+            # direct scores (0-4 each)
             sequential_direct = score_direct.sequential if score_direct else 0
             stacking_direct = score_direct.stacking if score_direct else 0
+
+            # geometric distance between tetrad centroids
+            distance = -float(numpy.linalg.norm(tj.center() - ti.center()))
 
             # how strongly tj is connected to still-unvisited tetrads
             total_candidates = -sum(
@@ -1802,8 +1907,9 @@ class Analysis:
             )
 
             return (
-                sequential_direct,
                 stacking_direct,
+                distance,
+                sequential_direct,
                 total_candidates,
                 -self.tetrads.index(tj),
             )

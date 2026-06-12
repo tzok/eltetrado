@@ -209,3 +209,35 @@ def test_serialized_path_tetrad_letters_follow_5p_order_in_5v3f():
         "B2",
         "C2",
     ]
+
+
+def test_strand_polarities_serialized():
+    cif = handle_input_file("tests/files/6fc9-assembly-1.cif.gz")
+    structure3d = rnapolis.parser.read_3d_structure(cif, nucleic_acid_only=False)
+    base_interactions = rnapolis.annotator.extract_base_interactions(structure3d)
+    analysis = eltetrado(base_interactions, structure3d, False)
+    dto = generate_dto(analysis)
+
+    quadruplex = dto.helices[0].quadruplexes[0]
+    assert len(quadruplex.strandPolarities) == 4
+    for tract_polarities in quadruplex.strandPolarities:
+        for p in tract_polarities:
+            assert p in ("plus", "minus", None)
+
+
+def test_5de5_strand_polarities_serialized():
+    cif = handle_input_file("tests/files/5de5-assembly1.cif.gz")
+    structure3d = rnapolis.parser.read_3d_structure(cif, 1, nucleic_acid_only=False)
+    base_interactions = rnapolis.annotator.extract_base_interactions(structure3d)
+    analysis = eltetrado(base_interactions, structure3d, False)
+    dto = generate_dto(analysis)
+
+    quadruplex = dto.helices[0].quadruplexes[0]
+    assert len(quadruplex.strandPolarities) == 4
+
+    # Find the tract containing G20 and assert it has mixed polarities
+    for tract, tract_polarities in zip(quadruplex.tracts, quadruplex.strandPolarities):
+        if "A.G20" in tract:
+            values = [p for p in tract_polarities if p is not None]
+            assert "plus" in values and "minus" in values
+            assert tract_polarities[tract.index("A.G20")] == "minus"
