@@ -200,7 +200,7 @@ wheels = [
 
 [[package]]
 name = "eltetrado"
-version = "1.9.6"
+version = "1.9.7"
 source = { editable = "." }
 dependencies = [
     { name = "mmcif" },

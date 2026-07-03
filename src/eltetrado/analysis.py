@@ -151,30 +151,6 @@ def calculate_rise(coords_base_A: numpy.ndarray, coords_base_B: numpy.ndarray) -
     return abs(rise)
 
 
-def calculate_signed_rise(
-    coords_base_A: numpy.ndarray, coords_base_B: numpy.ndarray
-) -> float:
-    c_A, n_A = get_plane_vectors(coords_base_A)
-    c_B, n_B = get_plane_vectors(coords_base_B)
-
-    if numpy.dot(n_A, n_B) < 0:
-        n_B = -n_B
-
-    axis = n_A + n_B
-    vector_connect = c_B - c_A
-
-    if numpy.linalg.norm(axis) < 1.0e-6:
-        axis = vector_connect
-    if numpy.linalg.norm(axis) < 1.0e-6:
-        return 0.0
-
-    axis = normalize_vector(axis)
-    if numpy.dot(axis, vector_connect) < 0:
-        axis = -axis
-
-    return float(numpy.dot(vector_connect, axis))
-
-
 def get_signed_angle(
     v1: numpy.ndarray, v2: numpy.ndarray, normal: numpy.ndarray
 ) -> float:
@@ -980,10 +956,41 @@ class Quadruplex:
         )
 
     def __find_tracts(self) -> List[Tract]:
-        return [
+        tracts = [
             Tract(nts)
             for nts in self.__build_tracts(self.__first_tetrad_column_order())
         ]
+        return self.__rotate_tracts_to_tetrad_a(tracts)
+
+    def __rotate_tracts_to_tetrad_a(self, tracts: List[Tract]) -> List[Tract]:
+        """Re-anchor tract numbering so tract ``1`` always belongs to tetrad A.
+
+        ``__first_tetrad_column_order`` anchors column ``1`` on
+        ``self.tetrads[0]``, which is the first tetrad in the internal 3D-stack
+        discovery order, not necessarily the tetrad labelled ``A`` (the tetrad
+        with the 5'-most nucleotide). Rotating the tract list preserves the
+        existing geometric (anticlockwise) cyclic order while guaranteeing that
+        ``path`` always starts with ``A1``.
+        """
+        if not tracts or not self.tetrads:
+            return tracts
+
+        tetrad_a_index = min(
+            range(len(self.tetrads)),
+            key=lambda i: min(
+                self.global_index[nt] for nt in self.tetrads[i].nucleotides
+            ),
+        )
+        tetrad_a_anchor = min(
+            self.tetrads[tetrad_a_index].nucleotides,
+            key=lambda nt: self.global_index[nt],
+        )
+
+        for rotation, tract in enumerate(tracts):
+            if tract.nucleotides[tetrad_a_index] == tetrad_a_anchor:
+                return tracts[rotation:] + tracts[:rotation]
+
+        return tracts
 
     def __build_tracts(
         self, first_tetrad_order: List[Residue3D]
@@ -1370,9 +1377,31 @@ class Quadruplex:
     def __detect_loop_type(
         self, nt_first: Residue3D, nt_last: Residue3D
     ) -> Optional[LoopType]:
+        """Classify a loop by the column transition between its flanking tetrads.
+
+        Columns are ElTetrado tract indices, numbered anticlockwise starting
+        from the tetrad-A anchor. A loop is ``+`` when the 3'-flanking column
+        is the clockwise-next of the 5'-flanking column (i.e. the column number
+        decreases by 1 modulo 4), ``-`` when it is the anticlockwise-next
+        (column number increases by 1 modulo 4), and ``diagonal`` (no sign)
+        when the two columns are opposite each other.
+        """
+        column_first = self.__find_tract_index_with_nt(nt_first)
+        column_last = self.__find_tract_index_with_nt(nt_last)
+        if column_first is None or column_last is None:
+            logging.warning(
+                f"Failed to classify the loop between {nt_first} and {nt_last}"
+            )
+            return None
+
+        delta = (column_last - column_first) % 4
+        if delta == 2:
+            return LoopType.diagonal
+
+        sign = "+" if delta == 3 else "-"
+
         tetrad_with_first = self.__find_tetrad_with_nt(nt_first)
         tetrad_with_last = self.__find_tetrad_with_nt(nt_last)
-
         if tetrad_with_first is None or tetrad_with_last is None:
             logging.warning(
                 f"Failed to classify the loop between {nt_first} and {nt_last}"
@@ -1380,22 +1409,8 @@ class Quadruplex:
             return None
 
         if tetrad_with_first == tetrad_with_last:
-            # diagonal or laterals happen when first and last nt of a loop is in the same tetrad
-            sign = self.__detect_loop_sign(nt_first, nt_last, tetrad_with_first)
-            if sign is not None:
-                return LoopType.from_value(f"lateral{sign}")
-            return LoopType.diagonal
-
-        tract_with_last = self.__find_tract_with_nt(nt_last)
-        if tract_with_last is not None:
-            # search along the tract to check what pairs with nt_first
-            for nt in tract_with_last.nucleotides:
-                if nt in tetrad_with_first.nucleotides:
-                    sign = self.__detect_loop_sign(nt_first, nt, tetrad_with_first)
-                    if sign is not None:
-                        return LoopType.from_value(f"propeller{sign}")
-        logging.warning(f"Failed to classify the loop between {nt_first} and {nt_last}")
-        return None
+            return LoopType.from_value(f"lateral{sign}")
+        return LoopType.from_value(f"propeller{sign}")
 
     # ------------------------------------------------------------------
     # Bulges
@@ -1451,20 +1466,10 @@ class Quadruplex:
                 return tract
         return None
 
-    def __detect_loop_sign(
-        self, first: Residue3D, last: Residue3D, tetrad: Tetrad
-    ) -> Optional[str]:
-        for pair in [tetrad.pair_12, tetrad.pair_23, tetrad.pair_34, tetrad.pair_41]:
-            # main check
-            if pair.nt1_3d == first and pair.nt2_3d == last:
-                if pair.score < pair.reverse.score:
-                    return "-"
-                return "+"
-            # reverse check
-            if pair.nt1_3d == last and pair.nt2_3d == first:
-                if pair.score < pair.reverse.score:
-                    return "+"
-                return "-"
+    def __find_tract_index_with_nt(self, nt: Residue3D) -> Optional[int]:
+        for index, tract in enumerate(self.tracts):
+            if nt in tract.nucleotides:
+                return index
         return None
 
     def __classify_by_loops(self) -> Optional[LoopClassification]:
