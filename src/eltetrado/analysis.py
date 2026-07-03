@@ -1319,17 +1319,17 @@ class Quadruplex:
         return result
 
     def __find_tetrad_polarities(self) -> List[Optional[TetradPolarity]]:
+        axis = self.__compute_axis()
         polarities: List[Optional[TetradPolarity]] = []
 
         for i, tetrad in enumerate(self.tetrads):
             column1 = self.tracts[0].nucleotides[i]
             geometry = self.__tetrad_geometry(tetrad)
-            if geometry is None:
+            if geometry is None or axis is None:
                 polarities.append(None)
                 continue
 
-            center, normal = geometry
-            normal = self.__orient_tetrad_normal(i, tetrad, normal, column1)
+            center, _ = geometry
             successor = self.__hydrogen_bond_successor_map(tetrad)
 
             if len(successor) != 4 or column1 not in successor:
@@ -1346,7 +1346,7 @@ class Quadruplex:
             try:
                 delta = calculate_angle_around_axis(
                     next_point - center,
-                    normal,
+                    axis,
                     reference_point - center,
                 ) % (2.0 * math.pi)
             except ValueError:

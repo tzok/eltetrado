@@ -150,6 +150,7 @@ def test_g4composer_export_in_5dea():
     entry = generate_g4composer_entry(analysis, quadruplex, "5dea-assembly1")
 
     assert entry.path == "A1;A4;B4;C4;B1;C1;A2;B2;C2;B3;C3;A3"
+    assert entry.orient == "A-;B+;C+"
     assert entry.rise == "-6.9;3.5"
     assert entry.twist == "11.1;26.8"
 
