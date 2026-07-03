@@ -1377,9 +1377,31 @@ class Quadruplex:
     def __detect_loop_type(
         self, nt_first: Residue3D, nt_last: Residue3D
     ) -> Optional[LoopType]:
+        """Classify a loop by the column transition between its flanking tetrads.
+
+        Columns are ElTetrado tract indices, numbered anticlockwise starting
+        from the tetrad-A anchor. A loop is ``+`` when the 3'-flanking column
+        is the clockwise-next of the 5'-flanking column (i.e. the column number
+        decreases by 1 modulo 4), ``-`` when it is the anticlockwise-next
+        (column number increases by 1 modulo 4), and ``diagonal`` (no sign)
+        when the two columns are opposite each other.
+        """
+        column_first = self.__find_tract_index_with_nt(nt_first)
+        column_last = self.__find_tract_index_with_nt(nt_last)
+        if column_first is None or column_last is None:
+            logging.warning(
+                f"Failed to classify the loop between {nt_first} and {nt_last}"
+            )
+            return None
+
+        delta = (column_last - column_first) % 4
+        if delta == 2:
+            return LoopType.diagonal
+
+        sign = "+" if delta == 3 else "-"
+
         tetrad_with_first = self.__find_tetrad_with_nt(nt_first)
         tetrad_with_last = self.__find_tetrad_with_nt(nt_last)
-
         if tetrad_with_first is None or tetrad_with_last is None:
             logging.warning(
                 f"Failed to classify the loop between {nt_first} and {nt_last}"
@@ -1387,22 +1409,8 @@ class Quadruplex:
             return None
 
         if tetrad_with_first == tetrad_with_last:
-            # diagonal or laterals happen when first and last nt of a loop is in the same tetrad
-            sign = self.__detect_loop_sign(nt_first, nt_last, tetrad_with_first)
-            if sign is not None:
-                return LoopType.from_value(f"lateral{sign}")
-            return LoopType.diagonal
-
-        tract_with_last = self.__find_tract_with_nt(nt_last)
-        if tract_with_last is not None:
-            # search along the tract to check what pairs with nt_first
-            for nt in tract_with_last.nucleotides:
-                if nt in tetrad_with_first.nucleotides:
-                    sign = self.__detect_loop_sign(nt_first, nt, tetrad_with_first)
-                    if sign is not None:
-                        return LoopType.from_value(f"propeller{sign}")
-        logging.warning(f"Failed to classify the loop between {nt_first} and {nt_last}")
-        return None
+            return LoopType.from_value(f"lateral{sign}")
+        return LoopType.from_value(f"propeller{sign}")
 
     # ------------------------------------------------------------------
     # Bulges
@@ -1458,20 +1466,10 @@ class Quadruplex:
                 return tract
         return None
 
-    def __detect_loop_sign(
-        self, first: Residue3D, last: Residue3D, tetrad: Tetrad
-    ) -> Optional[str]:
-        for pair in [tetrad.pair_12, tetrad.pair_23, tetrad.pair_34, tetrad.pair_41]:
-            # main check
-            if pair.nt1_3d == first and pair.nt2_3d == last:
-                if pair.score < pair.reverse.score:
-                    return "-"
-                return "+"
-            # reverse check
-            if pair.nt1_3d == last and pair.nt2_3d == first:
-                if pair.score < pair.reverse.score:
-                    return "+"
-                return "-"
+    def __find_tract_index_with_nt(self, nt: Residue3D) -> Optional[int]:
+        for index, tract in enumerate(self.tracts):
+            if nt in tract.nucleotides:
+                return index
         return None
 
     def __classify_by_loops(self) -> Optional[LoopClassification]:

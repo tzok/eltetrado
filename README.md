@@ -194,7 +194,7 @@ path        A1;B1;B4;A4;C4;C1;B2;A2;C2;B3;A3;C3
         Loops:
           propeller- 1.DT7, 1.DT8, 1.DA9
           lateral- 1.DT13, 1.DT14, 1.DA15
-          lateral+ 1.DT19, 1.DT20, 1.DA21
+          lateral- 1.DT19, 1.DT20, 1.DA21
 
     AAAGGGTTAGGGTTAGGGTTAGGGAA
     ...(([...{)]...[[}...)]]..
@@ -673,6 +673,28 @@ Click to see the output JSON
             "anticlockwise",
             "anticlockwise"
           ],
+          "strandPolarities": [
+            [
+              "plus",
+              "plus",
+              "plus"
+            ],
+            [
+              "plus",
+              "plus",
+              "plus"
+            ],
+            [
+              "minus",
+              "minus",
+              "minus"
+            ],
+            [
+              "plus",
+              "plus",
+              "plus"
+            ]
+          ],
           "loopClassification": {
             "classification": "9a",
             "loopProgression": "-(pll)"
@@ -735,7 +757,7 @@ Click to see the output JSON
               ]
             },
             {
-              "type": "lateral+",
+              "type": "lateral-",
               "nucleotides": [
                 "1.DT19",
                 "1.DT20",
@@ -773,7 +795,7 @@ Click to see the output JSON
     "structure": "...qRS...Qrs...SRq...Qrs..",
     "chi": "saasaaaaasaaaaassaaaasaaaa",
     "sugar": "NNNNNSSNNNNSNNSSSNSNNSNNSN",
-    "loop": "......ppp...lll...LLL....."
+    "loop": "......ppp...lll...lll....."
   }
 }
 ```
@@ -1868,6 +1890,36 @@ Click to see the output JSON
             "clockwise",
             "clockwise"
           ],
+          "strandPolarities": [
+            [
+              "minus",
+              "plus",
+              "plus",
+              "plus",
+              "plus"
+            ],
+            [
+              "minus",
+              "plus",
+              "plus",
+              "plus",
+              "plus"
+            ],
+            [
+              "minus",
+              "plus",
+              "plus",
+              "plus",
+              "plus"
+            ],
+            [
+              "minus",
+              "plus",
+              "plus",
+              "plus",
+              "plus"
+            ]
+          ],
           "loopClassification": null,
           "gbaClassification": [
             "VIII"
@@ -2022,6 +2074,36 @@ Click to see the output JSON
             "anticlockwise",
             "anticlockwise",
             "clockwise"
+          ],
+          "strandPolarities": [
+            [
+              "plus",
+              "plus",
+              "plus",
+              "plus",
+              "minus"
+            ],
+            [
+              "plus",
+              "plus",
+              "plus",
+              "plus",
+              "minus"
+            ],
+            [
+              "plus",
+              "plus",
+              "plus",
+              "plus",
+              "minus"
+            ],
+            [
+              "plus",
+              "plus",
+              "plus",
+              "plus",
+              "minus"
+            ]
           ],
           "loopClassification": null,
           "gbaClassification": [

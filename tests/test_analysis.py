@@ -154,6 +154,21 @@ def test_g4composer_export_in_5dea():
     assert entry.twist == "11.1;26.8"
 
 
+def test_loop_signs_follow_columns_in_1i34():
+    cif = handle_input_file("tests/files/1i34-assembly1.cif.gz")
+    structure3d = rnapolis.parser.read_3d_structure(cif, 1, nucleic_acid_only=False)
+    base_interactions = rnapolis.annotator.extract_base_interactions(structure3d)
+    analysis = eltetrado(base_interactions, structure3d, False)
+
+    quadruplex = analysis.helices[0].quadruplexes[0]
+
+    assert [loop.loop_type.value for loop in quadruplex.loops] == [
+        "diagonal",
+        "propeller+",
+        "diagonal",
+    ]
+
+
 def test_2ms9_is_left_handed():
     cif = handle_input_file("tests/files/2ms9.cif")
     structure3d = rnapolis.parser.read_3d_structure(cif, nucleic_acid_only=False)
