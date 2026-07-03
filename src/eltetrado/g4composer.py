@@ -330,7 +330,9 @@ def build_order_intervals(quadruplex: Quadruplex) -> List[Tuple[float, float]]:
     intervals = []
     for tetrad1, tetrad2 in zip(build_order, build_order[1:]):
         rise = float(numpy.dot(centroids[tetrad2] - centroids[tetrad1], axis))
-        twist = tract_matched_twist(quadruplex, tetrad1, tetrad2, tetrad_row_index, axis)
+        twist = tract_matched_twist(
+            quadruplex, tetrad1, tetrad2, tetrad_row_index, axis
+        )
         intervals.append((rise, twist))
 
     return intervals
