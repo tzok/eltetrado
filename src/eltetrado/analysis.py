@@ -151,30 +151,6 @@ def calculate_rise(coords_base_A: numpy.ndarray, coords_base_B: numpy.ndarray) -
     return abs(rise)
 
 
-def calculate_signed_rise(
-    coords_base_A: numpy.ndarray, coords_base_B: numpy.ndarray
-) -> float:
-    c_A, n_A = get_plane_vectors(coords_base_A)
-    c_B, n_B = get_plane_vectors(coords_base_B)
-
-    if numpy.dot(n_A, n_B) < 0:
-        n_B = -n_B
-
-    axis = n_A + n_B
-    vector_connect = c_B - c_A
-
-    if numpy.linalg.norm(axis) < 1.0e-6:
-        axis = vector_connect
-    if numpy.linalg.norm(axis) < 1.0e-6:
-        return 0.0
-
-    axis = normalize_vector(axis)
-    if numpy.dot(axis, vector_connect) < 0:
-        axis = -axis
-
-    return float(numpy.dot(vector_connect, axis))
-
-
 def get_signed_angle(
     v1: numpy.ndarray, v2: numpy.ndarray, normal: numpy.ndarray
 ) -> float:
@@ -980,10 +956,41 @@ class Quadruplex:
         )
 
     def __find_tracts(self) -> List[Tract]:
-        return [
+        tracts = [
             Tract(nts)
             for nts in self.__build_tracts(self.__first_tetrad_column_order())
         ]
+        return self.__rotate_tracts_to_tetrad_a(tracts)
+
+    def __rotate_tracts_to_tetrad_a(self, tracts: List[Tract]) -> List[Tract]:
+        """Re-anchor tract numbering so tract ``1`` always belongs to tetrad A.
+
+        ``__first_tetrad_column_order`` anchors column ``1`` on
+        ``self.tetrads[0]``, which is the first tetrad in the internal 3D-stack
+        discovery order, not necessarily the tetrad labelled ``A`` (the tetrad
+        with the 5'-most nucleotide). Rotating the tract list preserves the
+        existing geometric (anticlockwise) cyclic order while guaranteeing that
+        ``path`` always starts with ``A1``.
+        """
+        if not tracts or not self.tetrads:
+            return tracts
+
+        tetrad_a_index = min(
+            range(len(self.tetrads)),
+            key=lambda i: min(
+                self.global_index[nt] for nt in self.tetrads[i].nucleotides
+            ),
+        )
+        tetrad_a_anchor = min(
+            self.tetrads[tetrad_a_index].nucleotides,
+            key=lambda nt: self.global_index[nt],
+        )
+
+        for rotation, tract in enumerate(tracts):
+            if tract.nucleotides[tetrad_a_index] == tetrad_a_anchor:
+                return tracts[rotation:] + tracts[:rotation]
+
+        return tracts
 
     def __build_tracts(
         self, first_tetrad_order: List[Residue3D]

@@ -17,7 +17,7 @@ time into g4composer's build-order and path-numbering conventions.
 import math
 import os
 from dataclasses import dataclass
-from typing import Dict, Iterable, List, Optional, Sequence, Tuple
+from typing import Dict, List, Optional, Sequence, Tuple
 
 import numpy
 from rnapolis.common import Entry, GlycosidicBond, Molecule, BpSeq
@@ -27,8 +27,10 @@ from eltetrado.analysis import (
     Analysis,
     Quadruplex,
     Tetrad,
-    calculate_signed_rise,
+    calculate_best_fit_rotation_around_axis,
     collect_nucleobase_atoms,
+    get_plane_vectors,
+    residue_c1prime_coordinates,
 )
 from eltetrado.model import SugarPucker
 
@@ -273,47 +275,15 @@ def remap_path_entry_to_clockwise(entry: str) -> str:
 
 
 def export_rise(quadruplex: Quadruplex) -> str:
-    intervals = build_intervals(quadruplex)
-    values = [
-        format_number(sum(step.signed_rise for step in interval))
-        for interval in intervals
-    ]
-    return ";".join(values)
+    return ";".join(
+        format_number(rise) for rise, _ in build_order_intervals(quadruplex)
+    )
 
 
 def export_twist(quadruplex: Quadruplex) -> str:
-    intervals = build_intervals(quadruplex)
-    values = [
-        format_number(sum(step.signed_twist for step in interval))
-        for interval in intervals
-    ]
-    return ";".join(values)
-
-
-@dataclass(frozen=True)
-class SignedStep:
-    signed_rise: float
-    signed_twist: float
-
-
-def build_intervals(quadruplex: Quadruplex) -> List[List[SignedStep]]:
-    """Build signed traversal intervals between consecutive build-order tetrads.
-
-    g4composer ``rise`` and ``twist`` are exported between consecutive tetrads in
-    build order (A->B, B->C, ...), but the underlying geometry in ElTetrado is
-    defined on adjacent stacked tetrad pairs. When build order differs from stack
-    order, an interval may therefore traverse one or more stack edges, possibly
-    in reverse. Reverse traversal negates the adjacent-pair metric.
-    """
-    build_order = tetrads_in_build_order(quadruplex)
-    if len(build_order) < 2:
-        return []
-
-    pair_steps = signed_pair_steps(quadruplex)
-    intervals = []
-    for start, end in zip(build_order, build_order[1:]):
-        intervals.append(path_steps_between(start, end, pair_steps))
-    return intervals
+    return ";".join(
+        format_number(twist) for _, twist in build_order_intervals(quadruplex)
+    )
 
 
 def tetrads_in_build_order(quadruplex: Quadruplex) -> List[Tetrad]:
@@ -337,64 +307,115 @@ def tetrads_in_build_order(quadruplex: Quadruplex) -> List[Tetrad]:
     return [label_to_tetrad[label] for label in build_labels]
 
 
-def signed_pair_steps(
-    quadruplex: Quadruplex,
-) -> Dict[Tuple[Tetrad, Tetrad], SignedStep]:
-    """Cache signed adjacent-stack metrics for both traversal directions."""
-    steps = {}
-    for pair in quadruplex.tetrad_pairs:
-        rise = signed_rise_for_pair(pair.tetrad1, pair.tetrad2)
-        twist = pair.twist
-        steps[(pair.tetrad1, pair.tetrad2)] = SignedStep(rise, twist)
-        steps[(pair.tetrad2, pair.tetrad1)] = SignedStep(-rise, -twist)
-    return steps
+def build_order_intervals(quadruplex: Quadruplex) -> List[Tuple[float, float]]:
+    """Compute (rise, twist) for each consecutive pair in g4composer build order.
 
-
-def path_steps_between(
-    start: Tetrad,
-    end: Tetrad,
-    pair_steps: Dict[Tuple[Tetrad, Tetrad], SignedStep],
-) -> List[SignedStep]:
-    """Traverse the stack graph between two build-order tetrads.
-
-    The returned step list is later summed to produce g4composer ``rise`` and
-    ``twist`` for a single build-order interval.
+    A single, quadruplex-wide axis (see ``quadruplex_axis_and_centroids``) is
+    used for every interval so that signs are comparable across the whole
+    build order, even when it reverses or bridges ElTetrado's internal
+    (discovery-order) stack of adjacent tetrad pairs.
     """
-    graph = adjacency(pair_steps.keys())
-    queue: List[Tuple[Tetrad, List[SignedStep], List[Tetrad]]] = [(start, [], [start])]
+    build_order = tetrads_in_build_order(quadruplex)
+    if len(build_order) < 2:
+        return []
 
-    while queue:
-        current, steps, visited = queue.pop(0)
-        if current == end:
-            return steps
-        for neighbor in graph.get(current, []):
-            if neighbor in visited:
-                continue
-            queue.append(
-                (
-                    neighbor,
-                    steps + [pair_steps[(current, neighbor)]],
-                    visited + [neighbor],
-                )
-            )
+    axis, centroids = quadruplex_axis_and_centroids(quadruplex)
+    if axis is None:
+        return [(math.nan, math.nan) for _ in build_order[1:]]
 
-    raise ValueError("Failed to derive g4composer build traversal between tetrads")
+    tetrad_row_index = {
+        tetrad: index for index, tetrad in enumerate(quadruplex.tetrads)
+    }
 
+    intervals = []
+    for tetrad1, tetrad2 in zip(build_order, build_order[1:]):
+        rise = float(numpy.dot(centroids[tetrad2] - centroids[tetrad1], axis))
+        twist = tract_matched_twist(quadruplex, tetrad1, tetrad2, tetrad_row_index, axis)
+        intervals.append((rise, twist))
 
-def adjacency(edges: Iterable[Tuple[Tetrad, Tetrad]]) -> Dict[Tetrad, List[Tetrad]]:
-    result: Dict[Tetrad, List[Tetrad]] = {}
-    for left, right in edges:
-        result.setdefault(left, []).append(right)
-    return result
+    return intervals
 
 
-def signed_rise_for_pair(tetrad1: Tetrad, tetrad2: Tetrad) -> float:
-    """Return the signed rise for one adjacent stacked tetrad pair."""
-    coords1 = numpy.array(collect_nucleobase_atoms(tetrad1.nucleotides))
-    coords2 = numpy.array(collect_nucleobase_atoms(tetrad2.nucleotides))
-    if len(coords1) == 0 or len(coords2) == 0:
-        return math.nan
-    return calculate_signed_rise(coords1, coords2)
+def quadruplex_axis_and_centroids(
+    quadruplex: Quadruplex,
+) -> Tuple[Optional[numpy.ndarray], Dict[Tetrad, numpy.ndarray]]:
+    """Return one consistently oriented axis for the whole quadruplex, plus
+    each tetrad's nucleobase centroid.
+
+    g4composer ``rise``/``twist`` are exported between consecutive tetrads in
+    build order, which may differ from ElTetrado's internal (discovery-order)
+    stack of adjacent tetrad pairs. Deriving a fresh axis per adjacent pair (as
+    ``TetradPair`` geometry does) only yields a *locally* meaningful sign;
+    chaining or reversing such per-pair values does not represent a single,
+    comparable direction across the whole build order. Instead we build one
+    shared axis here: each tetrad's own plane normal (arbitrarily signed by
+    SVD) is chain-aligned to its discovery-order neighbor, the results are
+    averaged, and the final axis is oriented from the first to the last
+    tetrad in discovery order.
+    """
+    tetrads = quadruplex.tetrads
+    centroids: Dict[Tetrad, numpy.ndarray] = {}
+    normals: List[numpy.ndarray] = []
+
+    for tetrad in tetrads:
+        coords = collect_nucleobase_atoms(tetrad.nucleotides)
+        if len(coords) < 3:
+            return None, centroids
+        centroid, normal = get_plane_vectors(numpy.array(coords))
+        centroids[tetrad] = centroid
+        normals.append(normal)
+
+    if len(normals) < 2:
+        return None, centroids
+
+    consistent_normals = [normals[0]]
+    for normal in normals[1:]:
+        if numpy.dot(normal, consistent_normals[-1]) < 0:
+            normal = -normal
+        consistent_normals.append(normal)
+
+    axis = numpy.sum(consistent_normals, axis=0)
+    norm = numpy.linalg.norm(axis)
+    if norm < 1.0e-6:
+        return None, centroids
+    axis = axis / norm
+
+    net_displacement = centroids[tetrads[-1]] - centroids[tetrads[0]]
+    if numpy.dot(axis, net_displacement) < 0:
+        axis = -axis
+
+    return axis, centroids
+
+
+def tract_matched_twist(
+    quadruplex: Quadruplex,
+    tetrad1: Tetrad,
+    tetrad2: Tetrad,
+    tetrad_row_index: Dict[Tetrad, int],
+    axis: numpy.ndarray,
+) -> float:
+    """Best-fit rotation between two build-order tetrads' C1' atoms.
+
+    Tracts already provide a stable, quadruplex-wide nucleotide-to-nucleotide
+    correspondence (one nucleotide per tetrad per tract), so this works even
+    when the two tetrads are not adjacent in ElTetrado's internal stack order.
+    """
+    index1 = tetrad_row_index[tetrad1]
+    index2 = tetrad_row_index[tetrad2]
+
+    points1 = []
+    points2 = []
+    for tract in quadruplex.tracts:
+        c1 = residue_c1prime_coordinates(tract.nucleotides[index1])
+        c2 = residue_c1prime_coordinates(tract.nucleotides[index2])
+        if c1 is None or c2 is None:
+            return math.nan
+        points1.append(c1)
+        points2.append(c2)
+
+    return calculate_best_fit_rotation_around_axis(
+        numpy.array(points1), numpy.array(points2), axis
+    )
 
 
 def format_number(value: float) -> str:

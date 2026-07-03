@@ -128,20 +128,24 @@ export time:
 - The exported residue span covers the whole chain containing the
   quadruplex, including 5’ and 3’ flanking single strands.
 - Tetrad letters (`A`, `B`, `C`, …) still follow tetrad 5’ order.
-- Core ElTetrado path columns are numbered anticlockwise after the `1`
-  column anchor, but g4composer path columns are numbered clockwise.
-  This affects only the exported g4composer `path`, not ElTetrado’s
-  internal topology model or JSON `path`.
+- Path columns are numbered so that `1` is always the tract containing
+  the 5’-most nucleotide of tetrad `A`. Core ElTetrado path columns are
+  numbered anticlockwise after that anchor, but g4composer path columns
+  are numbered clockwise. This affects only the exported g4composer
+  `path`, not ElTetrado’s internal topology model or JSON `path`.
 - `orient` is exported from ElTetrado tetrad polarities:
   `clockwise -> +`, `anticlockwise -> -`.
-- `rise` and `twist` are exported as signed traversal values between
-  consecutive build-order tetrads. When build order differs from
-  adjacent stack order, ElTetrado traverses the stack graph and negates
-  a step when the traversal goes against the stored adjacent-pair
-  direction.
-- Adjacent-pair `twist` is measured from the best-fit signed rotation of
-  the four tract-matched `C1'` atoms after projection onto the plane
-  perpendicular to the common inter-tetrad axis. Missing `C1'` atoms
+- `rise` and `twist` are exported between consecutive build-order
+  tetrads. Both are measured against a single, quadruplex-wide reference
+  axis so that signs are comparable across the whole build order, even
+  when it reverses ElTetrado’s internal (discovery-order) stack of
+  adjacent tetrad pairs. The axis is built by chain-aligning each
+  tetrad’s plane normal to its discovery-order neighbour, averaging the
+  aligned normals, and orienting the result along the net displacement
+  from the first to the last tetrad in discovery order.
+- `rise` is the projection of the centroid-to-centroid displacement onto
+  that shared axis. `twist` is the best-fit signed rotation of the four
+  tract-matched `C1'` atoms around the same axis. Missing `C1'` atoms
   yield an undefined twist.
 
 Example g4composer export:
