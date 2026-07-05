@@ -84,15 +84,6 @@ def eligible_quadruplexes(analysis: Analysis) -> List[Quadruplex]:
     ]
 
 
-def select_single_quadruplex(analysis: Analysis) -> Quadruplex:
-    quadruplexes = eligible_quadruplexes(analysis)
-    if not quadruplexes:
-        raise ValueError(
-            "g4composer export requires at least one unimolecular quadruplex with at least 2 tetrads, found none"
-        )
-    return quadruplexes[0]
-
-
 def generate_g4composer_entry(
     analysis: Analysis, quadruplex: Quadruplex, name: str
 ) -> G4ComposerEntry:
@@ -429,38 +420,29 @@ def write_g4composer(
     analysis: Analysis,
     input_path: str,
     output_path: str,
-    quadruplex: Optional[Quadruplex] = None,
 ) -> None:
-    if quadruplex is not None:
-        entry = generate_g4composer_entry(analysis, quadruplex, input_name(input_path))
-        with open(output_path, "w") as handle:
-            handle.write(entry.serialize())
-        return
+    """Always write a single file at ``output_path``.
 
+    For each g4composer-eligible quadruplex we attempt to build an entry;
+    quadruplexes that raise during export are skipped. The remaining entries
+    are deduplicated by their serialized content. If no valid entry remains an
+    empty file is written. When more than one distinct entry is produced they
+    are concatenated into the single output file, separated by one blank line.
+    """
     quadruplexes = eligible_quadruplexes(analysis)
-    if not quadruplexes:
-        raise ValueError(
-            "g4composer export requires at least one unimolecular quadruplex with at least 2 tetrads, found none"
-        )
 
     seen: Set[str] = set()
-    unique_entries: List[Tuple[G4ComposerEntry, List[str]]] = []
+    blocks: List[str] = []
     for quad in quadruplexes:
-        entry = generate_g4composer_entry(analysis, quad, input_name(input_path))
+        try:
+            entry = generate_g4composer_entry(analysis, quad, input_name(input_path))
+        except ValueError:
+            continue
         serialized = entry.serialize()
         if serialized in seen:
             continue
         seen.add(serialized)
-        unique_entries.append((entry, export_chains(quad)))
+        blocks.append(serialized)
 
-    if len(unique_entries) == 1:
-        with open(output_path, "w") as handle:
-            handle.write(unique_entries[0][0].serialize())
-        return
-
-    base, ext = os.path.splitext(output_path)
-    for entry, chains in unique_entries:
-        suffix = "-".join(chains)
-        path = f"{base}-{suffix}{ext}"
-        with open(path, "w") as handle:
-            handle.write(entry.serialize())
+    with open(output_path, "w") as handle:
+        handle.write("\n".join(blocks))

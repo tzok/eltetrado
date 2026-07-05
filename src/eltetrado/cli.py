@@ -148,10 +148,7 @@ def eltetrado_cli(args=sys.argv[1:]):
             jsonfile.write(orjson.dumps(dto))
 
     if args.g4composer_output:
-        try:
-            write_g4composer(analysis, args.input, args.g4composer_output)
-        except ValueError as exc:
-            parser.error(str(exc))
+        write_g4composer(analysis, args.input, args.g4composer_output)
 
 
 def has_tetrad_cli(args=sys.argv[1:]):

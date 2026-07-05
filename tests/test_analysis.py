@@ -194,13 +194,17 @@ def test_g4composer_exports_multiple_quadruplexes_in_2rsk(tmp_path):
 
     from eltetrado.g4composer import write_g4composer
 
-    output_base = str(tmp_path / "2rsk-assembly1.inp")
-    write_g4composer(analysis, "tests/files/2rsk-assembly1.cif.gz", output_base)
+    output_path = str(tmp_path / "2rsk-assembly1.inp")
+    write_g4composer(analysis, "tests/files/2rsk-assembly1.cif.gz", output_path)
 
     outputs = sorted(tmp_path.glob("2rsk-assembly1*.inp"))
-    assert len(outputs) == 2
-    assert any("-A" in p.name for p in outputs)
-    assert any("-B" in p.name for p in outputs)
+    assert len(outputs) == 1
+    assert outputs[0] == tmp_path / "2rsk-assembly1.inp"
+
+    content = outputs[0].read_text()
+    blocks = content.split("\n\n")
+    assert len(blocks) == 2
+    assert all(b.startswith("name        2rsk-assembly1\n") for b in blocks)
 
 
 def test_2ms9_is_left_handed():
