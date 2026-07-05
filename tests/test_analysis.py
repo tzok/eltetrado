@@ -170,6 +170,39 @@ def test_loop_signs_follow_columns_in_1i34():
     ]
 
 
+def test_tetrad_polarity_inferred_for_non_canonical_tetrads_in_2km3():
+    cif = handle_input_file("tests/files/2km3-assembly1.cif.gz")
+    structure3d = rnapolis.parser.read_3d_structure(cif, 1, nucleic_acid_only=False)
+    base_interactions = parse_external_output(
+        ["tests/files/2km3-assembly1.json"], ExternalTool.DSSR, structure3d
+    )
+    analysis = eltetrado(base_interactions, structure3d, False)
+
+    quadruplex = analysis.helices[0].quadruplexes[0]
+
+    assert len(quadruplex.tetrads) == 3
+    assert all(p is not None for p in quadruplex.tetrad_polarities)
+
+
+def test_g4composer_exports_multiple_quadruplexes_in_2rsk(tmp_path):
+    cif = handle_input_file("tests/files/2rsk-assembly1.cif.gz")
+    structure3d = rnapolis.parser.read_3d_structure(cif, 1, nucleic_acid_only=False)
+    base_interactions = parse_external_output(
+        ["tests/files/2rsk-assembly1.json"], ExternalTool.DSSR, structure3d
+    )
+    analysis = eltetrado(base_interactions, structure3d, False)
+
+    from eltetrado.g4composer import write_g4composer
+
+    output_base = str(tmp_path / "2rsk-assembly1.inp")
+    write_g4composer(analysis, "tests/files/2rsk-assembly1.cif.gz", output_base)
+
+    outputs = sorted(tmp_path.glob("2rsk-assembly1*.inp"))
+    assert len(outputs) == 2
+    assert any("-A" in p.name for p in outputs)
+    assert any("-B" in p.name for p in outputs)
+
+
 def test_2ms9_is_left_handed():
     cif = handle_input_file("tests/files/2ms9.cif")
     structure3d = rnapolis.parser.read_3d_structure(cif, nucleic_acid_only=False)

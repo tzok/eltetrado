@@ -17,7 +17,7 @@ time into g4composer's build-order and path-numbering conventions.
 import math
 import os
 from dataclasses import dataclass
-from typing import Dict, List, Optional, Sequence, Tuple
+from typing import Dict, List, Optional, Sequence, Set, Tuple
 
 import numpy
 from rnapolis.common import Entry, GlycosidicBond, Molecule, BpSeq
@@ -88,11 +88,7 @@ def select_single_quadruplex(analysis: Analysis) -> Quadruplex:
     quadruplexes = eligible_quadruplexes(analysis)
     if not quadruplexes:
         raise ValueError(
-            "g4composer export requires exactly one unimolecular quadruplex with at least 2 tetrads, found none"
-        )
-    if len(quadruplexes) > 1:
-        raise ValueError(
-            f"g4composer export requires exactly one unimolecular quadruplex with at least 2 tetrads, found {len(quadruplexes)}"
+            "g4composer export requires at least one unimolecular quadruplex with at least 2 tetrads, found none"
         )
     return quadruplexes[0]
 
@@ -435,9 +431,36 @@ def write_g4composer(
     output_path: str,
     quadruplex: Optional[Quadruplex] = None,
 ) -> None:
-    selected = (
-        quadruplex if quadruplex is not None else select_single_quadruplex(analysis)
-    )
-    entry = generate_g4composer_entry(analysis, selected, input_name(input_path))
-    with open(output_path, "w") as handle:
-        handle.write(entry.serialize())
+    if quadruplex is not None:
+        entry = generate_g4composer_entry(analysis, quadruplex, input_name(input_path))
+        with open(output_path, "w") as handle:
+            handle.write(entry.serialize())
+        return
+
+    quadruplexes = eligible_quadruplexes(analysis)
+    if not quadruplexes:
+        raise ValueError(
+            "g4composer export requires at least one unimolecular quadruplex with at least 2 tetrads, found none"
+        )
+
+    seen: Set[str] = set()
+    unique_entries: List[Tuple[G4ComposerEntry, List[str]]] = []
+    for quad in quadruplexes:
+        entry = generate_g4composer_entry(analysis, quad, input_name(input_path))
+        serialized = entry.serialize()
+        if serialized in seen:
+            continue
+        seen.add(serialized)
+        unique_entries.append((entry, export_chains(quad)))
+
+    if len(unique_entries) == 1:
+        with open(output_path, "w") as handle:
+            handle.write(unique_entries[0][0].serialize())
+        return
+
+    base, ext = os.path.splitext(output_path)
+    for entry, chains in unique_entries:
+        suffix = "-".join(chains)
+        path = f"{base}-{suffix}{ext}"
+        with open(path, "w") as handle:
+            handle.write(entry.serialize())

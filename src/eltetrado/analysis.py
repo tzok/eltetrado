@@ -1364,13 +1364,57 @@ class Quadruplex:
     def __hydrogen_bond_successor_map(
         self, tetrad: Tetrad
     ) -> Dict[Residue3D, Residue3D]:
-        successor = {}
+        """Build the cyclic successor map around a tetrad's base-pairing edges.
 
-        for pair in [tetrad.pair_12, tetrad.pair_23, tetrad.pair_34, tetrad.pair_41]:
-            if pair.lw.value[1:] == "WH":
+        Each base pair connects two edges (Watson-Crick, Hoogsteen, Sugar).
+        The ``BasePair3D.score_table`` provides a global preference ordering:
+        the direction with the lower score is the "forward" direction
+        (donor -> acceptor), matching the established ``cWH``/``cHW`` convention
+        and extending it to every Leontis/Westhof pair type.  When a pair is a
+        tie (both directions score equally, e.g. ``cWW`` or ``tHH``), its
+        direction is left undecided and later inferred by completing the single
+        4-cycle from the directed pairs.
+        """
+        pairs = [tetrad.pair_12, tetrad.pair_23, tetrad.pair_34, tetrad.pair_41]
+        successor: Dict[Residue3D, Residue3D] = {}
+        tie_pairs: List[Tuple[Residue3D, Residue3D]] = []
+
+        for pair in pairs:
+            score_org = BasePair3D.score_table.get(pair.lw, 20)
+            score_rev = BasePair3D.score_table.get(pair.lw.reverse, 20)
+            if score_org < score_rev:
                 successor[pair.nt1_3d] = pair.nt2_3d
-            elif pair.lw.value[1:] == "HW":
+            elif score_rev < score_org:
                 successor[pair.nt2_3d] = pair.nt1_3d
+            else:
+                tie_pairs.append((pair.nt1_3d, pair.nt2_3d))
+
+        if not tie_pairs or len(successor) + len(tie_pairs) != 4:
+            return successor
+
+        all_nts = set(tetrad.nucleotides)
+
+        for choices in itertools.product((0, 1), repeat=len(tie_pairs)):
+            candidate = dict(successor)
+            valid = True
+            for (nt1, nt2), choice in zip(tie_pairs, choices):
+                src, dst = (nt1, nt2) if choice == 0 else (nt2, nt1)
+                if src in candidate:
+                    valid = False
+                    break
+                candidate[src] = dst
+            if not valid or len(candidate) != 4:
+                continue
+            if set(candidate.keys()) != all_nts or set(candidate.values()) != all_nts:
+                continue
+            start = tetrad.nucleotides[0]
+            current = start
+            for _ in range(4):
+                current = candidate.get(current)
+                if current is None:
+                    break
+            if current == start:
+                return candidate
 
         return successor
 
