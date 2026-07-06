@@ -154,13 +154,29 @@ def export_structure(
 
     g4composer uses one structure line, so we keep canonical base-pair context in
     the exported chain span and then overwrite tetrad residues with ``^`` to make
-    quadruplex participation explicit.
+    quadruplex participation explicit. When a tetrad residue participates in a
+    canonical base pair, the partner's bracket is neutralized to ``.`` so the
+    dot-bracket stays balanced.
     """
     structure = list(canonical_dot_bracket(analysis, residues))
     tetrad_residues = {nt for tetrad in quadruplex.tetrads for nt in tetrad.nucleotides}
+
+    residue_to_index = {residue: i for i, residue in enumerate(residues)}
+    partner: Dict[int, int] = {}
+    for base_pair in analysis.canonical():
+        nt1 = base_pair.nt1_3d
+        nt2 = base_pair.nt2_3d
+        if nt1 in residue_to_index and nt2 in residue_to_index:
+            i = residue_to_index[nt1]
+            j = residue_to_index[nt2]
+            partner[i] = j
+            partner[j] = i
+
     for i, residue in enumerate(residues):
         if residue in tetrad_residues:
             structure[i] = "^"
+            if i in partner and residues[partner[i]] not in tetrad_residues:
+                structure[partner[i]] = "."
     return "".join(structure)
 
 

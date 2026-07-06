@@ -1672,17 +1672,12 @@ class Helix:
         return quadruplexes
 
     def __filter_tetrad_pairs(self, tetrads: List[Tetrad]) -> List[TetradPair]:
-        chains = set()
-        for tetrad in tetrads:
-            chains.update(tetrad.chains())
-
-        def check_tetrad(t: Tetrad) -> bool:
-            return not t.chains().isdisjoint(chains)
-
-        def check_pair(tp: TetradPair) -> bool:
-            return check_tetrad(tp.tetrad1) and check_tetrad(tp.tetrad2)
-
-        return list(filter(check_pair, self.tetrad_pairs))
+        tetrad_set = set(tetrads)
+        return [
+            tp
+            for tp in self.tetrad_pairs
+            if tp.tetrad1 in tetrad_set and tp.tetrad2 in tetrad_set
+        ]
 
     def __str__(self):
         builder = ""
