@@ -880,7 +880,7 @@ wheels = [
 
 [[package]]
 name = "rnapolis"
-version = "0.16.13"
+version = "0.16.14"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "appdirs" },
@@ -899,9 +899,9 @@ dependencies = [
     { name = "tqdm" },
     { name = "viennarna" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/ec/3d/d6a903427138f8e6e4d770f05c852a4c69bf8ef16ceb9972958c64f01431/rnapolis-0.16.13.tar.gz", hash = "sha256:afef6b319f501ca049b231781621d6039dc1c29df624f9c1ccd3c7408894dca0", size = 730380, upload-time = "2026-07-10T13:29:32.903Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/9f/aa/204d48d2e9d3d3bc1e4d68852b9c53586fe94e24cf5dff002b8c92439b02/rnapolis-0.16.14.tar.gz", hash = "sha256:58a4fe2845f88ccd59262dd30f100b37b708ca92a3ee44a7033d8754f186dfb4", size = 730482, upload-time = "2026-08-19T12:39:19.655Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/ef/a8/8456f013cd966e11039f653db3c9fd86406a46b66deabefdcea9c8d4a01b/rnapolis-0.16.13-py3-none-any.whl", hash = "sha256:aec551437498e4f824719a8d068f3162583a77924e6f60502bb5d9177d2b561f", size = 748018, upload-time = "2026-07-10T13:29:31.544Z" },
+    { url = "https://files.pythonhosted.org/packages/8c/f6/a41712a68347f273f66407bab6ef1aafb9e700b5f10e60c8be7b63ec8c0e/rnapolis-0.16.14-py3-none-any.whl", hash = "sha256:cbed2c4a7f44a3160471a5a0f232306384b657259f7d49711a1e7501779d6742", size = 748099, upload-time = "2026-08-19T12:39:18.249Z" },
 ]
 
 [[package]]
