@@ -2249,6 +2249,92 @@ Click to see the output JSON
 
 </details>
 
+# G4 fold scoring
+
+The `src/eltetrado/score_folds.py` script scores candidate G4-folding JSON
+files (as produced by `eltetrado --output`) against a reference JSON file
+with correct values.
+
+## Usage
+
+``` bash
+uv run python src/eltetrado/score_folds.py reference.json cand1.json cand2.json \
+    [--csv results.csv] [--filter-valid] [--sort {score,file}] [--desc]
+```
+
+Candidates can also be piped via stdin, which is useful when evaluating
+hundreds of files:
+
+``` bash
+find candidates/ -name '*.json' | \
+    uv run python src/eltetrado/score_folds.py reference.json - \
+    --csv results.csv --filter-valid
+sort -t, -k3 -nr results.csv   # rank valid folds by score
+```
+
+A self-test (the reference scored against itself must yield `valid=True,
+score=100`):
+
+``` bash
+uv run python src/eltetrado/score_folds.py reference.json reference.json
+```
+
+## How the score is computed
+
+### Validity gate
+
+A candidate is `valid` only if the multiset of tetrad nucleotide sets — every
+`{nt1, nt2, nt3, nt4}` as an order-insensitive set, across all quadruplexes
+in all helices — is exactly identical to the reference. Invalid folds are
+capped at a small baseline score (proportional to how close the quadruplex
+count is to the reference).
+
+### Per-quadruplex score
+
+Reference and candidate quadruplexes are matched 1-1 greedily by tetrad
+Jaccard overlap. Each matched pair is scored with weighted checks:
+
+| Check | Weight |
+|---|---|
+| tetrads multiset match | 10 |
+| `gbaClassification` per tetrad | 8 |
+| `onz` per tetrad | 8 |
+| `planarityDeviation` (numeric similarity) | 6 |
+| `handedness` | 6 |
+| `loopClassification` (classification + loopProgression) | 6 |
+| `tetradPolarities` | 5 |
+| `strandPolarities` | 5 |
+| `tracts` (sets of ordered tracts) | 6 |
+| `path` (order-sensitive) | 5 |
+| quadruplex-level `gbaClassification` | 5 |
+| `loops` (multiset) | 6 |
+| `bulges` (multiset) | 4 |
+| `onzm` | 4 |
+| `tetradPairs` direction | 4 |
+| `tetradPairs` rise/twist (numeric, half/half) | 6 |
+
+Numeric checks (planarity deviation, rise, twist) contribute their 0..1
+similarity instead of a boolean pass/fail.
+
+### Aggregation
+
+Quadruplex scores are averaged, weighted by the number of tetrads in each
+reference quadruplex. Dot brackets contribute the remainder: both
+`dotBracket` and `quadruplexDotBracket` must match exactly to earn those
+points. A perfect match yields exactly 100.0.
+
+## CSV output
+
+One row per candidate, with columns for validity, score and every individual
+check (per-quadruplex metrics are prefixed `q0_`, `q1_`, ...). Filter and
+rank, e.g.:
+
+``` bash
+# valid folds only, best first
+uv run python src/eltetrado/score_folds.py ref.json $(ls cands/*.json) \
+    --csv results.csv --filter-valid
+```
+
 # Funding
 
 This research was supported by the National Science Centre, Poland
