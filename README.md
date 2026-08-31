@@ -7,11 +7,11 @@ structures to find and classify tetrads and quadruplexes. ElTetrado
 assigns tetrads to one of the ONZ classes (O, N, Z) alongside with the
 directionality of the tetrad (+/-) determined by the bonds between bases
 and their non-canonical interactions. The interactions follow
-Leontis/Westhof classification (Leontis *et al.* 2001). Watson-Crick (W)
+Leontis/Westhof classification (Leontis _et al._ 2001). Watson-Crick (W)
 edge of first base in the tetrad structure exposed to the Hoogsteen (H)
 edge of the next nucleobase from the same tetrad sets the tetrad
 directionality, clockwise (+) or anticlockwise (-). For more details,
-please refer to Zok *et al.* (2020) and Popenda *et al.* (2020)
+please refer to Zok _et al._ (2020) and Popenda _et al._ (2020)
 
 # Installation
 
@@ -20,7 +20,7 @@ management.
 
 To install the package, run:
 
-``` bash
+```bash
 uv sync --locked
 ```
 
@@ -32,7 +32,7 @@ The project is written in Python 3.12+ and requires
 [rnapolis](https://github.com/tzok/rnapolis-py).
 
 Visualization is created by `R` 3.6+ script which uses
-[R4RNA](https://www.e-rna.org/r-chie/) (Lai *et al.* 2012) library. The
+[R4RNA](https://www.e-rna.org/r-chie/) (Lai _et al._ 2012) library. The
 dependency will be automatically installed if not present.
 
 Base pairs and stacking interactions are identified by
@@ -150,7 +150,7 @@ export time:
 
 Example g4composer export:
 
-``` text
+```text
 name        6tc8
 sequence    gggatgggacacaggggacggg
 structure   ^^...^^^.....^^^^..^^^
@@ -176,11 +176,11 @@ path        A1;B1;B4;A4;C4;C1;B2;A2;C2;B3;A3;C3
       Oh* V 9a -(pll) quadruplex with 3 tetrads
         Handedness: right
         Tetrad polarities: clockwise, anticlockwise, anticlockwise
-        1.DG4 1.DG22 1.DG18 1.DG10 cWH cWH cWH cWH O- Vb planarity=0.06  
+        1.DG4 1.DG22 1.DG18 1.DG10 cWH cWH cWH cWH O- Vb planarity=0.06
           direction=hybrid rise=3.15 twist=18.78
-        1.DG5 1.DG23 1.DG17 1.DG11 cHW cHW cHW cHW O+ Va planarity=0.05  
+        1.DG5 1.DG23 1.DG17 1.DG11 cHW cHW cHW cHW O+ Va planarity=0.05
           direction=hybrid rise=3.08 twist=27.86
-        1.DG6 1.DG24 1.DG16 1.DG12 cHW cHW cHW cHW O+ Va planarity=0.05  
+        1.DG6 1.DG24 1.DG16 1.DG12 cHW cHW cHW cHW O+ Va planarity=0.05
 
         Tracts:
           1.DG4, 1.DG5, 1.DG6
@@ -205,9 +205,10 @@ path        A1;B1;B4;A4;C4;C1;B2;A2;C2;B3;A3;C3
 <summary>
 
 Click to see the output JSON
+
 </summary>
 
-``` json
+```json
 {
   "metals": [],
   "nucleotides": [
@@ -668,101 +669,38 @@ Click to see the output JSON
           ],
           "onzm": "Oh*",
           "handedness": "right",
-          "tetradPolarities": [
-            "clockwise",
-            "anticlockwise",
-            "anticlockwise"
-          ],
+          "tetradPolarities": ["clockwise", "anticlockwise", "anticlockwise"],
           "strandPolarities": [
-            [
-              "plus",
-              "plus",
-              "plus"
-            ],
-            [
-              "plus",
-              "plus",
-              "plus"
-            ],
-            [
-              "minus",
-              "minus",
-              "minus"
-            ],
-            [
-              "plus",
-              "plus",
-              "plus"
-            ]
+            ["plus", "plus", "plus"],
+            ["plus", "plus", "plus"],
+            ["minus", "minus", "minus"],
+            ["plus", "plus", "plus"]
           ],
           "loopClassification": {
             "classification": "9a",
             "loopProgression": "-(pll)"
           },
-          "gbaClassification": [
-            "V"
-          ],
+          "gbaClassification": ["V"],
           "tracts": [
-            [
-              "1.DG4",
-              "1.DG5",
-              "1.DG6"
-            ],
-            [
-              "1.DG10",
-              "1.DG11",
-              "1.DG12"
-            ],
-            [
-              "1.DG18",
-              "1.DG17",
-              "1.DG16"
-            ],
-            [
-              "1.DG22",
-              "1.DG23",
-              "1.DG24"
-            ]
+            ["1.DG4", "1.DG5", "1.DG6"],
+            ["1.DG10", "1.DG11", "1.DG12"],
+            ["1.DG18", "1.DG17", "1.DG16"],
+            ["1.DG22", "1.DG23", "1.DG24"]
           ],
-          "path": [
-            "A1",
-            "B1",
-            "C1",
-            "A2",
-            "B2",
-            "C2",
-            "C3",
-            "B3",
-            "A3",
-            "A4",
-            "B4",
-            "C4"
-          ],
+          "path": ["A1", "B1", "C1", "A2", "B2", "C2", "C3", "B3", "A3", "A4", "B4", "C4"],
           "bulges": [],
           "loops": [
             {
               "type": "propeller-",
-              "nucleotides": [
-                "1.DT7",
-                "1.DT8",
-                "1.DA9"
-              ]
+              "nucleotides": ["1.DT7", "1.DT8", "1.DA9"]
             },
             {
               "type": "lateral-",
-              "nucleotides": [
-                "1.DT13",
-                "1.DT14",
-                "1.DA15"
-              ]
+              "nucleotides": ["1.DT13", "1.DT14", "1.DA15"]
             },
             {
               "type": "lateral-",
-              "nucleotides": [
-                "1.DT19",
-                "1.DT20",
-                "1.DA21"
-              ]
+              "nucleotides": ["1.DT19", "1.DT20", "1.DA21"]
             }
           ]
         }
@@ -816,11 +754,11 @@ Click to see the output JSON
         Tetrad polarities: anticlockwise, clockwise, clockwise, clockwise, clockwise
         A.U1006 AC.U1006 AA.U1006 AB.U1006 cWH cWH cWH cWH O- VIIIa planarity=0.34  ions_outside=A.U1006: [SR] AA.U1006: [SR] AB.U1006: [SR] AC.U1006: [SR]
           direction=parallel rise=3.35 twist=-39.96
-        A.G1005 AC.G1005 AA.G1005 AB.G1005 cHW cHW cHW cHW O+ VIIIa planarity=0.23  
+        A.G1005 AC.G1005 AA.G1005 AB.G1005 cHW cHW cHW cHW O+ VIIIa planarity=0.23
           direction=parallel rise=3.41 twist=25.9
-        A.G1004 AC.G1004 AA.G1004 AB.G1004 cHW cHW cHW cHW O+ VIIIa planarity=0.11 ions_channel=SR 
+        A.G1004 AC.G1004 AA.G1004 AB.G1004 cHW cHW cHW cHW O+ VIIIa planarity=0.11 ions_channel=SR
           direction=parallel rise=3.31 twist=35.81
-        A.G1003 AC.G1003 AA.G1003 AB.G1003 cHW cHW cHW cHW O+ VIIIa planarity=0.15 ions_channel=SR 
+        A.G1003 AC.G1003 AA.G1003 AB.G1003 cHW cHW cHW cHW O+ VIIIa planarity=0.15 ions_channel=SR
           direction=parallel rise=3.33 twist=27.12
         A.G1002 AC.G1002 AA.G1002 AB.G1002 cHW cHW cHW cHW O+ VIIIa planarity=0.16  ions_outside=AB.G1002: [CA] AC.G1002: [CA] AA.G1002: [CA] A.G1002: [CA]
 
@@ -836,15 +774,15 @@ Click to see the output JSON
       Op* VIII n/a quadruplex with 5 tetrads
         Handedness: right
         Tetrad polarities: anticlockwise, anticlockwise, anticlockwise, anticlockwise, clockwise
-        B.G2002 BC.G2002 BA.G2002 BB.G2002 cWH cWH cWH cWH O+ VIIIa planarity=0.19  
+        B.G2002 BC.G2002 BA.G2002 BB.G2002 cWH cWH cWH cWH O+ VIIIa planarity=0.19
           direction=parallel rise=3.4 twist=27.41
         B.G2003 BC.G2003 BA.G2003 BB.G2003 cWH cWH cWH cWH O+ VIIIa planarity=0.16 ions_channel=SR ions_outside=B.G2003: [CA] BA.G2003: [CA] BB.G2003: [CA] BC.G2003: [CA]
           direction=parallel rise=3.29 twist=35.04
-        B.G2004 BC.G2004 BA.G2004 BB.G2004 cWH cWH cWH cWH O+ VIIIa planarity=0.06 ions_channel=SR 
+        B.G2004 BC.G2004 BA.G2004 BB.G2004 cWH cWH cWH cWH O+ VIIIa planarity=0.06 ions_channel=SR
           direction=parallel rise=3.35 twist=25.15
-        B.G2005 BC.G2005 BA.G2005 BB.G2005 cWH cWH cWH cWH O+ VIIIa planarity=0.22  
+        B.G2005 BC.G2005 BA.G2005 BB.G2005 cWH cWH cWH cWH O+ VIIIa planarity=0.22
           direction=parallel rise=6.89 twist=-43.41
-        B.U2006 BC.U2006 BA.U2006 BB.U2006 cHW cHW cHW cHW O- VIIIa planarity=0.5 ions_channel=NA,NA 
+        B.U2006 BC.U2006 BA.U2006 BB.U2006 cHW cHW cHW cHW O- VIIIa planarity=0.5 ions_channel=NA,NA
 
         Tracts:
           B.G2002, B.G2003, B.G2004, B.G2005, B.U2006
@@ -864,9 +802,10 @@ Click to see the output JSON
 <summary>
 
 Click to see the output JSON
+
 </summary>
 
-``` json
+```json
 {
   "metals": [
     {
@@ -1832,9 +1771,7 @@ Click to see the output JSON
               "onz": "O+",
               "gbaClassification": "VIIIa",
               "planarityDeviation": 0.11204500276508543,
-              "ionsChannel": [
-                "Sr"
-              ],
+              "ionsChannel": ["Sr"],
               "ionsOutside": []
             },
             {
@@ -1846,9 +1783,7 @@ Click to see the output JSON
               "onz": "O+",
               "gbaClassification": "VIIIa",
               "planarityDeviation": 0.14900890205810532,
-              "ionsChannel": [
-                "Sr"
-              ],
+              "ionsChannel": ["Sr"],
               "ionsOutside": []
             },
             {
@@ -1883,99 +1818,22 @@ Click to see the output JSON
           ],
           "onzm": "Op*",
           "handedness": "right",
-          "tetradPolarities": [
-            "anticlockwise",
-            "clockwise",
-            "clockwise",
-            "clockwise",
-            "clockwise"
-          ],
+          "tetradPolarities": ["anticlockwise", "clockwise", "clockwise", "clockwise", "clockwise"],
           "strandPolarities": [
-            [
-              "minus",
-              "plus",
-              "plus",
-              "plus",
-              "plus"
-            ],
-            [
-              "minus",
-              "plus",
-              "plus",
-              "plus",
-              "plus"
-            ],
-            [
-              "minus",
-              "plus",
-              "plus",
-              "plus",
-              "plus"
-            ],
-            [
-              "minus",
-              "plus",
-              "plus",
-              "plus",
-              "plus"
-            ]
+            ["minus", "plus", "plus", "plus", "plus"],
+            ["minus", "plus", "plus", "plus", "plus"],
+            ["minus", "plus", "plus", "plus", "plus"],
+            ["minus", "plus", "plus", "plus", "plus"]
           ],
           "loopClassification": null,
-          "gbaClassification": [
-            "VIII"
-          ],
+          "gbaClassification": ["VIII"],
           "tracts": [
-            [
-              "A.U1006",
-              "A.G1005",
-              "A.G1004",
-              "A.G1003",
-              "A.G1002"
-            ],
-            [
-              "AC.U1006",
-              "AC.G1005",
-              "AC.G1004",
-              "AC.G1003",
-              "AC.G1002"
-            ],
-            [
-              "AA.U1006",
-              "AA.G1005",
-              "AA.G1004",
-              "AA.G1003",
-              "AA.G1002"
-            ],
-            [
-              "AB.U1006",
-              "AB.G1005",
-              "AB.G1004",
-              "AB.G1003",
-              "AB.G1002"
-            ]
+            ["A.U1006", "A.G1005", "A.G1004", "A.G1003", "A.G1002"],
+            ["AC.U1006", "AC.G1005", "AC.G1004", "AC.G1003", "AC.G1002"],
+            ["AA.U1006", "AA.G1005", "AA.G1004", "AA.G1003", "AA.G1002"],
+            ["AB.U1006", "AB.G1005", "AB.G1004", "AB.G1003", "AB.G1002"]
           ],
-          "path": [
-            "A1",
-            "B1",
-            "C1",
-            "D1",
-            "E1",
-            "A4",
-            "B4",
-            "C4",
-            "D4",
-            "E4",
-            "A3",
-            "B3",
-            "C3",
-            "D3",
-            "E3",
-            "A2",
-            "B2",
-            "C2",
-            "D2",
-            "E2"
-          ],
+          "path": ["A1", "B1", "C1", "D1", "E1", "A4", "B4", "C4", "D4", "E4", "A3", "B3", "C3", "D3", "E3", "A2", "B2", "C2", "D2", "E2"],
           "bulges": [],
           "loops": []
         },
@@ -2002,9 +1860,7 @@ Click to see the output JSON
               "onz": "O+",
               "gbaClassification": "VIIIa",
               "planarityDeviation": 0.15566413303664228,
-              "ionsChannel": [
-                "Sr"
-              ],
+              "ionsChannel": ["Sr"],
               "ionsOutside": [
                 {
                   "nt": "B.G2003",
@@ -2033,9 +1889,7 @@ Click to see the output JSON
               "onz": "O+",
               "gbaClassification": "VIIIa",
               "planarityDeviation": 0.06292564154330361,
-              "ionsChannel": [
-                "Sr"
-              ],
+              "ionsChannel": ["Sr"],
               "ionsOutside": []
             },
             {
@@ -2059,108 +1913,28 @@ Click to see the output JSON
               "onz": "O-",
               "gbaClassification": "VIIIa",
               "planarityDeviation": 0.5029635765888024,
-              "ionsChannel": [
-                "Na",
-                "Na"
-              ],
+              "ionsChannel": ["Na", "Na"],
               "ionsOutside": []
             }
           ],
           "onzm": "Op*",
           "handedness": "right",
-          "tetradPolarities": [
-            "anticlockwise",
-            "anticlockwise",
-            "anticlockwise",
-            "anticlockwise",
-            "clockwise"
-          ],
+          "tetradPolarities": ["anticlockwise", "anticlockwise", "anticlockwise", "anticlockwise", "clockwise"],
           "strandPolarities": [
-            [
-              "plus",
-              "plus",
-              "plus",
-              "plus",
-              "minus"
-            ],
-            [
-              "plus",
-              "plus",
-              "plus",
-              "plus",
-              "minus"
-            ],
-            [
-              "plus",
-              "plus",
-              "plus",
-              "plus",
-              "minus"
-            ],
-            [
-              "plus",
-              "plus",
-              "plus",
-              "plus",
-              "minus"
-            ]
+            ["plus", "plus", "plus", "plus", "minus"],
+            ["plus", "plus", "plus", "plus", "minus"],
+            ["plus", "plus", "plus", "plus", "minus"],
+            ["plus", "plus", "plus", "plus", "minus"]
           ],
           "loopClassification": null,
-          "gbaClassification": [
-            "VIII"
-          ],
+          "gbaClassification": ["VIII"],
           "tracts": [
-            [
-              "B.G2002",
-              "B.G2003",
-              "B.G2004",
-              "B.G2005",
-              "B.U2006"
-            ],
-            [
-              "BC.G2002",
-              "BC.G2003",
-              "BC.G2004",
-              "BC.G2005",
-              "BC.U2006"
-            ],
-            [
-              "BA.G2002",
-              "BA.G2003",
-              "BA.G2004",
-              "BA.G2005",
-              "BA.U2006"
-            ],
-            [
-              "BB.G2002",
-              "BB.G2003",
-              "BB.G2004",
-              "BB.G2005",
-              "BB.U2006"
-            ]
+            ["B.G2002", "B.G2003", "B.G2004", "B.G2005", "B.U2006"],
+            ["BC.G2002", "BC.G2003", "BC.G2004", "BC.G2005", "BC.U2006"],
+            ["BA.G2002", "BA.G2003", "BA.G2004", "BA.G2005", "BA.U2006"],
+            ["BB.G2002", "BB.G2003", "BB.G2004", "BB.G2005", "BB.U2006"]
           ],
-          "path": [
-            "A1",
-            "B1",
-            "C1",
-            "D1",
-            "E1",
-            "A2",
-            "B2",
-            "C2",
-            "D2",
-            "E2",
-            "A3",
-            "B3",
-            "C3",
-            "D3",
-            "E3",
-            "A4",
-            "B4",
-            "C4",
-            "D4",
-            "E4"
-          ],
+          "path": ["A1", "B1", "C1", "D1", "E1", "A2", "B2", "C2", "D2", "E2", "A3", "B3", "C3", "D3", "E3", "A4", "B4", "C4", "D4", "E4"],
           "bulges": [],
           "loops": []
         }
@@ -2251,13 +2025,13 @@ Click to see the output JSON
 
 # G4 fold scoring
 
-The `src/eltetrado/score_folds.py` script scores candidate G4-folding JSON
-files (as produced by `eltetrado --output`) against a reference JSON file
-with correct values.
+The `src/eltetrado/score_folds.py` script scores candidate G4-folding
+JSON files (as produced by `eltetrado --output`) against a reference
+JSON file with correct values.
 
 ## Usage
 
-``` bash
+```bash
 uv run python src/eltetrado/score_folds.py reference.json cand1.json cand2.json \
     [--csv results.csv] [--filter-valid] [--sort {score,file}] [--desc]
 ```
@@ -2265,17 +2039,17 @@ uv run python src/eltetrado/score_folds.py reference.json cand1.json cand2.json 
 Candidates can also be piped via stdin, which is useful when evaluating
 hundreds of files:
 
-``` bash
+```bash
 find candidates/ -name '*.json' | \
     uv run python src/eltetrado/score_folds.py reference.json - \
     --csv results.csv --filter-valid
 sort -t, -k3 -nr results.csv   # rank valid folds by score
 ```
 
-A self-test (the reference scored against itself must yield `valid=True,
-score=100`):
+A self-test (the reference scored against itself must yield
+`valid=True, score=100`):
 
-``` bash
+```bash
 uv run python src/eltetrado/score_folds.py reference.json reference.json
 ```
 
@@ -2283,53 +2057,53 @@ uv run python src/eltetrado/score_folds.py reference.json reference.json
 
 ### Validity gate
 
-A candidate is `valid` only if the multiset of tetrad nucleotide sets — every
-`{nt1, nt2, nt3, nt4}` as an order-insensitive set, across all quadruplexes
-in all helices — is exactly identical to the reference. Invalid folds are
-capped at a small baseline score (proportional to how close the quadruplex
-count is to the reference).
+A candidate is `valid` only if the multiset of tetrad nucleotide sets —
+every `{nt1, nt2, nt3, nt4}` as an order-insensitive set, across all
+quadruplexes in all helices — is exactly identical to the reference.
+Invalid folds are capped at a small baseline score (proportional to how
+close the quadruplex count is to the reference).
 
 ### Per-quadruplex score
 
 Reference and candidate quadruplexes are matched 1-1 greedily by tetrad
 Jaccard overlap. Each matched pair is scored with weighted checks:
 
-| Check | Weight |
-|---|---|
-| tetrads multiset match | 10 |
-| `gbaClassification` per tetrad | 8 |
-| `onz` per tetrad | 8 |
-| `planarityDeviation` (numeric similarity) | 6 |
-| `handedness` | 6 |
-| `loopClassification` (classification + loopProgression) | 6 |
-| `tetradPolarities` | 5 |
-| `strandPolarities` | 5 |
-| `tracts` (sets of ordered tracts) | 6 |
-| `path` (order-sensitive) | 5 |
-| quadruplex-level `gbaClassification` | 5 |
-| `loops` (multiset) | 6 |
-| `bulges` (multiset) | 4 |
-| `onzm` | 4 |
-| `tetradPairs` direction | 4 |
-| `tetradPairs` rise/twist (numeric, half/half) | 6 |
+| Check                                                   | Weight |
+| ------------------------------------------------------- | ------ |
+| tetrads multiset match                                  | 10     |
+| `gbaClassification` per tetrad                          | 8      |
+| `onz` per tetrad                                        | 8      |
+| `planarityDeviation` (numeric similarity)               | 6      |
+| `handedness`                                            | 6      |
+| `loopClassification` (classification + loopProgression) | 6      |
+| `tetradPolarities`                                      | 5      |
+| `strandPolarities`                                      | 5      |
+| `tracts` (sets of ordered tracts)                       | 6      |
+| `path` (order-sensitive)                                | 5      |
+| quadruplex-level `gbaClassification`                    | 5      |
+| `loops` (multiset)                                      | 6      |
+| `bulges` (multiset)                                     | 4      |
+| `onzm`                                                  | 4      |
+| `tetradPairs` direction                                 | 4      |
+| `tetradPairs` rise/twist (numeric, half/half)           | 6      |
 
 Numeric checks (planarity deviation, rise, twist) contribute their 0..1
 similarity instead of a boolean pass/fail.
 
 ### Aggregation
 
-Quadruplex scores are averaged, weighted by the number of tetrads in each
-reference quadruplex. Dot brackets contribute the remainder: both
+Quadruplex scores are averaged, weighted by the number of tetrads in
+each reference quadruplex. Dot brackets contribute the remainder: both
 `dotBracket` and `quadruplexDotBracket` must match exactly to earn those
 points. A perfect match yields exactly 100.0.
 
 ## CSV output
 
-One row per candidate, with columns for validity, score and every individual
-check (per-quadruplex metrics are prefixed `q0_`, `q1_`, ...). Filter and
-rank, e.g.:
+One row per candidate, with columns for validity, score and every
+individual check (per-quadruplex metrics are prefixed `q0_`, `q1_`, …).
+Filter and rank, e.g.:
 
-``` bash
+```bash
 # valid folds only, best first
 uv run python src/eltetrado/score_folds.py ref.json $(ls cands/*.json) \
     --csv results.csv --filter-valid
@@ -2352,21 +2126,21 @@ intramural financing program.
 
 1.  Topology-Based Classification of Tetrads and Quadruplex
     Structures. M. Popenda, J. Miskiewicz, J. Sarzynska, T. Zok, M.
-    Szachniuk. *Bioinformatics*. 2020. 36(4):1129–1134.
+    Szachniuk. _Bioinformatics_. 2020. 36(4):1129–1134.
     doi:[10.1093/bioinformatics/btz738](https://doi.org/10.1093/bioinformatics/btz738)
 
 2.  ElTetrado: A Tool for Identification and Classification of Tetrads
-    and Quadruplexes. T. Zok, M. Popenda, M. Szachniuk. *BMC
-    Bioinformatics*. 2020. 21(1):40.
+    and Quadruplexes. T. Zok, M. Popenda, M. Szachniuk. _BMC
+    Bioinformatics_. 2020. 21(1):40.
     doi:[10.1186/s12859-020-3385-1](https://doi.org/10.1186/s12859-020-3385-1)
 
 3.  R-Chie : A Web Server and R Package for Visualizing RNA Secondary
-    Structures. D. Lai, J.R. Proctor, J.Y.A. Zhu, I.M. Meyer. *Nucleic
-    Acids Research*. 2012. 40(12):e95.
+    Structures. D. Lai, J.R. Proctor, J.Y.A. Zhu, I.M. Meyer. _Nucleic
+    Acids Research_. 2012. 40(12):e95.
     doi:[10/f99845](https://doi.org/10/f99845)
 
 4.  Geometric Nomenclature and Classification of RNA Base Pairs. N.B.
-    Leontis, E. Westhof. *RNA*. 2001. 7(4):499–512.
+    Leontis, E. Westhof. _RNA_. 2001. 7(4):499–512.
     doi:[10.1017/s1355838201002515](https://doi.org/10.1017/s1355838201002515)
 
 </div>
