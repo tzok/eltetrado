@@ -75,6 +75,12 @@ class LoopDTO:
 
 
 @dataclass
+class SnapbackDTO:
+    orientation: str
+    nucleotides: List[str]
+
+
+@dataclass
 class LoopClassificationDTO:
     classification: str
     loopProgression: str
@@ -93,6 +99,7 @@ class QuadruplexDTO:
     path: List[str]
     bulges: List[str]
     loops: List[LoopDTO]
+    snapbacks: List[SnapbackDTO]
 
 
 @dataclass
@@ -249,6 +256,10 @@ def convert_quadruplexes(quadruplexes: List[Quadruplex]) -> List[QuadruplexDTO]:
                 )
                 for l in q.loops
             ],
+            [
+                SnapbackDTO(s.orientation.value, nts_(s.nucleotides))
+                for s in q.snapbacks
+            ],
         )
         for q in quadruplexes
     ]
@@ -396,6 +407,10 @@ def convert_quadruplex_dot_bracket(analysis: Analysis) -> QuadruplexDotBracketDT
             # mark bulges
             for nt in quadruplex.bulges:
                 loop_line[mapping[nt]] = "b"
+            # mark snapbacks
+            for snapback in quadruplex.snapbacks:
+                for nt in snapback.nucleotides:
+                    loop_line[mapping[nt]] = "s"
 
     return QuadruplexDotBracketDTO(
         sequence,

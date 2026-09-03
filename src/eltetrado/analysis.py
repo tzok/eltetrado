@@ -32,6 +32,7 @@ from eltetrado.model import (
     Ion,
     LoopClassification,
     LoopType,
+    SnapbackOrientation,
     StrandPolarity,
     SugarPucker,
     TetradPolarity,
@@ -881,6 +882,23 @@ class Loop:
 
 
 @dataclass
+class Snapback:
+    """A chain re-entry into an already visited tract (same column, tetrad
+    layers not adjacent). The nucleotides are the connector between the two
+    same-column Gs (possibly empty); orientation says which side of the
+    connector is the isolated one."""
+
+    nucleotides: List[Residue3D]
+    orientation: SnapbackOrientation
+
+    def __str__(self):
+        return (
+            f"      snapback {self.orientation.value} "
+            f"{', '.join(map(lambda nt: nt.full_name, self.nucleotides))}"
+        )
+
+
+@dataclass
 class Quadruplex:
     tetrads: List[Tetrad]
     tetrad_pairs: List[TetradPair]
@@ -891,6 +909,7 @@ class Quadruplex:
     tracts: List[Tract] = field(init=False)
     bulges: List[Residue3D] = field(init=False)
     loops: List[Loop] = field(init=False)
+    snapbacks: List[Snapback] = field(init=False)
     path: List[str] = field(init=False)
     handedness: Optional[HelixHandedness] = field(init=False)
     tetrad_polarities: List[Optional[TetradPolarity]] = field(init=False)
@@ -903,6 +922,7 @@ class Quadruplex:
         self.tracts = self.__find_tracts()
         self.bulges = self.__find_bulges()
         self.loops = self.__find_loops()
+        self.snapbacks = self.__find_snapbacks()
         self.handedness = self.__find_handedness()
         self.tetrad_polarities = self.__find_tetrad_polarities()
         self.strand_polarities = self.__find_strand_polarities()
@@ -1122,41 +1142,49 @@ class Quadruplex:
 
         return None
 
+    def __chain_connectors(self):
+        """Yield ``(nt_prev, nt_cur, in_between)`` for every pair of
+        chain-consecutive tetrad nucleotides (same chain, in chain order).
+        ``in_between`` holds the standard nucleotides strictly between the
+        two and may be empty. This single walk classifies every connector of
+        the chain through the tetrad core: cross-tract connectors are loops,
+        same-tract connectors between adjacent tract positions are stacks
+        (bulging out any in-between nucleotides) and same-tract connectors
+        between non-adjacent tract positions are snapbacks."""
+        tetrad_nucleotides = sorted(
+            [nt for tetrad in self.tetrads for nt in tetrad.nucleotides],
+            key=lambda nt: self.global_index[nt],
+        )
+        for i in range(1, len(tetrad_nucleotides)):
+            nt_prev = tetrad_nucleotides[i - 1]
+            nt_cur = tetrad_nucleotides[i]
+            if nt_prev.chain != nt_cur.chain:
+                continue
+            in_between = list(
+                filter(
+                    lambda nt: (
+                        nt.is_nucleotide
+                        and self.global_index[nt_prev]
+                        < self.global_index[nt]
+                        < self.global_index[nt_cur]
+                    ),
+                    self.structure3d.residues,
+                )
+            )
+            yield nt_prev, nt_cur, in_between
+
     def __find_loops(self) -> List[Loop]:
         if len(self.tetrads) == 1:
             return []
 
         loops = []
-        tetrad_nucleotides = sorted(
-            [nt for tetrad in self.tetrads for nt in tetrad.nucleotides],
-            key=lambda nt: self.global_index[nt],
-        )
-
-        for i in range(1, len(tetrad_nucleotides)):
-            nprev = tetrad_nucleotides[i - 1]
-            ncur = tetrad_nucleotides[i]
-            if (
-                self.global_index[ncur] - self.global_index[nprev] > 1
-                and ncur.chain == nprev.chain
-            ):
-                for tract in self.tracts:
-                    if nprev in tract.nucleotides and ncur in tract.nucleotides:
-                        break
-                else:
-                    nts = list(
-                        filter(
-                            lambda nt: (
-                                nt.is_nucleotide
-                                and self.global_index[nprev]
-                                < self.global_index[nt]
-                                < self.global_index[ncur]
-                            ),
-                            self.structure3d.residues,
-                        )
-                    )
-                    if len(nts) > 0:
-                        loop_type = self.__detect_loop_type(nprev, ncur)
-                        loops.append(Loop(nts, loop_type))
+        for nt_prev, nt_cur, in_between in self.__chain_connectors():
+            tract_prev = self.__find_tract_index_with_nt(nt_prev)
+            tract_cur = self.__find_tract_index_with_nt(nt_cur)
+            if tract_prev is None or tract_cur is None or tract_prev == tract_cur:
+                continue
+            loop_type = self.__detect_loop_type(nt_prev, nt_cur)
+            loops.append(Loop(in_between, loop_type))
         return loops
 
     def __find_path(self) -> List[str]:
@@ -1461,33 +1489,35 @@ class Quadruplex:
     # ------------------------------------------------------------------
     def __find_bulges(self) -> List[Residue3D]:
         """
-        Detect one- or two-nucleotide fragments (bulges) that appear inside a
-        tract.  Example:
+        Detect nucleotides bulging out between two stacked nucleotides of the
+        same tract.  Example:
             …-DG13-DC14-DG15-…
                         ↑
                       bulge
+        The two flanking nucleotides are chain-consecutive and occupy
+        adjacent positions within their tract (genuinely stacked); whatever
+        sits between them is the bulge, of any length.
         """
+        tract_positions = [
+            {nt: position for position, nt in enumerate(tract.nucleotides)}
+            for tract in self.tracts
+        ]
         bulges: List[Residue3D] = []
 
-        for tract in self.tracts:
-            nts_sorted = sorted(tract.nucleotides, key=lambda nt: self.global_index[nt])
-            for i in range(1, len(nts_sorted)):
-                nt_prev, nt_cur = nts_sorted[i - 1], nts_sorted[i]
-                # only within the same chain
-                if nt_prev.chain != nt_cur.chain:
-                    continue
-                gap = self.global_index[nt_cur] - self.global_index[nt_prev] - 1
-                if gap in (1, 2):
-                    # gather residues that fill the gap
-                    for nt in self.structure3d.residues:
-                        if (
-                            nt.is_nucleotide
-                            and nt.chain == nt_cur.chain
-                            and self.global_index[nt_prev]
-                            < self.global_index[nt]
-                            < self.global_index[nt_cur]
-                        ):
-                            bulges.append(nt)
+        for nt_prev, nt_cur, in_between in self.__chain_connectors():
+            tract_prev = self.__find_tract_index_with_nt(nt_prev)
+            if tract_prev is None or tract_prev != self.__find_tract_index_with_nt(
+                nt_cur
+            ):
+                continue
+            if (
+                abs(
+                    tract_positions[tract_prev][nt_prev]
+                    - tract_positions[tract_prev][nt_cur]
+                )
+                == 1
+            ):
+                bulges.extend(in_between)
 
         # keep order, remove duplicates
         seen: Set[Residue3D] = set()
@@ -1497,6 +1527,80 @@ class Quadruplex:
                 unique_bulges.append(nt)
                 seen.add(nt)
         return unique_bulges
+
+    def __find_snapbacks(self) -> List[Snapback]:
+        """
+        Detect snapbacks: chain re-entries into an already visited tract
+        (chain-consecutive tetrad nucleotides of the same tract whose
+        positions within the tract are not adjacent). The orientation says
+        which side of the connector is the isolated one: 3' when the
+        re-entering (post-connector) stacked run is shorter than the
+        pre-connector one — its first nucleotide is "injected" into the
+        column — and 5' for the mirror case. Ties default to 3'.
+        """
+        if len(self.tetrads) == 1:
+            return []
+
+        tetrad_nucleotides = sorted(
+            [nt for tetrad in self.tetrads for nt in tetrad.nucleotides],
+            key=lambda nt: self.global_index[nt],
+        )
+        tract_positions = [
+            {nt: position for position, nt in enumerate(tract.nucleotides)}
+            for tract in self.tracts
+        ]
+        snapbacks: List[Snapback] = []
+
+        for i in range(1, len(tetrad_nucleotides)):
+            nt_prev = tetrad_nucleotides[i - 1]
+            nt_cur = tetrad_nucleotides[i]
+            if nt_prev.chain != nt_cur.chain:
+                continue
+            tract_index = self.__find_tract_index_with_nt(nt_prev)
+            if tract_index is None or tract_index != self.__find_tract_index_with_nt(
+                nt_cur
+            ):
+                continue
+            positions = tract_positions[tract_index]
+            if abs(positions[nt_prev] - positions[nt_cur]) == 1:
+                continue  # stacked — a stack or a bulge connector
+
+            def run_length(start: int, step: int) -> int:
+                length = 1
+                j = start
+                while 0 <= j + step < len(tetrad_nucleotides):
+                    nt_a = tetrad_nucleotides[j]
+                    nt_b = tetrad_nucleotides[j + step]
+                    if nt_a.chain != nt_b.chain:
+                        break
+                    if self.__find_tract_index_with_nt(nt_b) != tract_index:
+                        break
+                    if abs(positions[nt_a] - positions[nt_b]) != 1:
+                        break
+                    length += 1
+                    j += step
+                return length
+
+            run_prev = run_length(i - 1, -1)
+            run_next = run_length(i, 1)
+            orientation = (
+                SnapbackOrientation.FIVE_PRIME
+                if run_next > run_prev
+                else SnapbackOrientation.THREE_PRIME
+            )
+            in_between = list(
+                filter(
+                    lambda nt: (
+                        nt.is_nucleotide
+                        and self.global_index[nt_prev]
+                        < self.global_index[nt]
+                        < self.global_index[nt_cur]
+                    ),
+                    self.structure3d.residues,
+                )
+            )
+            snapbacks.append(Snapback(in_between, orientation))
+        return snapbacks
 
     def __find_tetrad_with_nt(self, nt: Residue3D) -> Optional[Tetrad]:
         for tetrad in self.tetrads:
@@ -1602,6 +1706,10 @@ class Quadruplex:
                 builder += "\n    Loops:\n"
                 for loop in self.loops:
                     builder += f"{loop}\n"
+            if self.snapbacks:
+                builder += "\n    Snapbacks:\n"
+                for snapback in self.snapbacks:
+                    builder += f"{snapback}\n"
             if self.bulges:
                 builder += "\n    Bulges:\n"
                 builder += (
