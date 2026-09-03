@@ -562,3 +562,112 @@ def test_5de5_reports_zero_length_snapback():
     snapback = quadruplex.snapbacks[0]
     assert snapback.orientation == SnapbackOrientation.THREE_PRIME
     assert snapback.nucleotides == []
+
+
+def test_6fc9_tags_chair_and_quadruplex_duplex():
+    """
+    6fc9's long lateral loop forms a Watson-Crick duplex stem, so the
+    quadruplex is tagged with the common topology name and
+    quadruplex_duplex.
+    """
+    cif = handle_input_file("tests/files/6fc9-assembly-1.cif.gz")
+    structure3d = rnapolis.parser.read_3d_structure(cif, 1, nucleic_acid_only=False)
+    base_interactions = rnapolis.annotator.extract_base_interactions(structure3d)
+    analysis = eltetrado(base_interactions, structure3d, False)
+
+    quadruplex = analysis.helices[0].quadruplexes[0]
+
+    assert quadruplex.tags == ["chair", "quadruplex_duplex"]
+
+
+def test_2awe_tags_bulge_and_inverted_strand_polarity():
+    """
+    2awe carries one bulged U per tract and tracts whose nucleotides point
+    in both directions along the helix axis.
+    """
+    cif = handle_input_file("tests/files/2awe-assembly-1.cif.gz")
+    structure3d = rnapolis.parser.read_3d_structure(cif, 1, nucleic_acid_only=False)
+    base_interactions = rnapolis.annotator.extract_base_interactions(structure3d)
+    analysis = eltetrado(base_interactions, structure3d, False)
+
+    quadruplex = analysis.helices[0].quadruplexes[0]
+
+    assert quadruplex.tags == ["has_bulge", "has_inverted_strand_polarity"]
+
+
+def test_7wgw_tags_snapback_and_parallel():
+    cif = handle_input_file("tests/files/7wgw-assembly1.cif.gz")
+    structure3d = rnapolis.parser.read_3d_structure(cif, 1, nucleic_acid_only=False)
+    base_interactions = rnapolis.annotator.extract_base_interactions(structure3d)
+    analysis = eltetrado(base_interactions, structure3d, False)
+
+    quadruplex = analysis.helices[0].quadruplexes[0]
+
+    assert quadruplex.tags == [
+        "has_snapback",
+        "has_inverted_strand_polarity",
+        "parallel",
+    ]
+
+
+def test_6rs3_tags_v_loop():
+    """
+    6rs3 contains a seemingly missing loop: two tetrad guanines directly
+    adjacent in the chain but stacked in different tracts (a V-loop).
+    """
+    cif = handle_input_file("tests/files/6rs3-assembly1.cif.gz")
+    structure3d = rnapolis.parser.read_3d_structure(cif, 1, nucleic_acid_only=False)
+    base_interactions = rnapolis.annotator.extract_base_interactions(structure3d)
+    analysis = eltetrado(base_interactions, structure3d, False)
+
+    quadruplex = analysis.helices[0].quadruplexes[0]
+
+    assert "v_loop" in quadruplex.tags
+    assert "quadruplex_duplex" not in quadruplex.tags
+
+
+def test_2ms9_tags_two_block():
+    """
+    2ms9 is unimolecular but built from two separate two-tetrad blocks:
+    three of its columns are each visited by two chain segments stacking
+    two guanines apiece.
+    """
+    cif = handle_input_file("tests/files/2ms9.cif")
+    structure3d = rnapolis.parser.read_3d_structure(cif, nucleic_acid_only=False)
+    base_interactions = rnapolis.annotator.extract_base_interactions(structure3d)
+    analysis = eltetrado(base_interactions, structure3d, False)
+
+    quadruplex = analysis.helices[0].quadruplexes[0]
+
+    assert "two_block" in quadruplex.tags
+
+
+def test_5zev_tags_zero_length_loop_without_duplex():
+    """
+    5zev's V-loop (its 0-nt cross-tract connector) is tagged, while its
+    loops form no canonical duplex.
+    """
+    cif = handle_input_file("tests/files/5zev-assembly1.cif.gz")
+    structure3d = rnapolis.parser.read_3d_structure(cif, 1, nucleic_acid_only=False)
+    base_interactions = rnapolis.annotator.extract_base_interactions(structure3d)
+    analysis = eltetrado(base_interactions, structure3d, False)
+
+    quadruplex = analysis.helices[0].quadruplexes[0]
+
+    assert "v_loop" in quadruplex.tags
+    assert "quadruplex_duplex" not in quadruplex.tags
+
+
+def test_8psi_has_no_tags():
+    """
+    8psi's four loops, lack of snapbacks, bulges and duplex stems, and its
+    unclassifiable loop progression leave it without any tag.
+    """
+    cif = handle_input_file("tests/files/8psi-assembly1.cif.gz")
+    structure3d = rnapolis.parser.read_3d_structure(cif, 1, nucleic_acid_only=False)
+    base_interactions = rnapolis.annotator.extract_base_interactions(structure3d)
+    analysis = eltetrado(base_interactions, structure3d, False)
+
+    quadruplex = analysis.helices[0].quadruplexes[0]
+
+    assert quadruplex.tags == []

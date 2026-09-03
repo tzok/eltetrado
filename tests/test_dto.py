@@ -184,6 +184,11 @@ def test_2ms9_handedness_and_polarity_are_serialized():
         "anticlockwise",
         "anticlockwise",
     ]
+    assert quadruplex.tags == [
+        "has_bulge",
+        "has_inverted_strand_polarity",
+        "two_block",
+    ]
 
 
 def test_serialized_path_tetrad_letters_follow_5p_order_in_5v3f():

@@ -100,6 +100,7 @@ class QuadruplexDTO:
     bulges: List[str]
     loops: List[LoopDTO]
     snapbacks: List[SnapbackDTO]
+    tags: List[str]
 
 
 @dataclass
@@ -260,6 +261,7 @@ def convert_quadruplexes(quadruplexes: List[Quadruplex]) -> List[QuadruplexDTO]:
                 SnapbackDTO(s.orientation.value, nts_(s.nucleotides))
                 for s in q.snapbacks
             ],
+            list(q.tags),
         )
         for q in quadruplexes
     ]

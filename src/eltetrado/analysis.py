@@ -12,7 +12,13 @@ from typing import IO, Dict, FrozenSet, Iterable, List, Optional, Set, Tuple
 
 import numpy
 import numpy.typing
-from rnapolis.common import BaseInteractions, BpSeq, Entry, GlycosidicBond
+from rnapolis.common import (
+    BaseInteractions,
+    BpSeq,
+    Entry,
+    GlycosidicBond,
+    LeontisWesthof,
+)
 from rnapolis.tertiary import (
     Atom,
     BasePair3D,
@@ -898,18 +904,60 @@ class Snapback:
         )
 
 
+# Mapping from the Webba da Silva loop-classification value (the loop
+# progression fingerprint with the a/b subtype given by the sign of the
+# first flanking loop, or of the middle loop for the dpd progression) to
+# the common topology name.
+#
+# Source: ASC-G4, "Comprehensive analysis of intramolecular G-quadruplex
+# structures: furthering the understanding of their formalism"
+# (Nucleic Acids Res. 2024, gkae182; PMC11039995), Table 1, which lists the
+# observed loop progressions per topology in the Dvorkin et al. (2018)
+# frame of reference (the same column anchoring ElTetrado uses):
+#   parallel  -p-p-p                 (1a; 1b +p+p+p observed in PDB as well)
+#   chair     +l+l+l, -l-l-l         (6b, 6a)
+#   basket    -ld+l, d+pd            (11a, 12b)
+#   basket2   -pd+p, +ld-l, +l+p+l   (5a, 11b, 8b)
+#   hybrid1   -p-l-l, -p-l-p         (9a, 3a)
+#   hybrid2   -pd+l, -p-p-l, +ld-p   (10a, 2a, 13b)
+#   hybrid3   -l-l-p                 (7a)
+#   hybrid4   +l+p+p                 (4b)
+# The remaining subtypes (12a, 5b, 8a, 3b, 9b, 2b, 10b, 13a, 7b, 4a) have
+# not been observed and carry no common name - see AGENTS.md.
+TOPOLOGY_NAMES = {
+    "1a": "parallel",
+    "1b": "parallel",
+    "6a": "chair",
+    "6b": "chair",
+    "11a": "basket",
+    "12b": "basket",
+    "5a": "basket2",
+    "11b": "basket2",
+    "8b": "basket2",
+    "9a": "hybrid1",
+    "3a": "hybrid1",
+    "10a": "hybrid2",
+    "2a": "hybrid2",
+    "13b": "hybrid2",
+    "7a": "hybrid3",
+    "4b": "hybrid4",
+}
+
+
 @dataclass
 class Quadruplex:
     tetrads: List[Tetrad]
     tetrad_pairs: List[TetradPair]
     structure3d: Structure3D
     global_index: Dict[Residue3D, int]
+    base_pairs: List[BasePair3D] = field(default_factory=list)
     onzm: Optional[ONZM] = field(init=False)
     gba_classes: List[GbaQuadruplexClassification] = field(init=False)
     tracts: List[Tract] = field(init=False)
     bulges: List[Residue3D] = field(init=False)
     loops: List[Loop] = field(init=False)
     snapbacks: List[Snapback] = field(init=False)
+    tags: List[str] = field(init=False)
     path: List[str] = field(init=False)
     handedness: Optional[HelixHandedness] = field(init=False)
     tetrad_polarities: List[Optional[TetradPolarity]] = field(init=False)
@@ -928,6 +976,7 @@ class Quadruplex:
         self.strand_polarities = self.__find_strand_polarities()
         self.path = self.__find_path()
         self.loop_class = self.__classify_by_loops()
+        self.tags = self.__find_tags()
 
     def __classify_onzm(self) -> Optional[ONZM]:
         if len(self.tetrads) == 1:
@@ -1602,6 +1651,120 @@ class Quadruplex:
             snapbacks.append(Snapback(in_between, orientation))
         return snapbacks
 
+    def __find_tags(self) -> List[str]:
+        """Summarize the quadruplex's structural features as short tags,
+        exposed in the text report and the JSON output."""
+        tags: List[str] = []
+        if self.bulges:
+            tags.append("has_bulge")
+        if self.snapbacks:
+            tags.append("has_snapback")
+        if self.__has_inverted_strand_polarity():
+            tags.append("has_inverted_strand_polarity")
+        if any(not loop.nucleotides for loop in self.loops):
+            tags.append("v_loop")
+        if self.__is_two_block():
+            tags.append("two_block")
+        if self.loop_class is not None:
+            topology_name = TOPOLOGY_NAMES.get(self.loop_class.value)
+            if topology_name is not None:
+                tags.append(topology_name)
+        if self.__has_quadruplex_duplex():
+            tags.append("quadruplex_duplex")
+        return tags
+
+    def __has_inverted_strand_polarity(self) -> bool:
+        for tract_polarities in self.strand_polarities:
+            if not tract_polarities:
+                continue
+            has_plus = any(p == StrandPolarity.PLUS for p in tract_polarities)
+            has_minus = any(p == StrandPolarity.MINUS for p in tract_polarities)
+            if has_plus and has_minus:
+                return True
+        return False
+
+    def __is_two_block(self) -> bool:
+        """True for a unimolecular quadruplex built from two separate blocks:
+        some column is visited by two or more chain segments that each stack
+        at least two guanines (the two stems share columns)."""
+        if len(self.tetrads) < 2:
+            return False
+
+        tetrad_nucleotides = sorted(
+            [nt for tetrad in self.tetrads for nt in tetrad.nucleotides],
+            key=lambda nt: self.global_index[nt],
+        )
+        tract_positions = [
+            {nt: position for position, nt in enumerate(tract.nucleotides)}
+            for tract in self.tracts
+        ]
+        segments: List[List[int]] = [[] for _ in self.tracts]
+        run_tract: Optional[int] = None
+        run_length = 0
+        run_last: Optional[Residue3D] = None
+
+        for nt in tetrad_nucleotides:
+            tract_index = self.__find_tract_index_with_nt(nt)
+            continues = (
+                tract_index is not None
+                and tract_index == run_tract
+                and run_last is not None
+                and run_last.chain == nt.chain
+                and abs(
+                    tract_positions[tract_index][nt]
+                    - tract_positions[tract_index][run_last]
+                )
+                == 1
+            )
+            if continues:
+                run_length += 1
+            else:
+                if run_tract is not None:
+                    segments[run_tract].append(run_length)
+                run_tract = tract_index
+                run_length = 1 if tract_index is not None else 0
+            run_last = nt
+        if run_tract is not None:
+            segments[run_tract].append(run_length)
+
+        for tract_segments in segments:
+            multi_g_segments = [length for length in tract_segments if length >= 2]
+            if len(multi_g_segments) >= 2:
+                return True
+        return False
+
+    def __has_quadruplex_duplex(self) -> bool:
+        """True when at least two canonical Watson-Crick base pairs are formed
+        by the quadruplex's loop or bulge nucleotides - a duplex stem growing
+        out of a loop (e.g. 6fc9)."""
+        loop_or_bulge = {nt for loop in self.loops for nt in loop.nucleotides} | set(
+            self.bulges
+        )
+        if not loop_or_bulge:
+            return False
+
+        seen_pairs = set()
+        canonical_pairs = 0
+        for base_pair in self.base_pairs:
+            if base_pair.lw != LeontisWesthof.cWW:
+                continue
+            nt1, nt2 = base_pair.nt1_3d, base_pair.nt2_3d
+            if nt1 not in loop_or_bulge or nt2 not in loop_or_bulge:
+                continue
+            pair = frozenset((nt1, nt2))
+            if pair in seen_pairs:
+                continue
+            seen_pairs.add(pair)
+            pair_letters = {
+                nt1.one_letter_name.upper(),
+                nt2.one_letter_name.upper(),
+            }
+            if pair_letters in ({"G", "C"}, {"A", "U"}, {"A", "T"}):
+                canonical_pairs += 1
+                if canonical_pairs >= 2:
+                    return True
+        return False
+
     def __find_tetrad_with_nt(self, nt: Residue3D) -> Optional[Tetrad]:
         for tetrad in self.tetrads:
             if nt in tetrad.nucleotides:
@@ -1668,6 +1831,8 @@ class Quadruplex:
             else:
                 builder += " n/a"
             builder += f" quadruplex with {len(self.tetrads)} tetrads\n"
+            if self.tags:
+                builder += f"    Tags: {', '.join(self.tags)}\n"
             builder += self.__topology_details_str()
             builder += str(self.tetrad_pairs[0].tetrad1)
             for tetrad_pair in self.tetrad_pairs:
@@ -1740,6 +1905,7 @@ class Helix:
     tetrad_pairs: List[TetradPair]
     structure3d: Structure3D
     global_index: Dict[Residue3D, int]
+    base_pairs: List[BasePair3D] = field(default_factory=list)
     quadruplexes: List[Quadruplex] = field(init=False)
 
     def __post_init__(self):
@@ -1747,7 +1913,15 @@ class Helix:
 
     def __find_quadruplexes(self):
         if len(self.tetrad_pairs) == 0:
-            return [Quadruplex(self.tetrads, [], self.structure3d, self.global_index)]
+            return [
+                Quadruplex(
+                    self.tetrads,
+                    [],
+                    self.structure3d,
+                    self.global_index,
+                    self.base_pairs,
+                )
+            ]
 
         quadruplexes = list()
         tetrads = list()
@@ -1763,6 +1937,7 @@ class Helix:
                             self.__filter_tetrad_pairs(tetrads),
                             self.structure3d,
                             self.global_index,
+                            self.base_pairs,
                         )
                     )
                     tetrads = list()
@@ -1774,6 +1949,7 @@ class Helix:
                 self.__filter_tetrad_pairs(tetrads),
                 self.structure3d,
                 self.global_index,
+                self.base_pairs,
             )
         )
 
@@ -2142,6 +2318,7 @@ class Analysis:
                         helix_tetrad_pairs,
                         self.structure3d,
                         self.global_index,
+                        self.mapping.base_pairs,
                     )
                 )
                 helix_tetrads = [ti, tj]
@@ -2154,12 +2331,21 @@ class Analysis:
                     helix_tetrad_pairs,
                     self.structure3d,
                     self.global_index,
+                    self.mapping.base_pairs,
                 )
             )
 
         for tetrad in self.tetrads:
             if not any([tetrad in helix.tetrads for helix in helices]):
-                helices.append(Helix([tetrad], [], self.structure3d, self.global_index))
+                helices.append(
+                    Helix(
+                        [tetrad],
+                        [],
+                        self.structure3d,
+                        self.global_index,
+                        self.mapping.base_pairs,
+                    )
+                )
 
         return helices
 
