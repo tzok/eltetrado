@@ -1,6 +1,6 @@
 [project]
 name = "eltetrado"
-version = "1.10.1"
+version = "1.10.2"
 description = "Find and classify tetrads and quadruplexes in DNA/RNA 3D structure"
 readme = "README.md"
 requires-python = ">=3.12"
@@ -26,6 +26,7 @@ Documentation = "https://github.com/tzok/eltetrado"
 [project.scripts]
 eltetrado = "eltetrado.cli:eltetrado_cli"
 has_tetrad = "eltetrado.cli:has_tetrad_cli"
+score-folds = "eltetrado.score_folds:main"
 
 [dependency-groups]
 dev = ["pytest", "ruff"]
