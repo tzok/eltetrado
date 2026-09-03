@@ -1,6 +1,7 @@
 Chain order: A C B D E H F G
 n4-helix with 4 tetrads
   Op* VIII n/a quadruplex with 4 tetrads
+    Tags: has_bulge, has_inverted_strand_polarity
     Handedness: right
     Tetrad polarities: clockwise, anticlockwise, anticlockwise, clockwise
     A.BGM2 C.BGM2 B.BGM2 D.BGM2 cWH cWH cWH cWH O+ VIIIb planarity=0.13 ions_channel=K,K 
@@ -31,6 +32,7 @@ n4-helix with 4 tetrads
 
 n4-helix with 4 tetrads
   Op* VIII n/a quadruplex with 4 tetrads
+    Tags: has_bulge, has_inverted_strand_polarity
     Handedness: right
     Tetrad polarities: clockwise, anticlockwise, anticlockwise, clockwise
     E.BGM2 G.BGM2 F.BGM2 H.BGM2 cWH cWH cWH cWH O- VIIIb planarity=0.14 ions_channel=K,K 
