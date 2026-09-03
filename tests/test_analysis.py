@@ -8,7 +8,7 @@ from rnapolis.adapter import ExternalTool, parse_external_output
 
 import eltetrado.analysis as analysis_module
 from eltetrado.analysis import calculate_best_fit_rotation_around_axis, eltetrado
-from eltetrado.model import StrandPolarity
+from eltetrado.model import SnapbackOrientation, StrandPolarity
 from eltetrado.cli import handle_input_file, read_secondary_structure_from_dssr
 from eltetrado.g4composer import (
     canonical_dot_bracket,
@@ -466,3 +466,99 @@ def test_5v3f_most_5prime_guanine_is_plus():
     assert polarity_map.get("A.G14") == StrandPolarity.PLUS
     assert polarity_map.get("A.G19") == StrandPolarity.PLUS
     assert polarity_map.get("A.G24") == StrandPolarity.PLUS
+
+
+def test_8psi_has_four_loops_and_no_snapbacks():
+    """
+    8psi forms a fold in which the chain visits one of the tracts twice,
+    giving four cross-tract loops. The loop classification requires exactly
+    three loops, so it must stay unset.
+    """
+    cif = handle_input_file("tests/files/8psi-assembly1.cif.gz")
+    structure3d = rnapolis.parser.read_3d_structure(cif, 1, nucleic_acid_only=False)
+    base_interactions = rnapolis.annotator.extract_base_interactions(structure3d)
+    analysis = eltetrado(base_interactions, structure3d, False)
+
+    quadruplex = analysis.helices[0].quadruplexes[0]
+
+    assert [loop.loop_type.value for loop in quadruplex.loops] == [
+        "lateral+",
+        "lateral-",
+        "propeller-",
+        "lateral-",
+    ]
+    assert all(loop.nucleotides for loop in quadruplex.loops)
+    assert quadruplex.snapbacks == []
+    assert quadruplex.loop_class is None
+
+
+def test_7wgw_reports_three_prime_snapback():
+    """
+    7wgw ends with a chain re-entry into an already visited tract: after the
+    third propeller loop the chain leaves the column and re-enters it three
+    nucleotides later (8-oxo-G, A, A), injecting the last guanosine into the
+    column - a snapback 3'.
+    """
+    cif = handle_input_file("tests/files/7wgw-assembly1.cif.gz")
+    structure3d = rnapolis.parser.read_3d_structure(cif, 1, nucleic_acid_only=False)
+    base_interactions = rnapolis.annotator.extract_base_interactions(structure3d)
+    analysis = eltetrado(base_interactions, structure3d, False)
+
+    quadruplex = analysis.helices[0].quadruplexes[0]
+
+    assert [loop.loop_type.value for loop in quadruplex.loops] == [
+        "propeller-",
+        "propeller-",
+        "propeller-",
+    ]
+    assert len(quadruplex.snapbacks) == 1
+    snapback = quadruplex.snapbacks[0]
+    assert snapback.orientation == SnapbackOrientation.THREE_PRIME
+    assert [nt.full_name for nt in snapback.nucleotides] == [
+        "X.8OG18",
+        "X.DA19",
+        "X.DA20",
+    ]
+
+
+def test_5zev_emits_zero_length_loop():
+    """
+    5zev contains a 0-nt cross-tract connector: two tetrad guanines directly
+    adjacent in the chain but stacked in different tracts. Such a loop
+    carries no nucleotides and brings the loop count to four, so the loop
+    classification stays unset.
+    """
+    cif = handle_input_file("tests/files/5zev-assembly1.cif.gz")
+    structure3d = rnapolis.parser.read_3d_structure(cif, 1, nucleic_acid_only=False)
+    base_interactions = rnapolis.annotator.extract_base_interactions(structure3d)
+    analysis = eltetrado(base_interactions, structure3d, False)
+
+    quadruplex = analysis.helices[0].quadruplexes[0]
+
+    assert len(quadruplex.loops) == 4
+    zero_length = [loop for loop in quadruplex.loops if not loop.nucleotides]
+    assert len(zero_length) == 1
+    assert zero_length[0].loop_type.value == "propeller-"
+    assert quadruplex.snapbacks == []
+    assert quadruplex.loop_class is None
+
+
+def test_5de5_reports_zero_length_snapback():
+    """
+    5de5 re-enters the same tract with no nucleotides in between (the chain
+    leaves the column and immediately returns at a non-adjacent layer),
+    producing a 0-nt snapback - contrast with 5zev's 0-nt loop, which joins
+    two different tracts.
+    """
+    cif = handle_input_file("tests/files/5de5-assembly1.cif.gz")
+    structure3d = rnapolis.parser.read_3d_structure(cif, 1, nucleic_acid_only=False)
+    base_interactions = rnapolis.annotator.extract_base_interactions(structure3d)
+    analysis = eltetrado(base_interactions, structure3d, False)
+
+    quadruplex = analysis.helices[0].quadruplexes[0]
+
+    assert len(quadruplex.loops) == 4
+    assert len(quadruplex.snapbacks) == 1
+    snapback = quadruplex.snapbacks[0]
+    assert snapback.orientation == SnapbackOrientation.THREE_PRIME
+    assert snapback.nucleotides == []
