@@ -1,6 +1,7 @@
 Chain order: A
 n4-helix with 2 tetrads
   Oa* II 6b +(lll) quadruplex with 2 tetrads
+    Tags: chair, quadruplex_duplex
     Handedness: right
     Tetrad polarities: clockwise, anticlockwise
     A.DG1 A.DG6 A.DG22 A.DG27 cWH cWH cWH cWH O+ IIb planarity=0.16  

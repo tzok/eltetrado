@@ -256,6 +256,15 @@ class LoopType(Enum):
         raise RuntimeError(f"Failed to match {value} to a LoopType class")
 
 
+class SnapbackOrientation(Enum):
+    # A snapback is a chain re-entry into an already visited tract. 3' when
+    # the re-entering (post-connector) segment is the isolated one — its
+    # first nucleotide is "injected" into the column; 5' when the mirror
+    # pre-connector nucleotide is the isolated one.
+    THREE_PRIME = "3'"
+    FIVE_PRIME = "5'"
+
+
 class Direction(Enum):
     parallel = "parallel"
     antiparallel = "antiparallel"
