@@ -64,6 +64,13 @@ def eltetrado_cli(args=sys.argv[1:]):
         help="name of the external tool that produced the files (auto-detected when not provided)",
     )
     parser.add_argument(
+        "--keep-spurious",
+        action="store_true",
+        help="report quadruplexes even if they are classified as spurious "
+        "(e.g. bulges that are too long or unrealistic rise); by default "
+        "such quadruplexes are discarded",
+    )
+    parser.add_argument(
         "-v", "--version", action="version", version="%(prog)s {}".format(__version__)
     )
     args = parser.parse_args(args)
@@ -101,6 +108,7 @@ def eltetrado_cli(args=sys.argv[1:]):
         base_interactions,
         structure3d,
         args.no_reorder,
+        args.keep_spurious,
     )
     print(analysis)
 

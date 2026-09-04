@@ -671,3 +671,66 @@ def test_8psi_has_no_tags():
     quadruplex = analysis.helices[0].quadruplexes[0]
 
     assert quadruplex.tags == []
+
+
+class _StubPair:
+    def __init__(self, rise, twist):
+        self.rise = rise
+        self.twist = twist
+
+
+class _StubQuadruplex:
+    def __init__(self, tetrads=2, bulges=0, pairs=()):
+        self.tetrads = [None] * tetrads
+        self.bulges = [None] * bulges
+        self.tetrad_pairs = [_StubPair(*pair) for pair in pairs]
+
+
+def test_spurious_reasons_accepts_realistic_quadruplex():
+    from eltetrado.analysis import quadruplex_spurious_reasons
+
+    quadruplex = _StubQuadruplex(tetrads=3, bulges=15, pairs=[(3.4, 30.0)])
+    assert quadruplex_spurious_reasons(quadruplex) == []
+
+
+def test_spurious_reasons_rejects_single_tetrad():
+    from eltetrado.analysis import quadruplex_spurious_reasons
+
+    reasons = quadruplex_spurious_reasons(_StubQuadruplex(tetrads=1))
+    assert len(reasons) == 1
+    assert "tetrad" in reasons[0]
+
+
+def test_spurious_reasons_rejects_huge_bulge():
+    from eltetrado.analysis import quadruplex_spurious_reasons
+
+    reasons = quadruplex_spurious_reasons(_StubQuadruplex(bulges=105))
+    assert len(reasons) == 1
+    assert "bulge" in reasons[0]
+
+
+def test_spurious_reasons_rejects_unrealistic_rise():
+    from eltetrado.analysis import quadruplex_spurious_reasons
+
+    reasons = quadruplex_spurious_reasons(
+        _StubQuadruplex(pairs=[(0.5, 30.0), (15.0, 30.0)])
+    )
+    assert len(reasons) == 2
+    assert "rise" in reasons[0]
+    assert "rise" in reasons[1]
+
+
+def test_spurious_reasons_allows_extreme_twist():
+    from eltetrado.analysis import quadruplex_spurious_reasons
+
+    # extreme twist occurs in real structures (7d5d, 2la5) and must not
+    # be rejected
+    quadruplex = _StubQuadruplex(pairs=[(3.3, 141.19), (3.23, -170.74)])
+    assert quadruplex_spurious_reasons(quadruplex) == []
+
+
+def test_spurious_reasons_ignores_nan_geometry():
+    from eltetrado.analysis import quadruplex_spurious_reasons
+
+    quadruplex = _StubQuadruplex(pairs=[(math.nan, math.nan)])
+    assert quadruplex_spurious_reasons(quadruplex) == []

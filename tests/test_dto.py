@@ -37,7 +37,7 @@ def test_ions():
 def test_7zko():
     """
     In 7zko there are two helices, but the second one has only one tetrad
-    so it should be omitted from the output
+    so it is discarded as spurious and only one helix is reported
     """
     cif = handle_input_file("tests/files/7zko-assembly-1.cif.gz")
     structure3d = rnapolis.parser.read_3d_structure(cif, 1)
@@ -45,17 +45,20 @@ def test_7zko():
         structure3d, 1, "tests/files/7zko-assembly-1.json"
     )
     analysis = eltetrado(structure2d, structure3d, False)
-    assert len(analysis.helices) == 2
-    assert len(analysis.helices[1].quadruplexes) == 1
-    assert len(analysis.helices[1].quadruplexes[0].tetrads) == 1
+    assert len(analysis.helices) == 1
     dto = generate_dto(analysis)
     assert len(dto.helices) == 1
+
+    raw = eltetrado(structure2d, structure3d, False, True)
+    assert len(raw.helices) == 2
+    assert len(raw.helices[1].quadruplexes) == 1
+    assert len(raw.helices[1].quadruplexes[0].tetrads) == 1
 
 
 def test_1v3p():
     """
     In 1v3p there is one helix with two quadruplexes, but each has only
-    one tetrad so altogether we do not want to serialize it
+    one tetrad so the whole helix is discarded as spurious
     """
     cif = handle_input_file("tests/files/1v3p-assembly-1.cif.gz")
     structure3d = rnapolis.parser.read_3d_structure(cif, 1)
@@ -63,13 +66,16 @@ def test_1v3p():
         structure3d, 1, "tests/files/1v3p-assembly-1.json"
     )
     analysis = eltetrado(structure2d, structure3d, False)
-    assert len(analysis.helices) == 1
-    assert len(analysis.helices[0].quadruplexes) == 2
-    assert len(analysis.helices[0].quadruplexes[0].tetrads) == 1
-    assert len(analysis.helices[0].quadruplexes[1].tetrads) == 1
+    assert len(analysis.helices) == 0
 
     dto = generate_dto(analysis)
     assert len(dto.helices) == 0
+
+    raw = eltetrado(structure2d, structure3d, False, True)
+    assert len(raw.helices) == 1
+    assert len(raw.helices[0].quadruplexes) == 2
+    assert len(raw.helices[0].quadruplexes[0].tetrads) == 1
+    assert len(raw.helices[0].quadruplexes[1].tetrads) == 1
 
 
 def test_2awe():

@@ -46,6 +46,28 @@ from eltetrado.model import (
 
 logging.basicConfig(level=os.environ.get("LOGLEVEL", "INFO"))
 
+# Limits of the spurious quadruplex filter.
+#
+# Tetrad discovery is permissive on purpose: a tetrad only needs a cycle of
+# Leontis/Westhof base-pair edges (see ``Tetrad.is_valid``), and two tetrads
+# become a stack when as little as a single chain-adjacent or stacked
+# nucleotide supports the pairing. In large structured RNAs (e.g. ribosomal
+# RNA) this occasionally produces pseudo-quadruplexes: cycles of mixed bases
+# with unrealistic stacking geometry, joined by chain segments hundreds of
+# nucleotides long. The limits below reject such structures; they were tuned
+# on the ElTetrado/onquadro corpus (DSSR-annotated), where real quadruplexes
+# have bulges of up to 15 nucleotides (7cls) and pairs with rise between 2.69
+# and 10.4 Å (7csk, 8hb3), so keep the limits generous. Twist is deliberately
+# NOT limited: real two-block structures (7d5d, 7d5e, 7d5f, 6qjo) contain
+# pairs with twist up to 141°, and across antiparallel/snapback steps (2la5,
+# 5dea) it reaches 170°, so twist does not separate real stacks from pseudo
+# ones. Handedness is not a discriminator either — real left-handed
+# quadruplexes exist both as two-block and plain structures.
+MIN_QUADRUPLEX_TETRADS = 2
+MAX_QUADRUPLEX_BULGES = 25
+MIN_QUADRUPLEX_RISE = 2.0
+MAX_QUADRUPLEX_RISE = 12.0
+
 
 def get_plane_vectors(coords: numpy.ndarray) -> Tuple[numpy.ndarray, numpy.ndarray]:
     """
@@ -942,6 +964,38 @@ TOPOLOGY_NAMES = {
     "7a": "hybrid3",
     "4b": "hybrid4",
 }
+
+
+def quadruplex_spurious_reasons(quadruplex: "Quadruplex") -> List[str]:
+    """Return reasons why a quadruplex should be discarded as spurious.
+
+    An empty list means the quadruplex passed all filter limits.
+    """
+    reasons = []
+
+    if len(quadruplex.tetrads) < MIN_QUADRUPLEX_TETRADS:
+        reasons.append(
+            f"built of {len(quadruplex.tetrads)} tetrad(s), "
+            f"minimum is {MIN_QUADRUPLEX_TETRADS}"
+        )
+
+    if len(quadruplex.bulges) > MAX_QUADRUPLEX_BULGES:
+        reasons.append(
+            f"bulge of {len(quadruplex.bulges)} nucleotides "
+            f"(limit is {MAX_QUADRUPLEX_BULGES})"
+        )
+
+    for tetrad_pair in quadruplex.tetrad_pairs:
+        rise = tetrad_pair.rise
+        if not math.isnan(rise) and not (
+            MIN_QUADRUPLEX_RISE <= rise <= MAX_QUADRUPLEX_RISE
+        ):
+            reasons.append(
+                f"rise between tetrads {round(rise, 2)} Å "
+                f"(allowed range is {MIN_QUADRUPLEX_RISE}-{MAX_QUADRUPLEX_RISE} Å)"
+            )
+
+    return reasons
 
 
 @dataclass
@@ -1980,6 +2034,7 @@ class Analysis:
     base_interactions: BaseInteractions
     structure3d: Structure3D
     no_reorder: bool
+    keep_spurious: bool = False
     global_index: Dict[Residue3D, int] = field(init=False)
     mapping: Mapping2D3D = field(init=False)
     tetrads: List[Tetrad] = field(init=False)
@@ -2013,6 +2068,9 @@ class Analysis:
         if not self.no_reorder:
             self.__find_best_chain_order()
 
+        if not self.keep_spurious:
+            self.helices = self.__filter_spurious_quadruplexes()
+
         (
             self.sequence,
             self.line1,
@@ -2020,6 +2078,30 @@ class Analysis:
         ) = self.__generate_twoline_dotbracket()
         self.ions = self.__find_ions()
         self.__assign_ions_to_tetrads()
+
+    def __filter_spurious_quadruplexes(self) -> List[Helix]:
+        """Discard quadruplexes that fail the spurious quadruplex filter.
+
+        Helices left without a single quadruplex are dropped as well; this
+        also removes helices made of a single unstacked tetrad.
+        """
+        helices = []
+        for helix in self.helices:
+            quadruplexes = []
+            for quadruplex in helix.quadruplexes:
+                reasons = quadruplex_spurious_reasons(quadruplex)
+                if reasons:
+                    logging.info(
+                        "Discarding spurious quadruplex (%s tetrads): %s",
+                        len(quadruplex.tetrads),
+                        "; ".join(reasons),
+                    )
+                else:
+                    quadruplexes.append(quadruplex)
+            if quadruplexes:
+                helix.quadruplexes = quadruplexes
+                helices.append(helix)
+        return helices
 
     def __prepare_global_index(self) -> Dict[Residue3D, int]:
         result = {}
@@ -2803,8 +2885,9 @@ def eltetrado(
     base_interactions: BaseInteractions,
     structure3d: Structure3D,
     no_reorder: bool,
+    keep_spurious: bool = False,
 ) -> Analysis:
-    return Analysis(base_interactions, structure3d, no_reorder)
+    return Analysis(base_interactions, structure3d, no_reorder, keep_spurious)
 
 
 def has_tetrad(base_interactions: BaseInteractions, structure3d: Structure3D) -> bool:
