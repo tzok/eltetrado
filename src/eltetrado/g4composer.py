@@ -12,16 +12,31 @@ This module has to bridge several ordering conventions used elsewhere in ElTetra
 
 The exporter therefore keeps ElTetrado topology intact, but remaps it at export
 time into g4composer's build-order and path-numbering conventions.
+
+Two export modes are available (``G4ComposerMode``):
+
+- ``CLASSIC`` (default) keeps physical tract ids as path column numbers (with
+  the clockwise remap) and exports twist as a best-fit rotation of all four
+  matched tract C1' sets around one shared quadruplex-wide axis.
+- ``CONSISTENT`` numbers nucleotides within each tetrad by 5'->3' chain
+  visitation order (the first tetrad nucleotide visited by the chain is always
+  number 1) and exports twist as the torsion angle C1'(1) - center(tetrad 1) -
+  center(tetrad 2) - C1'(1) between consecutive build-order tetrads. Rise and
+  every other exported field are mode-independent.
 """
 
 import math
 import os
 from dataclasses import dataclass
+from enum import Enum
 from typing import Dict, List, Optional, Sequence, Set, Tuple
 
 import numpy
 from rnapolis.common import Entry, GlycosidicBond, Molecule, BpSeq
-from rnapolis.tertiary import Residue3D
+from rnapolis.tertiary import (
+    Residue3D,
+    calculate_torsion_angle_coords,
+)
 
 from eltetrado.analysis import (
     Analysis,
@@ -33,6 +48,16 @@ from eltetrado.analysis import (
     residue_c1prime_coordinates,
 )
 from eltetrado.model import SugarPucker
+
+
+class G4ComposerMode(Enum):
+    """Path/twist numbering convention used by the g4composer exporter.
+
+    See the module docstring for the full description of both modes.
+    """
+
+    CLASSIC = "classic"
+    CONSISTENT = "consistent"
 
 
 @dataclass(frozen=True)
@@ -85,7 +110,10 @@ def eligible_quadruplexes(analysis: Analysis) -> List[Quadruplex]:
 
 
 def generate_g4composer_entry(
-    analysis: Analysis, quadruplex: Quadruplex, name: str
+    analysis: Analysis,
+    quadruplex: Quadruplex,
+    name: str,
+    mode: G4ComposerMode = G4ComposerMode.CLASSIC,
 ) -> G4ComposerEntry:
     residues = export_residues(analysis, quadruplex)
     build_order = tetrads_in_build_order(quadruplex)
@@ -102,8 +130,8 @@ def generate_g4composer_entry(
         sugar=export_sugar(analysis, residues),
         orient=export_orient(quadruplex, build_order, tetrad_to_label),
         rise=export_rise(quadruplex),
-        twist=export_twist(quadruplex),
-        path=export_path(quadruplex),
+        twist=export_twist(quadruplex, mode),
+        path=export_path(quadruplex, mode),
     )
 
 
@@ -252,14 +280,37 @@ def export_orient(
     return ";".join(values)
 
 
-def export_path(quadruplex: Quadruplex) -> str:
+def export_path(
+    quadruplex: Quadruplex, mode: G4ComposerMode = G4ComposerMode.CLASSIC
+) -> str:
     """Convert ElTetrado path numbering into g4composer path numbering.
 
-    Both formats share tetrad letters and preserve ``A1`` as the anchor, but
-    g4composer numbers the remaining columns clockwise whereas ElTetrado tracts
-    are numbered anticlockwise.
+    In ``CLASSIC`` mode both formats share tetrad letters and preserve ``A1`` as
+    the anchor, but g4composer numbers the remaining columns clockwise whereas
+    ElTetrado tracts are numbered anticlockwise.
+
+    In ``CONSISTENT`` mode nucleotides within each tetrad are numbered 1-4 by
+    the 5'->3' order in which the chain visits them (the first tetrad
+    nucleotide visited by the chain is always number 1), so the clockwise
+    remap does not apply.
     """
+    if mode is G4ComposerMode.CONSISTENT:
+        return ";".join(consistent_path(quadruplex))
     return ";".join(remap_path_entry_to_clockwise(entry) for entry in quadruplex.path)
+
+
+def consistent_path(quadruplex: Quadruplex) -> List[str]:
+    """Return path entries numbered by chain-visitation order within each tetrad."""
+    tetrad_labels = quadruplex.tetrad_labels_by_5p_order()
+    labels: Dict[Residue3D, str] = {}
+    for tetrad, tetrad_label in zip(quadruplex.tetrads, tetrad_labels):
+        ordered = sorted(tetrad.nucleotides, key=lambda nt: quadruplex.global_index[nt])
+        for rank, nt in enumerate(ordered, start=1):
+            labels[nt] = f"{tetrad_label}{rank}"
+    return [
+        labels[nt]
+        for nt in sorted(labels.keys(), key=lambda nt: quadruplex.global_index[nt])
+    ]
 
 
 def remap_path_entry_to_clockwise(entry: str) -> str:
@@ -283,10 +334,57 @@ def export_rise(quadruplex: Quadruplex) -> str:
     )
 
 
-def export_twist(quadruplex: Quadruplex) -> str:
+def export_twist(
+    quadruplex: Quadruplex, mode: G4ComposerMode = G4ComposerMode.CLASSIC
+) -> str:
+    if mode is G4ComposerMode.CONSISTENT:
+        return ";".join(
+            format_number(twist) for twist in consistent_twist_intervals(quadruplex)
+        )
     return ";".join(
         format_number(twist) for _, twist in build_order_intervals(quadruplex)
     )
+
+
+def consistent_twist_intervals(quadruplex: Quadruplex) -> List[float]:
+    """Compute the torsion twist for each consecutive pair in build order.
+
+    Twist is the torsion angle C1'(1) - center(tetrad 1) - center(tetrad 2) -
+    C1'(1), where ``1`` denotes the nucleotide numbered 1 in ``CONSISTENT``
+    path mode (the first nucleotide of the tetrad visited by the chain). A
+    torsion angle is axis-free, so the shared quadruplex axis used by the
+    classic mode is not needed here.
+    """
+    build_order = tetrads_in_build_order(quadruplex)
+    nucleotides_by_tetrad = consistent_nucleotides_by_tetrad(quadruplex)
+
+    intervals = []
+    for tetrad1, tetrad2 in zip(build_order, build_order[1:]):
+        nt1 = nucleotides_by_tetrad[tetrad1][0]
+        nt2 = nucleotides_by_tetrad[tetrad2][0]
+        c1 = residue_c1prime_coordinates(nt1)
+        c2 = residue_c1prime_coordinates(nt2)
+        if c1 is None or c2 is None:
+            intervals.append(math.nan)
+            continue
+        intervals.append(
+            math.degrees(
+                calculate_torsion_angle_coords(
+                    c1, tetrad1.center(), tetrad2.center(), c2
+                )
+            )
+        )
+    return intervals
+
+
+def consistent_nucleotides_by_tetrad(
+    quadruplex: Quadruplex,
+) -> Dict[Tetrad, List[Residue3D]]:
+    """Map each tetrad to its nucleotides in 5'->3' chain visitation order."""
+    return {
+        tetrad: sorted(tetrad.nucleotides, key=lambda nt: quadruplex.global_index[nt])
+        for tetrad in quadruplex.tetrads
+    }
 
 
 def tetrads_in_build_order(quadruplex: Quadruplex) -> List[Tetrad]:
@@ -436,6 +534,7 @@ def write_g4composer(
     analysis: Analysis,
     input_path: str,
     output_path: str,
+    mode: G4ComposerMode = G4ComposerMode.CLASSIC,
 ) -> None:
     """Always write a single file at ``output_path``.
 
@@ -451,7 +550,9 @@ def write_g4composer(
     blocks: List[str] = []
     for quad in quadruplexes:
         try:
-            entry = generate_g4composer_entry(analysis, quad, input_name(input_path))
+            entry = generate_g4composer_entry(
+                analysis, quad, input_name(input_path), mode
+            )
         except ValueError:
             continue
         serialized = entry.serialize()

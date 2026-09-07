@@ -17,7 +17,7 @@ from rnapolis.tertiary import Structure3D
 from eltetrado import __version__
 from eltetrado.analysis import Visualizer, eltetrado, has_tetrad
 from eltetrado.dto import generate_dto
-from eltetrado.g4composer import write_g4composer
+from eltetrado.g4composer import G4ComposerMode, write_g4composer
 
 
 def eltetrado_cli(args=sys.argv[1:]):
@@ -27,6 +27,13 @@ def eltetrado_cli(args=sys.argv[1:]):
     parser.add_argument(
         "--g4composer-output",
         help="(optional) path for g4composer plain-text export; requires exactly one unimolecular quadruplex and exports the full involved chain",
+    )
+    parser.add_argument(
+        "--g4composer-consistent",
+        action="store_true",
+        help="number nucleotides within each tetrad by 5'-3' chain visitation order and "
+        "export twist as the torsion angle between the first nucleotides of consecutive "
+        "tetrads (affects only the g4composer export)",
     )
     parser.add_argument(
         "-m", "--model", help="(optional) model number to process", default=1, type=int
@@ -156,7 +163,12 @@ def eltetrado_cli(args=sys.argv[1:]):
             jsonfile.write(orjson.dumps(dto))
 
     if args.g4composer_output:
-        write_g4composer(analysis, args.input, args.g4composer_output)
+        mode = (
+            G4ComposerMode.CONSISTENT
+            if args.g4composer_consistent
+            else G4ComposerMode.CLASSIC
+        )
+        write_g4composer(analysis, args.input, args.g4composer_output, mode)
 
 
 def has_tetrad_cli(args=sys.argv[1:]):

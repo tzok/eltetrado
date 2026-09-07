@@ -56,11 +56,11 @@ want ElTetrado to not visualize anything, pass `--no-image` switch to
 it.
 
     usage: eltetrado [-h] [-i INPUT] [-o OUTPUT]
-                     [--g4composer-output G4COMPOSER_OUTPUT] [-m MODEL]
-                     [--no-reorder] [--complete-2d] [--image DIR]
-                     [-e [EXTERNAL_FILES ...]]
+                     [--g4composer-output G4COMPOSER_OUTPUT]
+                     [--g4composer-consistent] [-m MODEL] [--no-reorder]
+                     [--complete-2d] [--image DIR] [-e [EXTERNAL_FILES ...]]
                      [--tool {fr3d,dssr,rnaview,bpnet,maxit,barnaba,mc-annotate,dnatco}]
-                     [-v]
+                     [--keep-spurious] [-v]
 
     options:
       -h, --help            show this help message and exit
@@ -70,6 +70,11 @@ it.
                             (optional) path for g4composer plain-text export;
                             requires exactly one unimolecular quadruplex and
                             exports the full involved chain
+      --g4composer-consistent
+                            number nucleotides within each tetrad by 5'-3' chain
+                            visitation order and export twist as the torsion angle
+                            between the first nucleotides of consecutive tetrads
+                            (affects only the g4composer export)
       -m, --model MODEL     (optional) model number to process
       --no-reorder          chains of bi- and tetramolecular quadruplexes should
                             be reordered to be able to have them classified; when
@@ -86,6 +91,9 @@ it.
       --tool {fr3d,dssr,rnaview,bpnet,maxit,barnaba,mc-annotate,dnatco}
                             name of the external tool that produced the files
                             (auto-detected when not provided)
+      --keep-spurious       report quadruplexes even if they are classified as
+                            spurious (e.g. bulges that are too long or unrealistic
+                            rise); by default such quadruplexes are discarded
       -v, --version         show program's version number and exit
 
 # Chains reorder
@@ -147,6 +155,18 @@ export time:
   that shared axis. `twist` is the best-fit signed rotation of the four
   tract-matched `C1'` atoms around the same axis. Missing `C1'` atoms
   yield an undefined twist.
+- With `--g4composer-consistent`, the export switches to the
+  *consistent* mode: nucleotides within each tetrad are numbered 1-4 by
+  the 5’-3’ order in which the chain visits them (the first tetrad
+  nucleotide visited by the chain is always number 1, e.g. classic
+  `A1;B4` becomes `A1;B1`), and `twist` is computed as the torsion angle
+  `C1'(1) - center(tetrad 1) - center(tetrad 2) - C1'(1)` between
+  consecutive build-order tetrads, where `1` denotes the nucleotide
+  numbered 1 in the consistent path. Note that consistent-mode numbers
+  are per-tetrad visitation ranks, so they no longer identify a physical
+  tract across tetrads. `rise`, `orient`, and every other exported field
+  are mode-independent; the rest of ElTetrado (report, JSON DTO) always
+  uses the classic numbering.
 
 Example g4composer export:
 

@@ -115,6 +115,33 @@ def test_g4composer_export_for_6fc9(tmp_path, capfd):
     )
 
 
+def test_g4composer_export_consistent_mode_for_5dea(tmp_path, capfd):
+    output_path = tmp_path / "5dea.g4c"
+
+    eltetrado_cli(
+        [
+            "--input",
+            "tests/files/5dea-assembly1.cif.gz",
+            "--g4composer-output",
+            str(output_path),
+            "--g4composer-consistent",
+        ]
+    )
+
+    out, err = capfd.readouterr()
+    assert (
+        output_path.read_text() == "name        5dea-assembly1\n"
+        "sequence    GCUGCGGUGUGGAAGGAGUGGCUGGGUUGCGCAGC\n"
+        "structure   (((((^((^.^^..^^.^.^^..^^^..)))))))\n"
+        "chi         ............SS.....................\n"
+        "sugar       NNNNNSNNSSNSSSNSSSSNSSNNNSSSNNNNNNN\n"
+        "orient      A-;B+;C+\n"
+        "rise        -6.9;3.5\n"
+        "twist       77.1;26.9\n"
+        "path        A1;A2;B1;C1;B2;C2;A3;B3;C3;B4;C4;A4\n"
+    )
+
+
 def test_g4composer_export_creates_empty_file_for_2awe(tmp_path, capfd):
     output_path = tmp_path / "2awe.g4c"
 

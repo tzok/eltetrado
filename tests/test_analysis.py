@@ -11,6 +11,7 @@ from eltetrado.analysis import calculate_best_fit_rotation_around_axis, eltetrad
 from eltetrado.model import SnapbackOrientation, StrandPolarity
 from eltetrado.cli import handle_input_file, read_secondary_structure_from_dssr
 from eltetrado.g4composer import (
+    G4ComposerMode,
     canonical_dot_bracket,
     export_residues,
     generate_g4composer_entry,
@@ -153,6 +154,32 @@ def test_g4composer_export_in_5dea():
     assert entry.orient == "A-;B+;C+"
     assert entry.rise == "-6.9;3.5"
     assert entry.twist == "11.1;26.8"
+
+
+def test_g4composer_consistent_mode_in_5dea():
+    """Consistent mode renumbers path entries per tetrad by chain order.
+
+    In 5DEA the chain visits tetrad A in tract order 1, 4, 2, 3 and tetrad B
+    starts at tract 4, so classic ``B4`` becomes consistent ``B1``. Only the
+    path and twist change; orient and rise are mode-independent. The first
+    consistent twist interval (A1 -> B1) is a cross-tract torsion because the
+    two "1" nucleotides sit in different tracts; the second one (B1 -> C1)
+    stays within a single tract and therefore matches the classic twist.
+    """
+    cif = handle_input_file("tests/files/5dea-assembly1.cif.gz")
+    structure3d = rnapolis.parser.read_3d_structure(cif, 1, nucleic_acid_only=False)
+    base_interactions = rnapolis.annotator.extract_base_interactions(structure3d)
+    analysis = eltetrado(base_interactions, structure3d, False)
+
+    quadruplex = analysis.helices[0].quadruplexes[0]
+    entry = generate_g4composer_entry(
+        analysis, quadruplex, "5dea-assembly1", G4ComposerMode.CONSISTENT
+    )
+
+    assert entry.path == "A1;A2;B1;C1;B2;C2;A3;B3;C3;B4;C4;A4"
+    assert entry.orient == "A-;B+;C+"
+    assert entry.rise == "-6.9;3.5"
+    assert entry.twist == "77.1;26.9"
 
 
 def test_loop_signs_follow_columns_in_1i34():
@@ -356,6 +383,28 @@ def test_g4composer_non_linear_intervals_follow_build_order():
     assert entry.twist == "-31.8;63.5"
 
 
+def test_g4composer_consistent_mode_in_5zev():
+    """Consistent twist is axis-free, so a reversed build-order interval
+    keeps its intrinsic torsion sign instead of flipping like the classic
+    best-fit rotation around the shared quadruplex axis."""
+    cif = handle_input_file("tests/files/5zev-assembly1.cif.gz")
+    structure3d = rnapolis.parser.read_3d_structure(cif, 1, nucleic_acid_only=False)
+    base_interactions = parse_external_output(
+        ["tests/files/5zev-assembly1.json"], ExternalTool.DSSR, structure3d
+    )
+    analysis = eltetrado(base_interactions, structure3d, False)
+
+    quadruplex = analysis.helices[0].quadruplexes[0]
+    entry = generate_g4composer_entry(
+        analysis, quadruplex, "5zev-assembly1", G4ComposerMode.CONSISTENT
+    )
+
+    assert entry.path == "A1;B1;B2;A2;C1;B3;A3;C2;C3;B4;A4;C4"
+    assert entry.orient == "A-;B+;C-"
+    assert entry.rise == "-2.9;6.3"
+    assert entry.twist == "31;-116.2"
+
+
 def test_g4composer_structure_keeps_canonical_brackets_for_flanks():
     cif = handle_input_file("tests/files/6fc9-assembly-1.cif.gz")
     structure3d = rnapolis.parser.read_3d_structure(cif, nucleic_acid_only=False)
@@ -370,6 +419,24 @@ def test_g4composer_structure_keeps_canonical_brackets_for_flanks():
     entry = generate_g4composer_entry(analysis, quadruplex, "6fc9-assembly-1")
 
     assert entry.structure == "^^..^^((((((...))))))^^..^^"
+
+
+def test_g4composer_consistent_mode_in_6fc9():
+    """In 6FC9 the chain visits each tetrad's tracts in ascending order, so
+    the consistent path is identical to the classic one; the torsion twist of
+    this right-handed quadruplex stays positive and close to the classic one."""
+    cif = handle_input_file("tests/files/6fc9-assembly-1.cif.gz")
+    structure3d = rnapolis.parser.read_3d_structure(cif, nucleic_acid_only=False)
+    base_interactions = rnapolis.annotator.extract_base_interactions(structure3d)
+    analysis = eltetrado(base_interactions, structure3d, False)
+
+    quadruplex = analysis.helices[0].quadruplexes[0]
+    entry = generate_g4composer_entry(
+        analysis, quadruplex, "6fc9-assembly-1", G4ComposerMode.CONSISTENT
+    )
+
+    assert entry.path == "A1;B1;B2;A2;A3;B3;B4;A4"
+    assert entry.twist == "17.9"
 
 
 def test_6fc9_strand_polarities_are_consistent_within_tracts():
