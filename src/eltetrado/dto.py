@@ -2,11 +2,18 @@ import math
 import re
 from collections import Counter
 from dataclasses import dataclass
-from typing import List, Optional
 
 from rnapolis.common import GlycosidicBond
+from rnapolis.tertiary import Residue3D
 
-from eltetrado.analysis import ONZ, Analysis, LoopType, Quadruplex, TetradPair
+from eltetrado.analysis import (
+    ONZ,
+    Analysis,
+    LoopType,
+    Quadruplex,
+    Tetrad,
+    TetradPair,
+)
 from eltetrado.model import Ion
 
 
@@ -21,13 +28,13 @@ class NucleotideDTO:
     index: int
     chain: str
     number: int
-    icode: Optional[str]
+    icode: str | None
     molecule: str
     fullName: str
     shortName: str
     chi: float
-    glycosidicBond: Optional[str]
-    sugarPucker: Optional[str]
+    glycosidicBond: str | None
+    sugarPucker: str | None
 
 
 @dataclass
@@ -53,10 +60,10 @@ class TetradDTO:
     nt3: str
     nt4: str
     onz: str
-    gbaClassification: Optional[str]
+    gbaClassification: str | None
     planarityDeviation: float
-    ionsChannel: List[str]
-    ionsOutside: List[IonOutsideDTO]
+    ionsChannel: list[str]
+    ionsOutside: list[IonOutsideDTO]
 
 
 @dataclass
@@ -70,14 +77,14 @@ class TetradPairDTO:
 
 @dataclass
 class LoopDTO:
-    type: Optional[str]
-    nucleotides: List[str]
+    type: str | None
+    nucleotides: list[str]
 
 
 @dataclass
 class SnapbackDTO:
     orientation: str
-    nucleotides: List[str]
+    nucleotides: list[str]
 
 
 @dataclass
@@ -88,25 +95,25 @@ class LoopClassificationDTO:
 
 @dataclass
 class QuadruplexDTO:
-    tetrads: List[TetradDTO]
-    onzm: Optional[str]
-    handedness: Optional[str]
-    tetradPolarities: List[Optional[str]]
-    strandPolarities: List[List[Optional[str]]]
-    loopClassification: Optional[LoopClassificationDTO]
-    gbaClassification: List[str]
-    tracts: List[List[str]]
-    path: List[str]
-    bulges: List[str]
-    loops: List[LoopDTO]
-    snapbacks: List[SnapbackDTO]
-    tags: List[str]
+    tetrads: list[TetradDTO]
+    onzm: str | None
+    handedness: str | None
+    tetradPolarities: list[str | None]
+    strandPolarities: list[list[str | None]]
+    loopClassification: LoopClassificationDTO | None
+    gbaClassification: list[str]
+    tracts: list[list[str]]
+    path: list[str]
+    bulges: list[str]
+    loops: list[LoopDTO]
+    snapbacks: list[SnapbackDTO]
+    tags: list[str]
 
 
 @dataclass
 class HelixDTO:
-    quadruplexes: List[QuadruplexDTO]
-    tetradPairs: List[TetradPairDTO]
+    quadruplexes: list[QuadruplexDTO]
+    tetradPairs: list[TetradPairDTO]
 
 
 @dataclass
@@ -127,20 +134,20 @@ class QuadruplexDotBracketDTO:
 
 @dataclass
 class ResultDTO:
-    metals: List[MetalDTO]
-    nucleotides: List[NucleotideDTO]
-    basePairs: List[BasePairDTO]
-    helices: List[HelixDTO]
+    metals: list[MetalDTO]
+    nucleotides: list[NucleotideDTO]
+    basePairs: list[BasePairDTO]
+    helices: list[HelixDTO]
     dotBracket: TwoLineDotBracketDTO
     quadruplexDotBracket: QuadruplexDotBracketDTO
 
 
-def convert_metals(analysis: Analysis) -> List[MetalDTO]:
-    counter = Counter(map(lambda atom: atom.name.title(), analysis.ions))
+def convert_metals(analysis: Analysis) -> list[MetalDTO]:
+    counter = Counter(atom.name.title() for atom in analysis.ions)
     return [MetalDTO(Ion[k.title()].value, v) for k, v in counter.items()]
 
 
-def convert_nucleotides(analysis: Analysis) -> List[NucleotideDTO]:
+def convert_nucleotides(analysis: Analysis) -> list[NucleotideDTO]:
     return [
         NucleotideDTO(
             analysis.global_index[nt],
@@ -163,7 +170,7 @@ def convert_nucleotides(analysis: Analysis) -> List[NucleotideDTO]:
     ]
 
 
-def convert_base_pairs(analysis: Analysis) -> List[BasePairDTO]:
+def convert_base_pairs(analysis: Analysis) -> list[BasePairDTO]:
     return [
         BasePairDTO(
             bp.nt1.full_name,
@@ -177,18 +184,20 @@ def convert_base_pairs(analysis: Analysis) -> List[BasePairDTO]:
     ]
 
 
-def convert_tetrads(quadruplex: Quadruplex) -> List[TetradDTO]:
-    id_ = lambda tetrad: (
-        f"{tetrad.nt1.full_name}-{tetrad.nt2.full_name}-{tetrad.nt3.full_name}-{tetrad.nt4.full_name}"
-    )
-    ions_channel = lambda tetrad: [
-        Ion[atom.name.title()].value for atom in tetrad.ions_channel
-    ]
-    ions_outside = lambda tetrad: [
-        IonOutsideDTO(nt.full_name, Ion[atom.name.title()].value)
-        for nt, atoms in tetrad.ions_outside.items()
-        for atom in atoms
-    ]
+def convert_tetrads(quadruplex: Quadruplex) -> list[TetradDTO]:
+    def id_(tetrad: Tetrad) -> str:
+        return f"{tetrad.nt1.full_name}-{tetrad.nt2.full_name}-{tetrad.nt3.full_name}-{tetrad.nt4.full_name}"
+
+    def ions_channel(tetrad: Tetrad) -> list[str]:
+        return [Ion[atom.name.title()].value for atom in tetrad.ions_channel]
+
+    def ions_outside(tetrad: Tetrad) -> list[IonOutsideDTO]:
+        return [
+            IonOutsideDTO(nt.full_name, Ion[atom.name.title()].value)
+            for nt, atoms in tetrad.ions_outside.items()
+            for atom in atoms
+        ]
+
     return [
         TetradDTO(
             id_(tetrad),
@@ -206,10 +215,10 @@ def convert_tetrads(quadruplex: Quadruplex) -> List[TetradDTO]:
     ]
 
 
-def convert_tetrad_pairs(tetrad_pairs: List[TetradPair]) -> List[TetradPairDTO]:
-    id_ = lambda tetrad: (
-        f"{tetrad.nt1.full_name}-{tetrad.nt2.full_name}-{tetrad.nt3.full_name}-{tetrad.nt4.full_name}"
-    )
+def convert_tetrad_pairs(tetrad_pairs: list[TetradPair]) -> list[TetradPairDTO]:
+    def id_(tetrad: Tetrad) -> str:
+        return f"{tetrad.nt1.full_name}-{tetrad.nt2.full_name}-{tetrad.nt3.full_name}-{tetrad.nt4.full_name}"
+
     return [
         TetradPairDTO(
             id_(tp.tetrad1),
@@ -222,8 +231,10 @@ def convert_tetrad_pairs(tetrad_pairs: List[TetradPair]) -> List[TetradPairDTO]:
     ]
 
 
-def convert_quadruplexes(quadruplexes: List[Quadruplex]) -> List[QuadruplexDTO]:
-    nts_ = lambda nts: [nt.full_name for nt in nts]
+def convert_quadruplexes(quadruplexes: list[Quadruplex]) -> list[QuadruplexDTO]:
+    def nts_(nts: list[Residue3D]) -> list[str]:
+        return [nt.full_name for nt in nts]
+
     return [
         QuadruplexDTO(
             convert_tetrads(q),
@@ -252,10 +263,10 @@ def convert_quadruplexes(quadruplexes: List[Quadruplex]) -> List[QuadruplexDTO]:
             [nt.full_name for nt in q.bulges],
             [
                 LoopDTO(
-                    l.loop_type.value if l.loop_type is not None else None,
-                    nts_(l.nucleotides),
+                    loop.loop_type.value if loop.loop_type is not None else None,
+                    nts_(loop.nucleotides),
                 )
-                for l in q.loops
+                for loop in q.loops
             ],
             [
                 SnapbackDTO(s.orientation.value, nts_(s.nucleotides))
@@ -267,13 +278,13 @@ def convert_quadruplexes(quadruplexes: List[Quadruplex]) -> List[QuadruplexDTO]:
     ]
 
 
-def convert_helices(analysis: Analysis) -> List[HelixDTO]:
+def convert_helices(analysis: Analysis) -> list[HelixDTO]:
     helices = []
     for h in analysis.helices:
         # take only quadruplexes with at least two tetrads
         quadruplexes = [q for q in h.quadruplexes if len(q.tetrads) >= 2]
         # gather tetrads from selected quadruplexes
-        tetrads = set([t for q in quadruplexes for t in q.tetrads])
+        tetrads = {t for q in quadruplexes for t in q.tetrads}
         # gather pairs among all selected tetrads
         tetrad_pairs = [
             tp

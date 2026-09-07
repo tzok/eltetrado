@@ -25,14 +25,15 @@ Two export modes are available (``G4ComposerMode``):
   every other exported field are mode-independent.
 """
 
+import itertools
 import math
 import os
+from collections.abc import Sequence
 from dataclasses import dataclass
 from enum import Enum
-from typing import Dict, List, Optional, Sequence, Set, Tuple
 
 import numpy
-from rnapolis.common import Entry, GlycosidicBond, Molecule, BpSeq
+from rnapolis.common import BpSeq, Entry, GlycosidicBond, Molecule
 from rnapolis.tertiary import (
     Residue3D,
     calculate_torsion_angle_coords,
@@ -95,7 +96,7 @@ def input_name(path: str) -> str:
     return root
 
 
-def eligible_quadruplexes(analysis: Analysis) -> List[Quadruplex]:
+def eligible_quadruplexes(analysis: Analysis) -> list[Quadruplex]:
     """Return g4composer-eligible quadruplexes.
 
     g4composer currently supports a single unimolecular quadruplex only, so we
@@ -135,7 +136,7 @@ def generate_g4composer_entry(
     )
 
 
-def export_residues(analysis: Analysis, quadruplex: Quadruplex) -> List[Residue3D]:
+def export_residues(analysis: Analysis, quadruplex: Quadruplex) -> list[Residue3D]:
     """Export full nucleotide chains participating in the selected quadruplex.
 
     g4composer expects the quadruplex together with its 5' and 3' flanking
@@ -153,7 +154,7 @@ def export_residues(analysis: Analysis, quadruplex: Quadruplex) -> List[Residue3
     ]
 
 
-def export_chains(quadruplex: Quadruplex) -> List[str]:
+def export_chains(quadruplex: Quadruplex) -> list[str]:
     return sorted(
         {
             nt.chain
@@ -190,7 +191,7 @@ def export_structure(
     tetrad_residues = {nt for tetrad in quadruplex.tetrads for nt in tetrad.nucleotides}
 
     residue_to_index = {residue: i for i, residue in enumerate(residues)}
-    partner: Dict[int, int] = {}
+    partner: dict[int, int] = {}
     for base_pair in analysis.canonical():
         nt1 = base_pair.nt1_3d
         nt2 = base_pair.nt2_3d
@@ -255,7 +256,7 @@ def export_sugar(analysis: Analysis, residues: Sequence[Residue3D]) -> str:
 def export_orient(
     quadruplex: Quadruplex,
     build_order: Sequence[Tetrad],
-    tetrad_to_label: Dict[Tetrad, str],
+    tetrad_to_label: dict[Tetrad, str],
 ) -> str:
     """Map tetrad polarities onto g4composer orientation signs.
 
@@ -264,10 +265,9 @@ def export_orient(
     and ``-`` respectively, emitted in g4composer build order rather than stack
     order.
     """
-    polarity_by_tetrad = {
-        tetrad: polarity
-        for tetrad, polarity in zip(quadruplex.tetrads, quadruplex.tetrad_polarities)
-    }
+    polarity_by_tetrad = dict(
+        zip(quadruplex.tetrads, quadruplex.tetrad_polarities, strict=True)
+    )
     values = []
     for tetrad in build_order:
         polarity = polarity_by_tetrad.get(tetrad)
@@ -299,11 +299,11 @@ def export_path(
     return ";".join(remap_path_entry_to_clockwise(entry) for entry in quadruplex.path)
 
 
-def consistent_path(quadruplex: Quadruplex) -> List[str]:
+def consistent_path(quadruplex: Quadruplex) -> list[str]:
     """Return path entries numbered by chain-visitation order within each tetrad."""
     tetrad_labels = quadruplex.tetrad_labels_by_5p_order()
-    labels: Dict[Residue3D, str] = {}
-    for tetrad, tetrad_label in zip(quadruplex.tetrads, tetrad_labels):
+    labels: dict[Residue3D, str] = {}
+    for tetrad, tetrad_label in zip(quadruplex.tetrads, tetrad_labels, strict=True):
         ordered = sorted(tetrad.nucleotides, key=lambda nt: quadruplex.global_index[nt])
         for rank, nt in enumerate(ordered, start=1):
             labels[nt] = f"{tetrad_label}{rank}"
@@ -346,7 +346,7 @@ def export_twist(
     )
 
 
-def consistent_twist_intervals(quadruplex: Quadruplex) -> List[float]:
+def consistent_twist_intervals(quadruplex: Quadruplex) -> list[float]:
     """Compute the torsion twist for each consecutive pair in build order.
 
     Twist is the torsion angle C1'(1) - center(tetrad 1) - center(tetrad 2) -
@@ -359,7 +359,7 @@ def consistent_twist_intervals(quadruplex: Quadruplex) -> List[float]:
     nucleotides_by_tetrad = consistent_nucleotides_by_tetrad(quadruplex)
 
     intervals = []
-    for tetrad1, tetrad2 in zip(build_order, build_order[1:]):
+    for tetrad1, tetrad2 in itertools.pairwise(build_order):
         nt1 = nucleotides_by_tetrad[tetrad1][0]
         nt2 = nucleotides_by_tetrad[tetrad2][0]
         c1 = residue_c1prime_coordinates(nt1)
@@ -379,7 +379,7 @@ def consistent_twist_intervals(quadruplex: Quadruplex) -> List[float]:
 
 def consistent_nucleotides_by_tetrad(
     quadruplex: Quadruplex,
-) -> Dict[Tetrad, List[Residue3D]]:
+) -> dict[Tetrad, list[Residue3D]]:
     """Map each tetrad to its nucleotides in 5'->3' chain visitation order."""
     return {
         tetrad: sorted(tetrad.nucleotides, key=lambda nt: quadruplex.global_index[nt])
@@ -387,7 +387,7 @@ def consistent_nucleotides_by_tetrad(
     }
 
 
-def tetrads_in_build_order(quadruplex: Quadruplex) -> List[Tetrad]:
+def tetrads_in_build_order(quadruplex: Quadruplex) -> list[Tetrad]:
     """Infer g4composer build order from the exported path.
 
     Tetrad labels are assigned by 5'->3' tetrad order, not by stack order. The
@@ -397,7 +397,7 @@ def tetrads_in_build_order(quadruplex: Quadruplex) -> List[Tetrad]:
     label_to_tetrad = {
         label: tetrad
         for tetrad, label in zip(
-            quadruplex.tetrads, quadruplex.tetrad_labels_by_5p_order()
+            quadruplex.tetrads, quadruplex.tetrad_labels_by_5p_order(), strict=True
         )
     }
     build_labels = []
@@ -408,7 +408,7 @@ def tetrads_in_build_order(quadruplex: Quadruplex) -> List[Tetrad]:
     return [label_to_tetrad[label] for label in build_labels]
 
 
-def build_order_intervals(quadruplex: Quadruplex) -> List[Tuple[float, float]]:
+def build_order_intervals(quadruplex: Quadruplex) -> list[tuple[float, float]]:
     """Compute (rise, twist) for each consecutive pair in g4composer build order.
 
     A single, quadruplex-wide axis (see ``quadruplex_axis_and_centroids``) is
@@ -429,7 +429,7 @@ def build_order_intervals(quadruplex: Quadruplex) -> List[Tuple[float, float]]:
     }
 
     intervals = []
-    for tetrad1, tetrad2 in zip(build_order, build_order[1:]):
+    for tetrad1, tetrad2 in itertools.pairwise(build_order):
         rise = float(numpy.dot(centroids[tetrad2] - centroids[tetrad1], axis))
         twist = tract_matched_twist(
             quadruplex, tetrad1, tetrad2, tetrad_row_index, axis
@@ -441,7 +441,7 @@ def build_order_intervals(quadruplex: Quadruplex) -> List[Tuple[float, float]]:
 
 def quadruplex_axis_and_centroids(
     quadruplex: Quadruplex,
-) -> Tuple[Optional[numpy.ndarray], Dict[Tetrad, numpy.ndarray]]:
+) -> tuple[numpy.ndarray | None, dict[Tetrad, numpy.ndarray]]:
     """Return one consistently oriented axis for the whole quadruplex, plus
     each tetrad's nucleobase centroid.
 
@@ -457,8 +457,8 @@ def quadruplex_axis_and_centroids(
     tetrad in discovery order.
     """
     tetrads = quadruplex.tetrads
-    centroids: Dict[Tetrad, numpy.ndarray] = {}
-    normals: List[numpy.ndarray] = []
+    centroids: dict[Tetrad, numpy.ndarray] = {}
+    normals: list[numpy.ndarray] = []
 
     for tetrad in tetrads:
         coords = collect_nucleobase_atoms(tetrad.nucleotides)
@@ -473,9 +473,8 @@ def quadruplex_axis_and_centroids(
 
     consistent_normals = [normals[0]]
     for normal in normals[1:]:
-        if numpy.dot(normal, consistent_normals[-1]) < 0:
-            normal = -normal
-        consistent_normals.append(normal)
+        aligned = -normal if numpy.dot(normal, consistent_normals[-1]) < 0 else normal
+        consistent_normals.append(aligned)
 
     axis = numpy.sum(consistent_normals, axis=0)
     norm = numpy.linalg.norm(axis)
@@ -494,7 +493,7 @@ def tract_matched_twist(
     quadruplex: Quadruplex,
     tetrad1: Tetrad,
     tetrad2: Tetrad,
-    tetrad_row_index: Dict[Tetrad, int],
+    tetrad_row_index: dict[Tetrad, int],
     axis: numpy.ndarray,
 ) -> float:
     """Best-fit rotation between two build-order tetrads' C1' atoms.
@@ -526,7 +525,7 @@ def format_number(value: float) -> str:
         return "."
     rounded = round(value, 1)
     if math.isclose(rounded, round(rounded), abs_tol=1.0e-9):
-        return str(int(round(rounded)))
+        return str(round(rounded))
     return f"{rounded:.1f}".rstrip("0").rstrip(".")
 
 
@@ -546,8 +545,8 @@ def write_g4composer(
     """
     quadruplexes = eligible_quadruplexes(analysis)
 
-    seen: Set[str] = set()
-    blocks: List[str] = []
+    seen: set[str] = set()
+    blocks: list[str] = []
     for quad in quadruplexes:
         try:
             entry = generate_g4composer_entry(

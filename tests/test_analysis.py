@@ -8,7 +8,6 @@ from rnapolis.adapter import ExternalTool, parse_external_output
 
 import eltetrado.analysis as analysis_module
 from eltetrado.analysis import calculate_best_fit_rotation_around_axis, eltetrado
-from eltetrado.model import SnapbackOrientation, StrandPolarity
 from eltetrado.cli import handle_input_file, read_secondary_structure_from_dssr
 from eltetrado.g4composer import (
     G4ComposerMode,
@@ -16,6 +15,7 @@ from eltetrado.g4composer import (
     export_residues,
     generate_g4composer_entry,
 )
+from eltetrado.model import SnapbackOrientation, StrandPolarity
 
 
 def test_5zev_tracts():
@@ -485,8 +485,10 @@ def test_5de5_g20_has_minus_strand_polarity():
 
     # Find G20 specifically and assert it is MINUS
     g20_polarity = None
-    for tract, tract_polarities in zip(quadruplex.tracts, quadruplex.strand_polarities):
-        for nt, polarity in zip(tract.nucleotides, tract_polarities):
+    for tract, tract_polarities in zip(
+        quadruplex.tracts, quadruplex.strand_polarities, strict=True
+    ):
+        for nt, polarity in zip(tract.nucleotides, tract_polarities, strict=True):
             if nt.full_name == "A.G20":
                 g20_polarity = polarity
                 break
@@ -515,8 +517,10 @@ def test_5v3f_most_5prime_guanine_is_plus():
 
     # Build a mapping from full_name to polarity
     polarity_map = {}
-    for tract, tract_polarities in zip(quadruplex.tracts, quadruplex.strand_polarities):
-        for nt, polarity in zip(tract.nucleotides, tract_polarities):
+    for tract, tract_polarities in zip(
+        quadruplex.tracts, quadruplex.strand_polarities, strict=True
+    ):
+        for nt, polarity in zip(tract.nucleotides, tract_polarities, strict=True):
             polarity_map[nt.full_name] = polarity
 
     # Most 5' guanine should be PLUS (normal/upright)

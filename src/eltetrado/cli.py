@@ -4,12 +4,12 @@ import logging
 import os
 import sys
 import tempfile
-from typing import IO, List, Optional
+from typing import IO
 
 import orjson
 import rnapolis.annotator
 import rnapolis.parser
-from rnapolis.adapter import ExternalTool, parse_external_output, auto_detect_tool
+from rnapolis.adapter import ExternalTool, auto_detect_tool, parse_external_output
 from rnapolis.annotator import BaseInteractions, LeontisWesthof
 from rnapolis.common import BasePair, Residue, Stacking
 from rnapolis.tertiary import Structure3D
@@ -18,6 +18,8 @@ from eltetrado import __version__
 from eltetrado.analysis import Visualizer, eltetrado, has_tetrad
 from eltetrado.dto import generate_dto
 from eltetrado.g4composer import G4ComposerMode, write_g4composer
+
+logger = logging.getLogger(__name__)
 
 
 def eltetrado_cli(args=sys.argv[1:]):
@@ -78,7 +80,7 @@ def eltetrado_cli(args=sys.argv[1:]):
         "such quadruplexes are discarded",
     )
     parser.add_argument(
-        "-v", "--version", action="version", version="%(prog)s {}".format(__version__)
+        "-v", "--version", action="version", version=f"%(prog)s {__version__}"
     )
     args = parser.parse_args(args)
 
@@ -91,14 +93,12 @@ def eltetrado_cli(args=sys.argv[1:]):
         cif_or_pdb, args.model, nucleic_acid_only=False
     )
 
-    external_files: List[str] = args.external_files
-    selected_tool: Optional[ExternalTool] = (
-        ExternalTool(args.tool) if args.tool else None
-    )
+    external_files: list[str] = args.external_files
+    selected_tool: ExternalTool | None = ExternalTool(args.tool) if args.tool else None
 
     if selected_tool is None and external_files:
         selected_tool = auto_detect_tool(external_files)
-        logging.info(f"Auto-detected external tool: {selected_tool.value}")
+        logger.info("Auto-detected external tool: %s", selected_tool.value)
 
     if selected_tool:
         if not external_files and selected_tool == ExternalTool.MAXIT:
@@ -136,7 +136,7 @@ def eltetrado_cli(args=sys.argv[1:]):
             hv = Visualizer(
                 analysis, helix.tetrads, args.complete_2d, analysis.global_index
             )
-            suffix = "h{}".format(i + 1)
+            suffix = f"h{i + 1}"
             hv.visualize(prefix, suffix, args.image)
 
             for j, quadruplex in enumerate(helix.quadruplexes):
@@ -146,15 +146,13 @@ def eltetrado_cli(args=sys.argv[1:]):
                     args.complete_2d,
                     analysis.global_index,
                 )
-                qv.visualize(prefix, "{}-q{}".format(suffix, j + 1), args.image)
+                qv.visualize(prefix, f"{suffix}-q{j + 1}", args.image)
 
                 for k, tetrad in enumerate(quadruplex.tetrads):
                     tv = Visualizer(
                         analysis, [tetrad], args.complete_2d, analysis.global_index
                     )
-                    tv.visualize(
-                        prefix, "{}-q{}-t{}".format(suffix, j + 1, k + 1), args.image
-                    )
+                    tv.visualize(prefix, f"{suffix}-q{j + 1}-t{k + 1}", args.image)
 
     if args.output:
         dto = generate_dto(analysis)
@@ -190,7 +188,7 @@ def has_tetrad_cli(args=sys.argv[1:]):
         help="name of the external tool that produced the files (auto-detected when not provided)",
     )
     parser.add_argument(
-        "--version", action="version", version="%(prog)s {}".format(__version__)
+        "--version", action="version", version=f"%(prog)s {__version__}"
     )
     args = parser.parse_args(args)
 
@@ -203,14 +201,12 @@ def has_tetrad_cli(args=sys.argv[1:]):
         cif_or_pdb, args.model, nucleic_acid_only=False
     )
 
-    external_files: List[str] = args.external_files
-    selected_tool: Optional[ExternalTool] = (
-        ExternalTool(args.tool) if args.tool else None
-    )
+    external_files: list[str] = args.external_files
+    selected_tool: ExternalTool | None = ExternalTool(args.tool) if args.tool else None
 
     if selected_tool is None and external_files:
         selected_tool = auto_detect_tool(external_files)
-        logging.info(f"Auto-detected external tool: {selected_tool.value}")
+        logger.info("Auto-detected external tool: %s", selected_tool.value)
 
     if selected_tool:
         if not external_files and selected_tool == ExternalTool.MAXIT:
@@ -227,16 +223,18 @@ def has_tetrad_cli(args=sys.argv[1:]):
 
 
 def handle_input_file(path) -> IO[str]:
+    """Return an open temporary copy of the input; the caller consumes it and
+    the OS removes the file at process exit, so no context manager is used."""
     root, ext = os.path.splitext(path)
 
     if ext == ".gz":
         root, ext = os.path.splitext(root)
-        file = tempfile.NamedTemporaryFile("w+", suffix=ext)
+        file = tempfile.NamedTemporaryFile("w+", suffix=ext)  # noqa: SIM115
         with gzip.open(path, "rt") as f:
             file.write(f.read())
             file.seek(0)
     else:
-        file = tempfile.NamedTemporaryFile("w+", suffix=ext)
+        file = tempfile.NamedTemporaryFile("w+", suffix=ext)  # noqa: SIM115
         with open(path) as f:
             file.write(f.read())
             file.seek(0)
@@ -246,8 +244,8 @@ def handle_input_file(path) -> IO[str]:
 def read_secondary_structure_from_dssr(
     structure3d: Structure3D, model: int, dssr_json_path: str
 ) -> BaseInteractions:
-    base_pairs: List[BasePair] = []
-    stackings: List[Stacking] = []
+    base_pairs: list[BasePair] = []
+    stackings: list[Stacking] = []
 
     with open(dssr_json_path) as f:
         dssr = orjson.loads(f.read())
@@ -280,18 +278,18 @@ def read_secondary_structure_from_dssr(
 
 
 def match_dssr_name_to_residue(
-    structure3d: Structure3D, nt_id: Optional[str]
-) -> Optional[Residue]:
+    structure3d: Structure3D, nt_id: str | None
+) -> Residue | None:
     if nt_id is not None:
         nt_id = nt_id.split(":")[-1]
         for residue in structure3d.residues:
             if residue.full_name == nt_id:
                 return residue
-        logging.warn(f"Failed to find residue {nt_id}")
+        logger.warning("Failed to find residue %s", nt_id)
     return None
 
 
-def match_dssr_lw(lw: Optional[str]) -> Optional[LeontisWesthof]:
+def match_dssr_lw(lw: str | None) -> LeontisWesthof | None:
     return LeontisWesthof[lw] if lw in dir(LeontisWesthof) else None
 
 

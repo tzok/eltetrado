@@ -226,7 +226,10 @@ def compare_quad(rq, cq, r_tetrad_pairs=None, c_tetrad_pairs=None, weights=None)
     if rtp is not None or ctp is not None:
         rtp = rtp or []
         ctp = ctp or []
-        key = lambda p: (p.get("tetrad1"), p.get("tetrad2"))
+
+        def key(p: dict) -> tuple:
+            return (p.get("tetrad1"), p.get("tetrad2"))
+
         c_by_pair = {key(p): p for p in ctp}
         direction_ok = True
         rise_d, twist_d = [], []
@@ -392,7 +395,7 @@ def main():
             with open(path) as f:
                 cand = json.load(f)
             res = score_candidate(ref, cand, weights=weights)
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001 - batch scorer records per-file errors
             res = {
                 "file": path,
                 "valid": False,
@@ -420,15 +423,16 @@ def main():
 
     rows = [flatten(r) for r in results]
 
-    out = open(args.csv, "w", newline="") if args.csv else sys.stdout
-    try:
-        w = csv.DictWriter(out, fieldnames=fields, extrasaction="ignore")
+    if args.csv:
+        with open(args.csv, "w", newline="") as out:
+            w = csv.DictWriter(out, fieldnames=fields, extrasaction="ignore")
+            w.writeheader()
+            w.writerows(rows)
+        print(f"Wrote {len(rows)} rows to {args.csv}")
+    else:
+        w = csv.DictWriter(sys.stdout, fieldnames=fields, extrasaction="ignore")
         w.writeheader()
         w.writerows(rows)
-    finally:
-        if args.csv:
-            out.close()
-            print(f"Wrote {len(rows)} rows to {args.csv}")
 
 
 if __name__ == "__main__":

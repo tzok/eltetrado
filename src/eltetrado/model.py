@@ -137,7 +137,8 @@ class GbaTetradClassification(Enum):
 
 
 class GbaQuadruplexClassification(Enum):
-    I = "I"
+    # member names mirror the published I-VIII classification, hence the short name
+    I = "I"  # noqa: E741
     II = "II"
     III = "III"
     IV = "IV"

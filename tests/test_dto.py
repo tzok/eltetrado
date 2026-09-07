@@ -96,8 +96,8 @@ def test_2awe():
         nt
         for h in dto.helices
         for q in h.quadruplexes
-        for l in q.loops
-        for nt in l.nucleotides
+        for loop in q.loops
+        for nt in loop.nucleotides
     ]
 
 
@@ -247,7 +247,9 @@ def test_5de5_strand_polarities_serialized():
     assert len(quadruplex.strandPolarities) == 4
 
     # Find the tract containing G20 and assert it has mixed polarities
-    for tract, tract_polarities in zip(quadruplex.tracts, quadruplex.strandPolarities):
+    for tract, tract_polarities in zip(
+        quadruplex.tracts, quadruplex.strandPolarities, strict=True
+    ):
         if "A.G20" in tract:
             values = [p for p in tract_polarities if p is not None]
             assert "plus" in values and "minus" in values

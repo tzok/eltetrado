@@ -12,7 +12,7 @@ def test_has_tetrad_with_dssr(capfd):
             "dssr",
         ]
     )
-    out, err = capfd.readouterr()
+    out, _err = capfd.readouterr()
     assert out == "True\n"
 
 
@@ -27,7 +27,7 @@ def test_has_tetrad_with_fr3d(capfd):
             "fr3d",
         ]
     )
-    out, err = capfd.readouterr()
+    out, _err = capfd.readouterr()
     assert out == "True\n"
 
 
@@ -38,7 +38,7 @@ def test_has_tetrad(capfd):
             "tests/files/1v3p-assembly-1.cif.gz",
         ]
     )
-    out, err = capfd.readouterr()
+    out, _err = capfd.readouterr()
     assert out == "True\n"
 
 
@@ -53,7 +53,7 @@ def test_eltetrado_with_dssr(capfd):
             "dssr",
         ]
     )
-    out, err = capfd.readouterr()
+    out, _err = capfd.readouterr()
     with open("tests/files/2awe-assembly-1.out") as f:
         assert out == f.read()
 
@@ -69,7 +69,7 @@ def test_eltetrado_with_fr3d(capfd):
             "fr3d",
         ]
     )
-    out, err = capfd.readouterr()
+    out, _err = capfd.readouterr()
     with open("tests/files/2awe-assembly-1-fr3d.out") as f:
         assert out == f.read()
 
@@ -81,7 +81,7 @@ def test_eltetrado_without_dssr(capfd):
             "tests/files/6fc9-assembly-1.cif.gz",
         ]
     )
-    out, err = capfd.readouterr()
+    out, _err = capfd.readouterr()
     with open("tests/files/6fc9-assembly-1.out") as f:
         assert out == f.read()
 
@@ -98,7 +98,7 @@ def test_g4composer_export_for_6fc9(tmp_path, capfd):
         ]
     )
 
-    out, err = capfd.readouterr()
+    out, _err = capfd.readouterr()
     with open("tests/files/6fc9-assembly-1.out") as f:
         assert out == f.read()
 
@@ -128,7 +128,7 @@ def test_g4composer_export_consistent_mode_for_5dea(tmp_path, capfd):
         ]
     )
 
-    out, err = capfd.readouterr()
+    _out, _err = capfd.readouterr()
     assert (
         output_path.read_text() == "name        5dea-assembly1\n"
         "sequence    GCUGCGGUGUGGAAGGAGUGGCUGGGUUGCGCAGC\n"
@@ -158,6 +158,6 @@ def test_g4composer_export_creates_empty_file_for_2awe(tmp_path, capfd):
         ]
     )
 
-    out, err = capfd.readouterr()
+    _out, _err = capfd.readouterr()
     assert output_path.exists()
     assert output_path.read_text() == ""
