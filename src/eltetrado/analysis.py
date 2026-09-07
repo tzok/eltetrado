@@ -996,6 +996,30 @@ def quadruplex_spurious_reasons(quadruplex: "Quadruplex") -> list[str]:
     return reasons
 
 
+def quadruplex_boundary_break_counts(quadruplex: "Quadruplex") -> list[int]:
+    """For each boundary between stack-adjacent tetrads, count the columns
+    whose two tract nucleotides are not chain-consecutive (a bulge, a snapback
+    or another chain discontinuity in between).
+    """
+    counts = []
+    for boundary in range(1, len(quadruplex.tetrads)):
+        broken = 0
+        for tract in quadruplex.tracts:
+            nt_prev = tract.nucleotides[boundary - 1]
+            nt_cur = tract.nucleotides[boundary]
+            chain_discontinuous = (
+                nt_prev.chain != nt_cur.chain
+                or abs(
+                    quadruplex.global_index[nt_cur] - quadruplex.global_index[nt_prev]
+                )
+                != 1
+            )
+            if chain_discontinuous:
+                broken += 1
+        counts.append(broken)
+    return counts
+
+
 @dataclass
 class Quadruplex:
     tetrads: list[Tetrad]
@@ -1722,8 +1746,12 @@ class Quadruplex:
             tags.append("has_inverted_strand_polarity")
         if any(not loop.nucleotides for loop in self.loops):
             tags.append("v_loop")
-        if self.__is_two_block():
-            tags.append("two_block")
+        chains = self.__tetrad_chains()
+        if len(chains) == 1:
+            if self.__is_two_block():
+                tags.append("two_block")
+        elif len(chains) == 2 and self.__is_interlocked_dimer():
+            tags.append("interlocked_dimer")
         if self.loop_class is not None:
             topology_name = TOPOLOGY_NAMES.get(self.loop_class.value)
             if topology_name is not None:
@@ -1731,6 +1759,17 @@ class Quadruplex:
         if self.__has_quadruplex_duplex():
             tags.append("quadruplex_duplex")
         return tags
+
+    def __tetrad_chains(self) -> set[str]:
+        return {nt.chain for tetrad in self.tetrads for nt in tetrad.nucleotides}
+
+    def __is_interlocked_dimer(self) -> bool:
+        """True for a bimolecular quadruplex whose two chains share at least
+        one column (tract) instead of each chain owning whole columns, e.g.
+        the interlocked (intercalated) dimers such as 1jjp."""
+        return any(
+            len({nt.chain for nt in tract.nucleotides}) > 1 for tract in self.tracts
+        )
 
     def __has_inverted_strand_polarity(self) -> bool:
         for tract_polarities in self.strand_polarities:
@@ -1743,12 +1782,27 @@ class Quadruplex:
         return False
 
     def __is_two_block(self) -> bool:
-        """True for a unimolecular quadruplex built from two separate blocks:
-        some column is visited by two or more chain segments that each stack
-        at least two guanines (the two stems share columns)."""
+        """True for a unimolecular quadruplex built from two separate blocks.
+
+        Two variants are recognized:
+
+        - *vertical* split: some column is visited by two or more chain
+          segments that each stack at least two guanines (the two stems share
+          columns, e.g. 2ms9, 6k84);
+        - *horizontal* split: some boundary between stack-adjacent tetrads is
+          chain-discontinuous in at least three of four columns, so the chain
+          builds the quadruplex as two blocks with at least two tetrads on one
+          side, e.g. the 2+1 Mango aptamer 5v3f (bulge or snapback breaks) or
+          5dea (snapback re-entries).
+        """
         if len(self.tetrads) < 2:
             return False
 
+        return self.__has_shared_column_blocks() or self.__has_broken_boundary()
+
+    def __has_shared_column_blocks(self) -> bool:
+        """Vertical split: two chain segments of at least two tetrad
+        nucleotides visit the same column."""
         tetrad_nucleotides = sorted(
             [nt for tetrad in self.tetrads for nt in tetrad.nucleotides],
             key=lambda nt: self.global_index[nt],
@@ -1789,6 +1843,23 @@ class Quadruplex:
         for tract_segments in segments:
             multi_g_segments = [length for length in tract_segments if length >= 2]
             if len(multi_g_segments) >= 2:
+                return True
+        return False
+
+    def __boundary_break_counts(self) -> list[int]:
+        """For each boundary between stack-adjacent tetrads, count the columns
+        whose two tract nucleotides are not chain-consecutive (a bulge, a
+        snapback or another chain discontinuity in between)."""
+        return quadruplex_boundary_break_counts(self)
+
+    def __has_broken_boundary(self) -> bool:
+        """Horizontal split: at least three of four columns are
+        chain-discontinuous at the same boundary between stack-adjacent
+        tetrads, and the larger side of the split has at least two tetrads
+        (which excludes 1+1 splits of two-tetrad quadruplexes)."""
+        tetrad_count = len(self.tetrads)
+        for boundary, broken in enumerate(self.__boundary_break_counts(), start=1):
+            if broken >= 3 and max(boundary, tetrad_count - boundary) >= 2:
                 return True
         return False
 

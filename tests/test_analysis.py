@@ -254,6 +254,68 @@ def test_2ms9_is_left_handed():
     ]
 
 
+def test_tags_two_block_and_interlocked_dimer():
+    """two_block requires a unimolecular quadruplex and is recognized for both
+    the vertical split (2ms9: two 2-tetrad stems sharing columns) and the
+    horizontal split (5v3f Mango: 2 tetrads + 1 tetrad with chain breaks in
+    three of four columns; 5dea: the same reached through snapbacks). The
+    2ms9-style rule must not fire for bimolecular quadruplexes such as 1jjp,
+    where two interlocked (column-sharing) chains are tagged
+    interlocked_dimer instead."""
+
+    def tags(path: str) -> list[list[str]]:
+        cif = handle_input_file(path)
+        structure3d = rnapolis.parser.read_3d_structure(cif, 1, nucleic_acid_only=False)
+        base_interactions = rnapolis.annotator.extract_base_interactions(structure3d)
+        analysis = eltetrado(base_interactions, structure3d, False)
+        return [
+            quadruplex.tags
+            for helix in analysis.helices
+            for quadruplex in helix.quadruplexes
+        ]
+
+    assert all("two_block" in tags for tags in tags("tests/files/2ms9.cif"))
+    assert all(
+        "two_block" in tags for tags in tags("tests/files/5v3f-assembly1.cif.gz")
+    )
+    assert all(
+        "two_block" in tags for tags in tags("tests/files/5dea-assembly1.cif.gz")
+    )
+    assert all(
+        "two_block" in tags for tags in tags("tests/files/5de5-assembly1.cif.gz")
+    )
+
+    interlocked = tags("tests/files/1jjp.cif.gz")
+    assert all("interlocked_dimer" in tags for tags in interlocked)
+    assert all("two_block" not in tags for tags in interlocked)
+
+    # tetramolecular quadruplexes are neither two-block nor interlocked dimers
+    for quad_tags in tags("tests/files/2awe-assembly-1.cif.gz"):
+        assert "two_block" not in quad_tags
+        assert "interlocked_dimer" not in quad_tags
+
+
+def test_boundary_break_counts():
+    """The horizontal two-block rule counts chain-discontinuous columns at
+    each boundary between stack-adjacent tetrads."""
+    from eltetrado.analysis import quadruplex_boundary_break_counts
+
+    def counts(path: str) -> list[int]:
+        cif = handle_input_file(path)
+        structure3d = rnapolis.parser.read_3d_structure(cif, 1, nucleic_acid_only=False)
+        base_interactions = rnapolis.annotator.extract_base_interactions(structure3d)
+        analysis = eltetrado(base_interactions, structure3d, False)
+        quadruplex = analysis.helices[0].quadruplexes[0]
+        return quadruplex_boundary_break_counts(quadruplex)
+
+    # 5v3f (Mango): 2 tetrads + 1 tetrad with a break in 3 of 4 columns
+    assert counts("tests/files/5v3f-assembly1.cif.gz") == [3, 0]
+    # 5dea: the third tetrad is reached through snapbacks in 4 of 4 columns
+    assert counts("tests/files/5dea-assembly1.cif.gz") == [0, 4]
+    # a plain quadruplex has no broken boundaries
+    assert counts("tests/files/1i34-assembly1.cif.gz") == [0]
+
+
 def test_best_fit_rotation_around_axis_reports_signed_rotation():
     axis = numpy.array([0.0, 0.0, 1.0])
     points1 = numpy.array(
