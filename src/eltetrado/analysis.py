@@ -1750,8 +1750,8 @@ class Quadruplex:
         if len(chains) == 1:
             if self.__is_two_block():
                 tags.append("two_block")
-        elif len(chains) == 2 and self.__is_interlocked_dimer():
-            tags.append("interlocked_dimer")
+        elif len(chains) > 1 and self.__is_interlocked():
+            tags.append("interlocked")
         if self.loop_class is not None:
             topology_name = TOPOLOGY_NAMES.get(self.loop_class.value)
             if topology_name is not None:
@@ -1763,10 +1763,11 @@ class Quadruplex:
     def __tetrad_chains(self) -> set[str]:
         return {nt.chain for tetrad in self.tetrads for nt in tetrad.nucleotides}
 
-    def __is_interlocked_dimer(self) -> bool:
-        """True for a bimolecular quadruplex whose two chains share at least
-        one column (tract) instead of each chain owning whole columns, e.g.
-        the interlocked (intercalated) dimers such as 1jjp."""
+    def __is_interlocked(self) -> bool:
+        """True for a multi-chain quadruplex whose chains share at least one
+        column (tract) instead of each chain owning whole columns, e.g. the
+        interlocked (intercalated) dimers such as 1jjp or the locked
+        tetramolecular quadruplex pairs such as 1nyd and 1xce."""
         return any(
             len({nt.chain for nt in tract.nucleotides}) > 1 for tract in self.tracts
         )

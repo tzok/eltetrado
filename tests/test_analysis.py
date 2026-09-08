@@ -254,14 +254,14 @@ def test_2ms9_is_left_handed():
     ]
 
 
-def test_tags_two_block_and_interlocked_dimer():
+def test_tags_two_block_and_interlocked():
     """two_block requires a unimolecular quadruplex and is recognized for both
     the vertical split (2ms9: two 2-tetrad stems sharing columns) and the
     horizontal split (5v3f Mango: 2 tetrads + 1 tetrad with chain breaks in
     three of four columns; 5dea: the same reached through snapbacks). The
-    2ms9-style rule must not fire for bimolecular quadruplexes such as 1jjp,
-    where two interlocked (column-sharing) chains are tagged
-    interlocked_dimer instead."""
+    2ms9-style rule must not fire for multi-chain quadruplexes whose chains
+    share columns: interlocked dimers such as 1jjp and locked tetramolecular
+    quadruplex pairs such as 1nyd and 1xce are tagged interlocked instead."""
 
     def tags(path: str) -> list[list[str]]:
         cif = handle_input_file(path)
@@ -285,14 +285,19 @@ def test_tags_two_block_and_interlocked_dimer():
         "two_block" in tags for tags in tags("tests/files/5de5-assembly1.cif.gz")
     )
 
-    interlocked = tags("tests/files/1jjp.cif.gz")
-    assert all("interlocked_dimer" in tags for tags in interlocked)
-    assert all("two_block" not in tags for tags in interlocked)
+    for path in ["1jjp", "1nyd", "1xce"]:
+        interlocked = tags(f"tests/files/{path}.cif.gz")
+        assert all("interlocked" in quad_tags for quad_tags in interlocked), path
+        assert all("two_block" not in quad_tags for quad_tags in interlocked), path
 
-    # tetramolecular quadruplexes are neither two-block nor interlocked dimers
-    for quad_tags in tags("tests/files/2awe-assembly-1.cif.gz"):
-        assert "two_block" not in quad_tags
-        assert "interlocked_dimer" not in quad_tags
+    # chain-pure multi-chain quadruplexes are neither two-block nor interlocked
+    for path in [
+        "tests/files/2awe-assembly-1.cif.gz",
+        "tests/files/6a85-assembly1.cif.gz",
+    ]:
+        for quad_tags in tags(path):
+            assert "two_block" not in quad_tags
+            assert "interlocked" not in quad_tags
 
 
 def test_boundary_break_counts():
