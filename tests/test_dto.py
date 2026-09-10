@@ -192,7 +192,9 @@ def test_2ms9_handedness_and_polarity_are_serialized():
     ]
     assert quadruplex.tags == [
         "has_bulge",
+        "has_snapback",
         "has_inverted_strand_polarity",
+        "v_loop",
         "two_block",
     ]
 

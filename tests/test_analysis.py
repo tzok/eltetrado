@@ -255,13 +255,13 @@ def test_2ms9_is_left_handed():
 
 
 def test_tags_two_block_and_interlocked():
-    """two_block requires a unimolecular quadruplex and is recognized for both
-    the vertical split (2ms9: two 2-tetrad stems sharing columns) and the
-    horizontal split (5v3f Mango: 2 tetrads + 1 tetrad with chain breaks in
-    three of four columns; 5dea: the same reached through snapbacks). The
-    2ms9-style rule must not fire for multi-chain quadruplexes whose chains
-    share columns: interlocked dimers such as 1jjp and locked tetramolecular
-    quadruplex pairs such as 1nyd and 1xce are tagged interlocked instead."""
+    """two_block applies to any molecularity: a column visited by two or more
+    chain segments that each stack at least two guanines, with a clean row
+    partition (2ms9 unimolecular; the bimolecular 6jje/6jjf family and 6sx6
+    own whole columns or split cleanly by rows). 1+2 / 2+1 tetrad caps
+    (5dea, 5de5, 5v3f Mango) are NOT two-blocks. Staggered multi-chain
+    arrangements (1jjp, locked tetramolecular 1nyd/1xce) have no row
+    partition and are tagged interlocked instead."""
 
     def tags(path: str) -> list[list[str]]:
         cif = handle_input_file(path)
@@ -274,16 +274,20 @@ def test_tags_two_block_and_interlocked():
             for quadruplex in helix.quadruplexes
         ]
 
-    assert all("two_block" in tags for tags in tags("tests/files/2ms9.cif"))
-    assert all(
-        "two_block" in tags for tags in tags("tests/files/5v3f-assembly1.cif.gz")
-    )
-    assert all(
-        "two_block" in tags for tags in tags("tests/files/5dea-assembly1.cif.gz")
-    )
-    assert all(
-        "two_block" in tags for tags in tags("tests/files/5de5-assembly1.cif.gz")
-    )
+    assert all("two_block" in quad_tags for quad_tags in tags("tests/files/2ms9.cif"))
+
+    for path in ["6jjf-assembly1.cif.gz", "6sx6-assembly1.cif.gz"]:
+        multi_chain = tags(f"tests/files/{path}")
+        assert all("two_block" in quad_tags for quad_tags in multi_chain), path
+        assert all("interlocked" not in quad_tags for quad_tags in multi_chain), path
+
+    # 1T+2T / 2T+1T aptamers are not two-blocks
+    for path in [
+        "tests/files/5dea-assembly1.cif.gz",
+        "tests/files/5de5-assembly1.cif.gz",
+        "tests/files/5v3f-assembly1.cif.gz",
+    ]:
+        assert all("two_block" not in quad_tags for quad_tags in tags(path)), path
 
     for path in ["1jjp", "1nyd", "1xce"]:
         interlocked = tags(f"tests/files/{path}.cif.gz")
@@ -300,25 +304,73 @@ def test_tags_two_block_and_interlocked():
             assert "interlocked" not in quad_tags
 
 
-def test_boundary_break_counts():
-    """The horizontal two-block rule counts chain-discontinuous columns at
-    each boundary between stack-adjacent tetrads."""
-    from eltetrado.analysis import quadruplex_boundary_break_counts
+def test_v_loop_and_non_g4_tag_rules():
+    """V-loops require an isolated tetrad nucleotide at a propeller-type
+    connector; same-tetrad V-BRAKs, missing-residue breaks and non-G4
+    quadruple interactions are excluded."""
+    cif = handle_input_file("tests/files/4p1d-assembly1.cif.gz")
+    structure3d = rnapolis.parser.read_3d_structure(cif, 1, nucleic_acid_only=False)
+    interactions = parse_external_output(
+        ["tests/files/4p1d-assembly1.json"], ExternalTool.DSSR, structure3d
+    )
+    analysis = eltetrado(interactions, structure3d, False)
+    assert all("v_loop" not in q.tags for h in analysis.helices for q in h.quadruplexes)
 
-    def counts(path: str) -> list[int]:
-        cif = handle_input_file(path)
+    cif = handle_input_file("tests/files/2kpr-assembly1.cif.gz")
+    structure3d = rnapolis.parser.read_3d_structure(cif, 1, nucleic_acid_only=False)
+    analysis = eltetrado(
+        rnapolis.annotator.extract_base_interactions(structure3d),
+        structure3d,
+        False,
+    )
+    quadruplex = analysis.helices[0].quadruplexes[0]
+    assert "v_loop" in quadruplex.tags
+    assert any(
+        s.orientation == SnapbackOrientation.FIVE_PRIME for s in quadruplex.snapbacks
+    )
+
+    cif = handle_input_file("tests/files/7sxp-assembly1.cif.gz")
+    structure3d = rnapolis.parser.read_3d_structure(cif, 1, nucleic_acid_only=False)
+    analysis = eltetrado(
+        rnapolis.annotator.extract_base_interactions(structure3d),
+        structure3d,
+        False,
+    )
+    assert all("v_loop" not in q.tags for h in analysis.helices for q in h.quadruplexes)
+
+    cif = handle_input_file("tests/files/8gxc-assembly1.cif.gz")
+    structure3d = rnapolis.parser.read_3d_structure(cif, 1, nucleic_acid_only=False)
+    interactions = parse_external_output(
+        ["tests/files/8gxc-assembly1.json"], ExternalTool.DSSR, structure3d
+    )
+    analysis = eltetrado(interactions, structure3d, False)
+    assert all(q.tags == ["non_g4"] for h in analysis.helices for q in h.quadruplexes)
+
+
+def test_reentry_snapbacks_in_asc_g4_examples():
+    expected = {
+        "2mgn": SnapbackOrientation.THREE_PRIME,
+        "6jcd": SnapbackOrientation.THREE_PRIME,
+        "6xt7": SnapbackOrientation.FIVE_PRIME,
+    }
+    for pdb, orientation in expected.items():
+        cif = handle_input_file(f"tests/files/{pdb}-assembly1.cif.gz")
         structure3d = rnapolis.parser.read_3d_structure(cif, 1, nucleic_acid_only=False)
-        base_interactions = rnapolis.annotator.extract_base_interactions(structure3d)
-        analysis = eltetrado(base_interactions, structure3d, False)
-        quadruplex = analysis.helices[0].quadruplexes[0]
-        return quadruplex_boundary_break_counts(quadruplex)
-
-    # 5v3f (Mango): 2 tetrads + 1 tetrad with a break in 3 of 4 columns
-    assert counts("tests/files/5v3f-assembly1.cif.gz") == [3, 0]
-    # 5dea: the third tetrad is reached through snapbacks in 4 of 4 columns
-    assert counts("tests/files/5dea-assembly1.cif.gz") == [0, 4]
-    # a plain quadruplex has no broken boundaries
-    assert counts("tests/files/1i34-assembly1.cif.gz") == [0]
+        analysis = eltetrado(
+            rnapolis.annotator.extract_base_interactions(structure3d),
+            structure3d,
+            False,
+        )
+        quadruplexes = [
+            quadruplex
+            for helix in analysis.helices
+            for quadruplex in helix.quadruplexes
+        ]
+        assert quadruplexes
+        assert all(
+            any(snapback.orientation == orientation for snapback in q.snapbacks)
+            for q in quadruplexes
+        ), pdb
 
 
 def test_best_fit_rotation_around_axis_reports_signed_rotation():
@@ -606,11 +658,11 @@ def test_5v3f_most_5prime_guanine_is_plus():
     assert polarity_map.get("A.G24") == StrandPolarity.PLUS
 
 
-def test_8psi_has_four_loops_and_no_snapbacks():
+def test_8psi_has_four_loops_and_reentry_snapback():
     """
     8psi forms a fold in which the chain visits one of the tracts twice,
-    giving four cross-tract loops. The loop classification requires exactly
-    three loops, so it must stay unset.
+    giving four cross-tract loops and a 5' re-entry snapback. The loop
+    classification requires exactly three loops, so it stays unset.
     """
     cif = handle_input_file("tests/files/8psi-assembly1.cif.gz")
     structure3d = rnapolis.parser.read_3d_structure(cif, 1, nucleic_acid_only=False)
@@ -626,7 +678,9 @@ def test_8psi_has_four_loops_and_no_snapbacks():
         "lateral-",
     ]
     assert all(loop.nucleotides for loop in quadruplex.loops)
-    assert quadruplex.snapbacks == []
+    assert len(quadruplex.snapbacks) == 1
+    assert quadruplex.snapbacks[0].orientation == SnapbackOrientation.FIVE_PRIME
+    assert len(quadruplex.snapbacks[0].nucleotides) == 8
     assert quadruplex.loop_class is None
 
 
@@ -677,7 +731,9 @@ def test_5zev_emits_zero_length_loop():
     zero_length = [loop for loop in quadruplex.loops if not loop.nucleotides]
     assert len(zero_length) == 1
     assert zero_length[0].loop_type.value == "propeller-"
-    assert quadruplex.snapbacks == []
+    assert len(quadruplex.snapbacks) == 1
+    assert quadruplex.snapbacks[0].orientation == SnapbackOrientation.FIVE_PRIME
+    assert len(quadruplex.snapbacks[0].nucleotides) == 17
     assert quadruplex.loop_class is None
 
 
@@ -696,10 +752,11 @@ def test_5de5_reports_zero_length_snapback():
     quadruplex = analysis.helices[0].quadruplexes[0]
 
     assert len(quadruplex.loops) == 4
-    assert len(quadruplex.snapbacks) == 1
-    snapback = quadruplex.snapbacks[0]
-    assert snapback.orientation == SnapbackOrientation.THREE_PRIME
-    assert snapback.nucleotides == []
+    assert len(quadruplex.snapbacks) == 2
+    assert quadruplex.snapbacks[0].orientation == SnapbackOrientation.THREE_PRIME
+    assert quadruplex.snapbacks[0].nucleotides == []
+    assert quadruplex.snapbacks[1].orientation == SnapbackOrientation.FIVE_PRIME
+    assert len(quadruplex.snapbacks[1].nucleotides) == 8
 
 
 def test_6fc9_tags_chair_and_quadruplex_duplex():
@@ -796,10 +853,9 @@ def test_5zev_tags_zero_length_loop_without_duplex():
     assert "quadruplex_duplex" not in quadruplex.tags
 
 
-def test_8psi_has_no_tags():
+def test_8psi_has_snapback_and_v_loop_tags():
     """
-    8psi's four loops, lack of snapbacks, bulges and duplex stems, and its
-    unclassifiable loop progression leave it without any tag.
+    8psi has a re-entry snapback and a V-loop at the broken first column.
     """
     cif = handle_input_file("tests/files/8psi-assembly1.cif.gz")
     structure3d = rnapolis.parser.read_3d_structure(cif, 1, nucleic_acid_only=False)
@@ -808,7 +864,7 @@ def test_8psi_has_no_tags():
 
     quadruplex = analysis.helices[0].quadruplexes[0]
 
-    assert quadruplex.tags == []
+    assert quadruplex.tags == ["has_snapback", "v_loop"]
 
 
 class _StubPair:

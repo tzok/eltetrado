@@ -996,28 +996,74 @@ def quadruplex_spurious_reasons(quadruplex: "Quadruplex") -> list[str]:
     return reasons
 
 
-def quadruplex_boundary_break_counts(quadruplex: "Quadruplex") -> list[int]:
-    """For each boundary between stack-adjacent tetrads, count the columns
-    whose two tract nucleotides are not chain-consecutive (a bulge, a snapback
-    or another chain discontinuity in between).
+def is_pure_g_tetrad(tetrad: "Tetrad") -> bool:
+    """True when all tetrad nucleotides are guanines (including modified
+    guanines such as 8OG or LCG)."""
+    return all(nt.one_letter_name.upper() == "G" for nt in tetrad.nucleotides)
+
+
+def quadruplex_tract_runs(quadruplex: "Quadruplex") -> list[list[list[Residue3D]]]:
+    """Split each tract into runs of nucleotides that are consecutive in the
+    chain-ordered sequence of all tetrad nucleotides (result is aligned with
+    ``quadruplex.tracts``).
+
+    A run breaks wherever the chain leaves the tract and visits another
+    tract's tetrad nucleotide(s) before coming back (a re-entry excursion).
+    Bulges between two stacked nucleotides of the same tract and direct 0-nt
+    reversals do NOT break a run.
     """
-    counts = []
-    for boundary in range(1, len(quadruplex.tetrads)):
-        broken = 0
-        for tract in quadruplex.tracts:
-            nt_prev = tract.nucleotides[boundary - 1]
-            nt_cur = tract.nucleotides[boundary]
-            chain_discontinuous = (
-                nt_prev.chain != nt_cur.chain
-                or abs(
-                    quadruplex.global_index[nt_cur] - quadruplex.global_index[nt_prev]
-                )
-                != 1
-            )
-            if chain_discontinuous:
-                broken += 1
-        counts.append(broken)
-    return counts
+    tract_of: dict[Residue3D, int] = {}
+    for tract_index, tract in enumerate(quadruplex.tracts):
+        for nt in tract.nucleotides:
+            if nt not in tract_of:
+                tract_of[nt] = tract_index
+    chain_ordered = sorted(tract_of, key=lambda nt: quadruplex.global_index[nt])
+    runs: list[list[list[Residue3D]]] = [[] for _ in quadruplex.tracts]
+    last_seen_at: dict[int, int] = {}
+    last_run: dict[int, list[Residue3D]] = {}
+    for position, nt in enumerate(chain_ordered):
+        tract_index = tract_of[nt]
+        if (
+            last_seen_at.get(tract_index) == position - 1
+            and last_run[tract_index][-1].chain == nt.chain
+        ):
+            last_run[tract_index].append(nt)
+        else:
+            last_run[tract_index] = [nt]
+            runs[tract_index].append(last_run[tract_index])
+        last_seen_at[tract_index] = position
+    return runs
+
+
+def isolated_run_nucleotides(
+    tract_runs: list[list[list[Residue3D]]],
+) -> set[Residue3D]:
+    """Nucleotides forming a single-nucleotide run of a tract that the chain
+    visits in more than one run (the "snapped" guanines of re-entries)."""
+    isolated: set[Residue3D] = set()
+    for runs in tract_runs:
+        if len(runs) >= 2:
+            for run in runs:
+                if len(run) == 1:
+                    isolated.add(run[0])
+    return isolated
+
+
+def quadruplex_row_partition_boundaries(quadruplex: "Quadruplex") -> list[int]:
+    """Tetrad-row boundaries at which every column splits into two
+    chain-homogeneous halves (each side of the boundary is owned by a single
+    chain in every tract). Empty for staggered arrangements such as 1jjp or
+    1nyd; vacuously full for unimolecular quadruplexes."""
+    tetrad_count = len(quadruplex.tetrads)
+    return [
+        boundary
+        for boundary in range(1, tetrad_count)
+        if all(
+            len({nt.chain for nt in tract.nucleotides[:boundary]}) <= 1
+            and len({nt.chain for nt in tract.nucleotides[boundary:]}) <= 1
+            for tract in quadruplex.tracts
+        )
+    ]
 
 
 @dataclass
@@ -1657,13 +1703,27 @@ class Quadruplex:
 
     def __find_snapbacks(self) -> list[Snapback]:
         """
-        Detect snapbacks: chain re-entries into an already visited tract
-        (chain-consecutive tetrad nucleotides of the same tract whose
-        positions within the tract are not adjacent). The orientation says
-        which side of the connector is the isolated one: 3' when the
-        re-entering (post-connector) stacked run is shorter than the
-        pre-connector one — its first nucleotide is "injected" into the
-        column — and 5' for the mirror case. Ties default to 3'.
+        Detect snapbacks: chain re-entries into an already visited tract.
+
+        Two kinds are recognized:
+
+        - direct reversals: chain-consecutive tetrad nucleotides of the same
+          tract whose positions within the tract are not adjacent (e.g. the
+          0-nt snapbacks of 5de5/2la7 or the 2-nt one of 2m53); the
+          orientation says which side of the connector is the isolated one:
+          3' when the re-entering (post-connector) stacked run is shorter -
+          its first nucleotide is "injected" into the column - and 5' for the
+          mirror case; ties default to 3';
+        - re-entries: the chain leaves a tract and returns to it only after
+          visiting other columns (the run break is an excursion, not a
+          bulge); one of the two adjacent runs is a single nucleotide - the
+          "snapped" guanine (e.g. 2mgn G8,G9 -> G24 = 3', 6jcd G6 -> G19 =
+          3', 2kpr G1,G2 -> G11 = 5', 6xt7 G1 <- G10,G11,G12 = 5'). The
+          orientation follows the chain-terminal run: 5' when the run holding
+          the chain's first tetrad nucleotide is the snapped one, 3' when it
+          is the run holding the chain's last tetrad nucleotide; ties default
+          to the shorter-run rule above. Two stacked stems (two-block
+          re-entries such as 2ms9 or the 6jje family) are not snapbacks.
         """
         if len(self.tetrads) == 1:
             return []
@@ -1732,11 +1792,71 @@ class Quadruplex:
                 )
             )
             snapbacks.append(Snapback(in_between, orientation))
+
+        snapbacks.extend(self.__find_re_entry_snapbacks(tetrad_nucleotides))
+        return snapbacks
+
+    def __find_re_entry_snapbacks(
+        self, tetrad_nucleotides: list[Residue3D]
+    ) -> list[Snapback]:
+        """Snapbacks formed by tract re-entries after an excursion through
+        other columns (see ``__find_snapbacks``)."""
+        first_of_chain: dict[str, Residue3D] = {}
+        last_of_chain: dict[str, Residue3D] = {}
+        for nt in tetrad_nucleotides:
+            first_of_chain.setdefault(nt.chain, nt)
+            last_of_chain[nt.chain] = nt
+
+        def in_between_nucleotides(nt_prev: Residue3D, nt_cur: Residue3D):
+            return list(
+                filter(
+                    lambda nt: (
+                        nt.is_nucleotide
+                        and self.global_index[nt_prev]
+                        < self.global_index[nt]
+                        < self.global_index[nt_cur]
+                    ),
+                    self.structure3d.residues,
+                )
+            )
+
+        snapbacks: list[Snapback] = []
+        for tract_runs in quadruplex_tract_runs(self):
+            for run_prev, run_next in itertools.pairwise(tract_runs):
+                chain = run_prev[-1].chain
+                if chain != run_next[0].chain:
+                    continue  # a chain switch, not a re-entry
+                if len(run_prev) > 1 and len(run_next) > 1:
+                    continue  # two stacked stems — a two-block, not a snapback
+
+                orientation = None
+                for nt in run_prev + run_next:
+                    if nt is first_of_chain.get(chain):
+                        orientation = SnapbackOrientation.FIVE_PRIME
+                        break
+                    if nt is last_of_chain.get(chain):
+                        orientation = SnapbackOrientation.THREE_PRIME
+                        break
+                if orientation is None:
+                    orientation = (
+                        SnapbackOrientation.FIVE_PRIME
+                        if len(run_next) > len(run_prev)
+                        else SnapbackOrientation.THREE_PRIME
+                    )
+                snapbacks.append(
+                    Snapback(
+                        in_between_nucleotides(run_prev[-1], run_next[0]),
+                        orientation,
+                    )
+                )
         return snapbacks
 
     def __find_tags(self) -> list[str]:
         """Summarize the quadruplex's structural features as short tags,
         exposed in the text report and the JSON output."""
+        if not any(is_pure_g_tetrad(tetrad) for tetrad in self.tetrads):
+            return ["non_g4"]
+
         tags: list[str] = []
         if self.bulges:
             tags.append("has_bulge")
@@ -1744,13 +1864,11 @@ class Quadruplex:
             tags.append("has_snapback")
         if self.__has_inverted_strand_polarity():
             tags.append("has_inverted_strand_polarity")
-        if any(not loop.nucleotides for loop in self.loops):
+        if self.__has_v_loop():
             tags.append("v_loop")
-        chains = self.__tetrad_chains()
-        if len(chains) == 1:
-            if self.__is_two_block():
-                tags.append("two_block")
-        elif len(chains) > 1 and self.__is_interlocked():
+        if self.__is_two_block():
+            tags.append("two_block")
+        if self.__is_interlocked():
             tags.append("interlocked")
         if self.loop_class is not None:
             topology_name = TOPOLOGY_NAMES.get(self.loop_class.value)
@@ -1763,14 +1881,84 @@ class Quadruplex:
     def __tetrad_chains(self) -> set[str]:
         return {nt.chain for tetrad in self.tetrads for nt in tetrad.nucleotides}
 
-    def __is_interlocked(self) -> bool:
-        """True for a multi-chain quadruplex whose chains share at least one
-        column (tract) instead of each chain owning whole columns, e.g. the
-        interlocked (intercalated) dimers such as 1jjp or the locked
-        tetramolecular quadruplex pairs such as 1nyd and 1xce."""
-        return any(
-            len({nt.chain for nt in tract.nucleotides}) > 1 for tract in self.tracts
+    def __has_v_loop(self) -> bool:
+        """True when the quadruplex contains a V-loop: a cross-column
+        connector whose flanking nucleotides lie in different tetrads (a
+        propeller-type position) and where one flanking nucleotide is an
+        isolated single-nucleotide run of a broken column - the chain snaps
+        out of / into that lone guanine (e.g. 2kpr G11-G12, 5zev G20-G21,
+        1jjp G10-G11, 2mb4 G3-G5). The loop itself may hold nucleotides
+        (the 1-nt V-loops of 2mb4 or the 3qxr family).
+
+        Excluded: same-tetrad 0-nt connectors (lateral/diagonal positions,
+        e.g. 4p1d), connectors spanning unmodelled residues (missing loop
+        nucleotides, e.g. 7sxp), mirror-image L-nucleotide structures
+        (4wb2/4wb3) and non-G4 quadruplexes.
+        """
+        if self.__is_mirror_image():
+            return False
+        isolated = isolated_run_nucleotides(quadruplex_tract_runs(self))
+        if not isolated:
+            return False
+
+        tetrad_of = {
+            nt: index
+            for index, tetrad in enumerate(self.tetrads)
+            for nt in tetrad.nucleotides
+        }
+        for nt_prev, nt_cur, _ in self.__chain_connectors():
+            tract_prev = self.__find_tract_index_with_nt(nt_prev)
+            tract_cur = self.__find_tract_index_with_nt(nt_cur)
+            if tract_prev is None or tract_cur is None or tract_prev == tract_cur:
+                continue
+            if tetrad_of[nt_prev] == tetrad_of[nt_cur]:
+                continue
+            if nt_prev not in isolated and nt_cur not in isolated:
+                continue
+            if not self.__chain_numbering_is_continuous(nt_prev, nt_cur):
+                continue
+            return True
+        return False
+
+    def __chain_numbering_is_continuous(
+        self, nt_prev: Residue3D, nt_cur: Residue3D
+    ) -> bool:
+        """Residue numbering consistent with the modelled content - excludes
+        connectors that span unmodelled (missing) residues."""
+        index_prev = self.global_index[nt_prev]
+        index_cur = self.global_index[nt_cur]
+        between = sum(
+            1
+            for residue in self.structure3d.residues
+            if index_prev < self.global_index[residue] < index_cur
         )
+        return abs(nt_cur.number - nt_prev.number) == between + 1
+
+    def __is_mirror_image(self) -> bool:
+        """True when all tetrad nucleotides are L-configuration sugars (PDB
+        chemical component IDs prefixed with 0, e.g. 0G/0DA in mirror-image
+        L-RNA/L-DNA structures such as 4wb2/4wb3)."""
+        return all(
+            nt.name.startswith("0")
+            for tetrad in self.tetrads
+            for nt in tetrad.nucleotides
+        )
+
+    def __is_interlocked(self) -> bool:
+        """True for a multi-chain quadruplex whose chains share ALL columns
+        (tracts) and whose arrangement has no clean row partition - the
+        columns interpenetrate in a staggered fashion, e.g. the
+        interlocked/intercalated dimers such as 1jjp or the locked
+        tetramolecular quadruplex pairs such as 1nyd and 1xce. Mutually
+        exclusive with two_block, which requires a row partition."""
+        if len(self.__tetrad_chains()) < 2:
+            return False
+        mixed_tracts = sum(
+            1
+            for tract in self.tracts
+            if len({nt.chain for nt in tract.nucleotides}) > 1
+        )
+        return mixed_tracts == len(self.tracts) and not self.__has_row_partition()
 
     def __has_inverted_strand_polarity(self) -> bool:
         for tract_polarities in self.strand_polarities:
@@ -1783,23 +1971,25 @@ class Quadruplex:
         return False
 
     def __is_two_block(self) -> bool:
-        """True for a unimolecular quadruplex built from two separate blocks.
-
-        Two variants are recognized:
-
-        - *vertical* split: some column is visited by two or more chain
-          segments that each stack at least two guanines (the two stems share
-          columns, e.g. 2ms9, 6k84);
-        - *horizontal* split: some boundary between stack-adjacent tetrads is
-          chain-discontinuous in at least three of four columns, so the chain
-          builds the quadruplex as two blocks with at least two tetrads on one
-          side, e.g. the 2+1 Mango aptamer 5v3f (bulge or snapback breaks) or
-          5dea (snapback re-entries).
-        """
+        """True for a quadruplex built from two separate blocks: some column
+        is visited by two or more chain segments that each stack at least two
+        guanines (the stems share columns), and the blocks stack cleanly - a
+        row boundary exists at which every column splits into
+        chain-homogeneous halves (unimolecular quadruplexes satisfy this
+        vacuously; staggered interlocked arrangements do not). Applies to any
+        molecularity (e.g. the bimolecular 6jje/6jjf family and 6sx6/6syk);
+        1+2 or 2+1 tetrad caps (Mango, beetroot, sc1 aptamers) are NOT
+        two-blocks. 1oz8 is an accepted miss: its real 2+2 arrangement is
+        seen as 3 tetrads due to structure quality."""
         if len(self.tetrads) < 2:
             return False
 
-        return self.__has_shared_column_blocks() or self.__has_broken_boundary()
+        return self.__has_shared_column_blocks() and self.__has_row_partition()
+
+    def __has_row_partition(self) -> bool:
+        """A boundary between stack-adjacent tetrads at which every column
+        splits into chain-homogeneous halves exists."""
+        return bool(quadruplex_row_partition_boundaries(self))
 
     def __has_shared_column_blocks(self) -> bool:
         """Vertical split: two chain segments of at least two tetrad
@@ -1844,23 +2034,6 @@ class Quadruplex:
         for tract_segments in segments:
             multi_g_segments = [length for length in tract_segments if length >= 2]
             if len(multi_g_segments) >= 2:
-                return True
-        return False
-
-    def __boundary_break_counts(self) -> list[int]:
-        """For each boundary between stack-adjacent tetrads, count the columns
-        whose two tract nucleotides are not chain-consecutive (a bulge, a
-        snapback or another chain discontinuity in between)."""
-        return quadruplex_boundary_break_counts(self)
-
-    def __has_broken_boundary(self) -> bool:
-        """Horizontal split: at least three of four columns are
-        chain-discontinuous at the same boundary between stack-adjacent
-        tetrads, and the larger side of the split has at least two tetrads
-        (which excludes 1+1 splits of two-tetrad quadruplexes)."""
-        tetrad_count = len(self.tetrads)
-        for boundary, broken in enumerate(self.__boundary_break_counts(), start=1):
-            if broken >= 3 and max(boundary, tetrad_count - boundary) >= 2:
                 return True
         return False
 
