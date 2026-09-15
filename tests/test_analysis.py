@@ -152,19 +152,20 @@ def test_g4composer_export_in_5dea():
 
     assert entry.path == "A1;A4;B4;C4;B1;C1;A2;B2;C2;B3;C3;A3"
     assert entry.orient == "A-;B+;C+"
-    assert entry.rise == "-6.9;3.5"
-    assert entry.twist == "11.1;26.8"
+    assert entry.rise == "6.9;-3.5"
+    assert entry.twist == "-11.1;-26.8"
 
 
 def test_g4composer_consistent_mode_in_5dea():
-    """Consistent mode renumbers path entries per tetrad by chain order.
+    """Consistent mode shifts the classic numbering cyclically per tetrad.
 
-    In 5DEA the chain visits tetrad A in tract order 1, 4, 2, 3 and tetrad B
-    starts at tract 4, so classic ``B4`` becomes consistent ``B1``. Only the
-    path and twist change; orient and rise are mode-independent. The first
-    consistent twist interval (A1 -> B1) is a cross-tract torsion because the
-    two "1" nucleotides sit in different tracts; the second one (B1 -> C1)
-    stays within a single tract and therefore matches the classic twist.
+    In 5DEA the chain visits tetrad A in tract order 1, 4, 2, 3 (so A keeps
+    its classic numbering, anchored at A1) and tetrad B starts at tract 4, so
+    classic ``B4`` becomes consistent ``B1`` and the remaining B numbers keep
+    their cyclic order (B1->2, B2->3, B3->4). Orient never changes. Rise is
+    positive-first (the shared axis is oriented accordingly). The consistent
+    twist is the torsion signed by the interval's rise: the first interval
+    (rise +6.9) keeps the torsion 77.1, the second one (rise -3.5) flips it.
     """
     cif = handle_input_file("tests/files/5dea-assembly1.cif.gz")
     structure3d = rnapolis.parser.read_3d_structure(cif, 1, nucleic_acid_only=False)
@@ -176,10 +177,10 @@ def test_g4composer_consistent_mode_in_5dea():
         analysis, quadruplex, "5dea-assembly1", G4ComposerMode.CONSISTENT
     )
 
-    assert entry.path == "A1;A2;B1;C1;B2;C2;A3;B3;C3;B4;C4;A4"
+    assert entry.path == "A1;A4;B1;C1;B2;C2;A2;B3;C3;B4;C4;A3"
     assert entry.orient == "A-;B+;C+"
-    assert entry.rise == "-6.9;3.5"
-    assert entry.twist == "77.1;26.9"
+    assert entry.rise == "6.9;-3.5"
+    assert entry.twist == "77.1;-26.9"
 
 
 def test_loop_signs_follow_columns_in_1i34():
@@ -485,7 +486,8 @@ def test_g4composer_non_linear_intervals_follow_build_order():
 
     In 5ZEV the adjacent stack order is B-A-C, while the g4composer build order
     inferred from the path is A-B-C. The first exported interval therefore
-    traverses the stack graph in reverse, which flips the sign of rise/twist.
+    traverses the stack graph in reverse; the shared axis is oriented so the
+    first rise is positive.
     """
     cif = handle_input_file("tests/files/5zev-assembly1.cif.gz")
     structure3d = rnapolis.parser.read_3d_structure(cif, 1, nucleic_acid_only=False)
@@ -498,14 +500,15 @@ def test_g4composer_non_linear_intervals_follow_build_order():
     entry = generate_g4composer_entry(analysis, quadruplex, "5zev-assembly1")
 
     assert entry.orient == "A-;B+;C-"
-    assert entry.rise == "-2.9;6.3"
-    assert entry.twist == "-31.8;63.5"
+    assert entry.rise == "2.9;-6.3"
+    assert entry.twist == "31.8;-63.5"
 
 
 def test_g4composer_consistent_mode_in_5zev():
-    """Consistent twist is axis-free, so a reversed build-order interval
-    keeps its intrinsic torsion sign instead of flipping like the classic
-    best-fit rotation around the shared quadruplex axis."""
+    """Consistent mode shifts tetrad C's numbering cyclically (its chain
+    visits start at classic C3) and signs the torsion by the interval's rise:
+    the second interval (rise -6.3) flips the torsion sign to follow the
+    fixed, rise-positive quadruplex axis."""
     cif = handle_input_file("tests/files/5zev-assembly1.cif.gz")
     structure3d = rnapolis.parser.read_3d_structure(cif, 1, nucleic_acid_only=False)
     base_interactions = parse_external_output(
@@ -518,10 +521,10 @@ def test_g4composer_consistent_mode_in_5zev():
         analysis, quadruplex, "5zev-assembly1", G4ComposerMode.CONSISTENT
     )
 
-    assert entry.path == "A1;B1;B2;A2;C1;B3;A3;C2;C3;B4;A4;C4"
+    assert entry.path == "A1;B1;B3;A3;C1;B2;A2;C4;C3;B4;A4;C2"
     assert entry.orient == "A-;B+;C-"
-    assert entry.rise == "-2.9;6.3"
-    assert entry.twist == "31;-116.2"
+    assert entry.rise == "2.9;-6.3"
+    assert entry.twist == "31;116.2"
 
 
 def test_g4composer_structure_keeps_canonical_brackets_for_flanks():

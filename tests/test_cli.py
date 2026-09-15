@@ -136,9 +136,9 @@ def test_g4composer_export_consistent_mode_for_5dea(tmp_path, capfd):
         "chi         ............SS.....................\n"
         "sugar       NNNNNSNNSSNSSSNSSSSNSSNNNSSSNNNNNNN\n"
         "orient      A-;B+;C+\n"
-        "rise        -6.9;3.5\n"
-        "twist       77.1;26.9\n"
-        "path        A1;A2;B1;C1;B2;C2;A3;B3;C3;B4;C4;A4\n"
+        "rise        6.9;-3.5\n"
+        "twist       77.1;-26.9\n"
+        "path        A1;A4;B1;C1;B2;C2;A2;B3;C3;B4;C4;A3\n"
     )
 
 

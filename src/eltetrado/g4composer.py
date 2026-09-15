@@ -18,11 +18,15 @@ Two export modes are available (``G4ComposerMode``):
 - ``CLASSIC`` (default) keeps physical tract ids as path column numbers (with
   the clockwise remap) and exports twist as a best-fit rotation of all four
   matched tract C1' sets around one shared quadruplex-wide axis.
-- ``CONSISTENT`` numbers nucleotides within each tetrad by 5'->3' chain
-  visitation order (the first tetrad nucleotide visited by the chain is always
-  number 1) and exports twist as the torsion angle C1'(1) - center(tetrad 1) -
-  center(tetrad 2) - C1'(1) between consecutive build-order tetrads. Rise and
-  every other exported field are mode-independent.
+- ``CONSISTENT`` keeps the classic column numbering but shifts it cyclically
+  within each tetrad so that the first tetrad nucleotide visited by the chain
+  becomes number 1 (classic ``A1;...;B4;...;B3;...;B2;...;B1`` becomes
+  ``A1;...;B1;...;B4;...;B3;...;B2``), and exports twist as the torsion angle
+  C1'(1) - center(tetrad 1) - center(tetrad 2) - C1'(1) between consecutive
+  build-order tetrads, signed by the interval's rise so it follows the fixed,
+  rise-positive quadruplex axis. Rise and every other exported field are
+  mode-independent; the shared axis is oriented so the first build-order rise
+  is positive in both modes.
 """
 
 import itertools
@@ -300,17 +304,39 @@ def export_path(
 
 
 def consistent_path(quadruplex: Quadruplex) -> list[str]:
-    """Return path entries numbered by chain-visitation order within each tetrad."""
+    """Return path entries numbered by a cyclic shift of the classic
+    (clockwise) column numbering within each tetrad.
+
+    The first nucleotide of a tetrad visited by the chain becomes number 1
+    and every other nucleotide of that tetrad keeps its original cyclic
+    position: classic ``A1;...;B4;...;B3;...;B2;...;B1`` becomes
+    ``A1;...;B1;...;B4;...;B3;...;B2`` (B4->1, B1->2, B2->3, B3->4), so the
+    numbering is shifted, not re-ranked.
+    """
     tetrad_labels = quadruplex.tetrad_labels_by_5p_order()
+    tract_of: dict[Residue3D, int] = {}
+    for tract_index, tract in enumerate(quadruplex.tracts, start=1):
+        for nt in tract.nucleotides:
+            if nt not in tract_of:
+                tract_of[nt] = tract_index
     labels: dict[Residue3D, str] = {}
     for tetrad, tetrad_label in zip(quadruplex.tetrads, tetrad_labels, strict=True):
         ordered = sorted(tetrad.nucleotides, key=lambda nt: quadruplex.global_index[nt])
-        for rank, nt in enumerate(ordered, start=1):
-            labels[nt] = f"{tetrad_label}{rank}"
+        first_column = clockwise_column(tract_of[ordered[0]])
+        for nt in ordered:
+            original = clockwise_column(tract_of[nt])
+            shifted = ((original - first_column) % 4) + 1
+            labels[nt] = f"{tetrad_label}{shifted}"
     return [
         labels[nt]
         for nt in sorted(labels.keys(), key=lambda nt: quadruplex.global_index[nt])
     ]
+
+
+def clockwise_column(tract_index: int) -> int:
+    """Map an ElTetrado tract index (anticlockwise numbering) to the
+    g4composer clockwise column number."""
+    return {1: 1, 2: 4, 3: 3, 4: 2}.get(tract_index, tract_index)
 
 
 def remap_path_entry_to_clockwise(entry: str) -> str:
@@ -347,19 +373,31 @@ def export_twist(
 
 
 def consistent_twist_intervals(quadruplex: Quadruplex) -> list[float]:
-    """Compute the torsion twist for each consecutive pair in build order.
+    """Compute the twist for each consecutive pair in build order.
 
     Twist is the torsion angle C1'(1) - center(tetrad 1) - center(tetrad 2) -
     C1'(1), where ``1`` denotes the nucleotide numbered 1 in ``CONSISTENT``
-    path mode (the first nucleotide of the tetrad visited by the chain). A
-    torsion angle is axis-free, so the shared quadruplex axis used by the
-    classic mode is not needed here.
+    path mode (the first nucleotide of the tetrad visited by the chain),
+    multiplied by the sign of the interval's rise. The sign correction
+    expresses the rotation around the fixed, rise-positive quadruplex axis
+    (the frame g4composer builds in): for a downward step (negative rise) the
+    axis-frame rotation is the opposite of the travel-direction torsion.
     """
     build_order = tetrads_in_build_order(quadruplex)
+    if len(build_order) < 2:
+        return []
+
+    axis, centroids = quadruplex_axis_and_centroids(quadruplex)
+    rises: list[float] | None = None
+    if axis is not None:
+        rises = [
+            float(numpy.dot(centroids[tetrad2] - centroids[tetrad1], axis))
+            for tetrad1, tetrad2 in itertools.pairwise(build_order)
+        ]
     nucleotides_by_tetrad = consistent_nucleotides_by_tetrad(quadruplex)
 
     intervals = []
-    for tetrad1, tetrad2 in itertools.pairwise(build_order):
+    for interval, (tetrad1, tetrad2) in enumerate(itertools.pairwise(build_order)):
         nt1 = nucleotides_by_tetrad[tetrad1][0]
         nt2 = nucleotides_by_tetrad[tetrad2][0]
         c1 = residue_c1prime_coordinates(nt1)
@@ -367,13 +405,16 @@ def consistent_twist_intervals(quadruplex: Quadruplex) -> list[float]:
         if c1 is None or c2 is None:
             intervals.append(math.nan)
             continue
-        intervals.append(
-            math.degrees(
-                calculate_torsion_angle_coords(
-                    c1, tetrad1.center(), tetrad2.center(), c2
-                )
-            )
+        twist = math.degrees(
+            calculate_torsion_angle_coords(c1, tetrad1.center(), tetrad2.center(), c2)
         )
+        if (
+            rises is not None
+            and not math.isnan(rises[interval])
+            and rises[interval] != 0
+        ):
+            twist *= numpy.sign(rises[interval])
+        intervals.append(twist)
     return intervals
 
 
@@ -453,8 +494,9 @@ def quadruplex_axis_and_centroids(
     comparable direction across the whole build order. Instead we build one
     shared axis here: each tetrad's own plane normal (arbitrarily signed by
     SVD) is chain-aligned to its discovery-order neighbor, the results are
-    averaged, and the final axis is oriented from the first to the last
-    tetrad in discovery order.
+    averaged, and the final axis is oriented so that the rise of the first
+    build-order interval is positive (the description direction g4composer
+    users expect).
     """
     tetrads = quadruplex.tetrads
     centroids: dict[Tetrad, numpy.ndarray] = {}
@@ -482,9 +524,13 @@ def quadruplex_axis_and_centroids(
         return None, centroids
     axis = axis / norm
 
-    net_displacement = centroids[tetrads[-1]] - centroids[tetrads[0]]
-    if numpy.dot(axis, net_displacement) < 0:
-        axis = -axis
+    # Orient the axis so that the first build-order rise is positive - the
+    # direction g4composer users expect the quadruplex to be described in.
+    build_order = tetrads_in_build_order(quadruplex)
+    if len(build_order) >= 2:
+        first_rise_direction = centroids[build_order[1]] - centroids[build_order[0]]
+        if numpy.dot(axis, first_rise_direction) < 0:
+            axis = -axis
 
     return axis, centroids
 
