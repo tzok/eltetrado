@@ -876,10 +876,15 @@ class _StubPair:
         self.twist = twist
 
 
+class _StubBulgeGroup:
+    def __init__(self, nucleotides):
+        self.nucleotides = [None] * nucleotides
+
+
 class _StubQuadruplex:
     def __init__(self, tetrads=2, bulges=0, pairs=()):
         self.tetrads = [None] * tetrads
-        self.bulges = [None] * bulges
+        self.bulges = [_StubBulgeGroup(bulges)] if bulges else []
         self.tetrad_pairs = [_StubPair(*pair) for pair in pairs]
 
 

@@ -9,7 +9,7 @@ import tempfile
 from collections import Counter, defaultdict
 from collections.abc import Iterable
 from dataclasses import dataclass, field
-from typing import IO
+from typing import IO, TYPE_CHECKING
 
 import numpy
 import numpy.typing
@@ -19,6 +19,7 @@ from rnapolis.common import (
     Entry,
     GlycosidicBond,
     LeontisWesthof,
+    Residue,
 )
 from rnapolis.tertiary import (
     Atom,
@@ -44,6 +45,9 @@ from eltetrado.model import (
     SugarPucker,
     TetradPolarity,
 )
+
+if TYPE_CHECKING:
+    from rnapolis.common import MissingResidue
 
 logging.basicConfig(level=os.environ.get("LOGLEVEL", "INFO"))
 logger = logging.getLogger(__name__)
@@ -899,12 +903,17 @@ class Tract:
 class Loop:
     nucleotides: list[Residue3D]
     loop_type: LoopType | None
+    missing: list[str] = field(default_factory=list)
 
     def __str__(self):
         return (
             f"      {self.loop_type.value if self.loop_type else 'n/a'} "
             f"{', '.join(nt.full_name for nt in self.nucleotides)}"
+            f"{self.__missing_suffix()}"
         )
+
+    def __missing_suffix(self) -> str:
+        return f" (missing: {', '.join(self.missing)})" if self.missing else ""
 
 
 @dataclass
@@ -916,12 +925,31 @@ class Snapback:
 
     nucleotides: list[Residue3D]
     orientation: SnapbackOrientation
+    missing: list[str] = field(default_factory=list)
 
     def __str__(self):
         return (
             f"      snapback {self.orientation.value} "
             f"{', '.join(nt.full_name for nt in self.nucleotides)}"
+            f"{self.__missing_suffix()}"
         )
+
+    def __missing_suffix(self) -> str:
+        return f" (missing: {', '.join(self.missing)})" if self.missing else ""
+
+
+@dataclass
+class BulgeGroup:
+    """Nucleotides bulging out between two stacked nucleotides of one tract,
+    together with any residues reported missing between the flanks."""
+
+    nucleotides: list[Residue3D]
+    missing: list[str] = field(default_factory=list)
+
+    def __str__(self):
+        names = [nt.full_name for nt in self.nucleotides]
+        names.extend(self.missing)
+        return ", ".join(names)
 
 
 # Mapping from the Webba da Silva loop-classification value (the loop
@@ -964,6 +992,89 @@ TOPOLOGY_NAMES = {
 }
 
 
+def sequence_entries_with_missing(
+    nucleotides: list[Residue3D],
+    missing_residues: "list[MissingResidue] | None",
+    sequence_by_entity: "dict[str, str] | None",
+) -> list[tuple[str, str, Residue3D | None]]:
+    """Build the full per-chain sequence entries for the report and exports.
+
+    Returns (chain, one-letter code, residue or None) triples in the given
+    nucleotide order (already chain-ordered by the caller), with residues
+    reported missing in the file header interleaved at their numbering
+    positions. Missing residues take their real one-letter code from the
+    entity sequence when available and carry ``residue=None``; without the
+    header data only numbering-based '?' placeholders (unknown identity) are
+    inserted for internal breaks.
+    """
+    if not missing_residues:
+        # degraded fallback: only internal numbering gaps between
+        # geometrically disconnected residues are marked with '?'
+        entries: list[tuple[str, str, Residue3D | None]] = []
+        for position, residue in enumerate(nucleotides):
+            if (
+                position > 0
+                and residue.chain == nucleotides[position - 1].chain
+                and not nucleotides[position - 1].is_connected(residue)
+            ):
+                previous_number = nucleotides[position - 1].number
+                modelled_numbers = {
+                    other.number
+                    for other in nucleotides
+                    if other.chain == residue.chain
+                }
+                for number in range(
+                    min(previous_number, residue.number) + 1,
+                    max(previous_number, residue.number),
+                ):
+                    if number not in modelled_numbers:
+                        entries.append((residue.chain, "?", None))
+            entries.append((residue.chain, residue.one_letter_name, residue))
+        return entries
+
+    modelled_by_chain: dict[str, dict[int, Residue3D]] = {}
+    chain_order: list[str] = []
+    entity_by_chain: dict[str, str | None] = {}
+    for residue in nucleotides:
+        modelled_by_chain.setdefault(residue.chain, {})[residue.number] = residue
+        if residue.chain not in chain_order:
+            chain_order.append(residue.chain)
+            entity_by_chain[residue.chain] = (
+                residue.atoms[0].entity_id if residue.atoms else None
+            )
+
+    missing_by_chain: dict[str, dict[int, MissingResidue]] = {}
+    for missing in missing_residues:
+        if missing.chain not in modelled_by_chain or missing.number is None:
+            continue
+        missing_by_chain.setdefault(missing.chain, {})[missing.number] = missing
+
+    entries: list[tuple[str, str, Residue3D | None]] = []
+    for chain in chain_order:
+        modelled = modelled_by_chain[chain]
+        missing = missing_by_chain.get(chain, {})
+        entity_id = entity_by_chain.get(chain)
+        sequence = sequence_by_entity.get(entity_id) if entity_id else None
+        for number in sorted(set(modelled) | set(missing)):
+            residue = modelled.get(number)
+            if residue is not None:
+                entries.append((chain, residue.one_letter_name, residue))
+                continue
+            missing_residue = missing[number]
+            letter = missing_residue.one_letter_name
+            label_number = (
+                missing_residue.label.number if missing_residue.label else None
+            )
+            if (
+                sequence is not None
+                and label_number
+                and 1 <= label_number <= len(sequence)
+            ):
+                letter = sequence[label_number - 1]
+            entries.append((chain, letter, None))
+    return entries
+
+
 def quadruplex_spurious_reasons(quadruplex: "Quadruplex") -> list[str]:
     """Return reasons why a quadruplex should be discarded as spurious.
 
@@ -977,10 +1088,10 @@ def quadruplex_spurious_reasons(quadruplex: "Quadruplex") -> list[str]:
             f"minimum is {MIN_QUADRUPLEX_TETRADS}"
         )
 
-    if len(quadruplex.bulges) > MAX_QUADRUPLEX_BULGES:
+    bulge_count = sum(len(bulge.nucleotides) for bulge in quadruplex.bulges)
+    if bulge_count > MAX_QUADRUPLEX_BULGES:
         reasons.append(
-            f"bulge of {len(quadruplex.bulges)} nucleotides "
-            f"(limit is {MAX_QUADRUPLEX_BULGES})"
+            f"bulge of {bulge_count} nucleotides (limit is {MAX_QUADRUPLEX_BULGES})"
         )
 
     for tetrad_pair in quadruplex.tetrad_pairs:
@@ -1353,7 +1464,13 @@ class Quadruplex:
             if tract_prev is None or tract_cur is None or tract_prev == tract_cur:
                 continue
             loop_type = self.__detect_loop_type(nt_prev, nt_cur)
-            loops.append(Loop(in_between, loop_type))
+            loops.append(
+                Loop(
+                    in_between,
+                    loop_type,
+                    self.__missing_residue_names_between(nt_prev, nt_cur),
+                )
+            )
         return loops
 
     def __find_path(self) -> list[str]:
@@ -1660,7 +1777,7 @@ class Quadruplex:
     # ------------------------------------------------------------------
     # Bulges
     # ------------------------------------------------------------------
-    def __find_bulges(self) -> list[Residue3D]:
+    def __find_bulges(self) -> list[BulgeGroup]:
         """
         Detect nucleotides bulging out between two stacked nucleotides of the
         same tract.  Example:
@@ -1675,7 +1792,7 @@ class Quadruplex:
             {nt: position for position, nt in enumerate(tract.nucleotides)}
             for tract in self.tracts
         ]
-        bulges: list[Residue3D] = []
+        bulges: list[BulgeGroup] = []
 
         for nt_prev, nt_cur, in_between in self.__chain_connectors():
             tract_prev = self.__find_tract_index_with_nt(nt_prev)
@@ -1689,16 +1806,24 @@ class Quadruplex:
                     - tract_positions[tract_prev][nt_cur]
                 )
                 == 1
+                and in_between
             ):
-                bulges.extend(in_between)
+                bulges.append(
+                    BulgeGroup(
+                        in_between,
+                        self.__missing_residue_names_between(nt_prev, nt_cur),
+                    )
+                )
 
-        # keep order, remove duplicates
-        seen: set[Residue3D] = set()
-        unique_bulges: list[Residue3D] = []
-        for nt in bulges:
-            if nt not in seen:
-                unique_bulges.append(nt)
-                seen.add(nt)
+        # keep order, remove duplicate groups with identical nucleotides
+        seen: set[frozenset[Residue3D]] = set()
+        unique_bulges: list[BulgeGroup] = []
+        for bulge in bulges:
+            key = frozenset(bulge.nucleotides)
+            if key in seen:
+                continue
+            seen.add(key)
+            unique_bulges.append(bulge)
         return unique_bulges
 
     def __find_snapbacks(self) -> list[Snapback]:
@@ -1791,7 +1916,13 @@ class Quadruplex:
                     self.structure3d.residues,
                 )
             )
-            snapbacks.append(Snapback(in_between, orientation))
+            snapbacks.append(
+                Snapback(
+                    in_between,
+                    orientation,
+                    self.__missing_residue_names_between(nt_prev, nt_cur),
+                )
+            )
 
         snapbacks.extend(self.__find_re_entry_snapbacks(tetrad_nucleotides))
         return snapbacks
@@ -1847,6 +1978,7 @@ class Quadruplex:
                     Snapback(
                         in_between_nucleotides(run_prev[-1], run_next[0]),
                         orientation,
+                        self.__missing_residue_names_between(run_prev[-1], run_next[0]),
                     )
                 )
         return snapbacks
@@ -1925,14 +2057,58 @@ class Quadruplex:
     ) -> bool:
         """Residue numbering consistent with the modelled content - excludes
         connectors that span unmodelled (missing) residues."""
+        return self.__missing_residue_count_between(nt_prev, nt_cur) == 0
+
+    def __missing_residue_count_between(
+        self, nt_prev: Residue3D, nt_cur: Residue3D
+    ) -> int:
+        """Number of unmodelled residues between two chain-consecutive
+        nucleotides: numbering slots minus the residues actually present."""
         index_prev = self.global_index[nt_prev]
         index_cur = self.global_index[nt_cur]
-        between = sum(
+        modelled = sum(
             1
             for residue in self.structure3d.residues
-            if index_prev < self.global_index[residue] < index_cur
+            if residue.chain == nt_prev.chain
+            and index_prev < self.global_index[residue] < index_cur
         )
-        return abs(nt_cur.number - nt_prev.number) == between + 1
+        return abs(nt_cur.number - nt_prev.number) - 1 - modelled
+
+    def __missing_residue_names_between(
+        self, nt_prev: Residue3D, nt_cur: Residue3D
+    ) -> list[str]:
+        """Full names of the residues missing between two chain-consecutive
+        nucleotides.
+
+        When the file header reports the unobserved residues (rnapolis >=
+        0.16.15) the real identifiers are returned; otherwise placeholders
+        (``A.?7`` style) are synthesized from the numbering so that the list
+        length always equals the number of missing residues.
+        """
+        low = min(nt_prev.number, nt_cur.number)
+        high = max(nt_prev.number, nt_cur.number)
+        slots = range(low + 1, high)
+        header_missing = getattr(self.structure3d, "missing_residues", None) or []
+        names = [
+            Residue(missing.label, missing.auth).full_name
+            or f"{missing.chain}.{missing.name}{missing.number}"
+            for missing in sorted(header_missing)
+            if missing.chain == nt_prev.chain
+            and missing.number is not None
+            and missing.number in slots
+        ]
+        if names or not slots:
+            return names
+        modelled_numbers = {
+            residue.number
+            for residue in self.structure3d.residues
+            if residue.chain == nt_prev.chain and low < residue.number < high
+        }
+        return [
+            f"{nt_prev.chain}.?{number}"
+            for number in slots
+            if number not in modelled_numbers
+        ]
 
     def __is_mirror_image(self) -> bool:
         """True when all tetrad nucleotides are L-configuration sugars (PDB
@@ -2041,9 +2217,9 @@ class Quadruplex:
         """True when at least two canonical Watson-Crick base pairs are formed
         by the quadruplex's loop or bulge nucleotides - a duplex stem growing
         out of a loop (e.g. 6fc9)."""
-        loop_or_bulge = {nt for loop in self.loops for nt in loop.nucleotides} | set(
-            self.bulges
-        )
+        loop_or_bulge = {nt for loop in self.loops for nt in loop.nucleotides} | {
+            nt for bulge in self.bulges for nt in bulge.nucleotides
+        }
         if not loop_or_bulge:
             return False
 
@@ -2182,9 +2358,8 @@ class Quadruplex:
                     builder += f"{snapback}\n"
             if self.bulges:
                 builder += "\n    Bulges:\n"
-                builder += (
-                    "      " + ", ".join(nt.full_name for nt in self.bulges) + "\n"
-                )
+                for bulge in self.bulges:
+                    builder += f"      {bulge}\n"
             builder += "\n"
         return builder
 
@@ -2293,6 +2468,7 @@ class Analysis:
     helices: list[Helix] = field(init=False)
     ions: list[Atom] = field(init=False)
     sugar_puckers: dict[Residue3D, SugarPucker | None] = field(init=False)
+    sequence_entries: list[tuple[str, Residue3D | None]] = field(init=False)
     sequence: str = field(init=False)
     line1: str = field(init=False)
     line2: str = field(init=False)
@@ -2303,8 +2479,10 @@ class Analysis:
             self.structure3d,
             self.base_interactions.base_pairs,
             self.base_interactions.stackings,
-            False,
+            True,
         )
+        self.sequence_entries = self.__prepare_sequence_entries()
+        self.sequence_entries = self.__prepare_sequence_entries()
         self.tetrads = self.__find_tetrads(self.no_reorder)
         self.tetrad_scores = self.__calculate_tetrad_scores()
         self.tetrad_pairs = self.__find_tetrad_pairs()
@@ -2352,6 +2530,19 @@ class Analysis:
                 helix.quadruplexes = quadruplexes
                 helices.append(helix)
         return helices
+
+    def __prepare_sequence_entries(self) -> list[tuple[str, Residue3D | None]]:
+        """Full per-chain sequence entries (chain, letter, residue or None)
+        for the report and exports, including residues missing from the 3D
+        coordinates."""
+        return sequence_entries_with_missing(
+            sorted(
+                filter(lambda nt: nt.is_nucleotide, self.structure3d.residues),
+                key=lambda nt: self.global_index[nt],
+            ),
+            getattr(self.structure3d, "missing_residues", None),
+            getattr(self.structure3d, "sequence_by_entity", None),
+        )
 
     def __prepare_global_index(self) -> dict[Residue3D, int]:
         result = {}
@@ -2890,22 +3081,11 @@ class Analysis:
     def __dot_bracket(self, pairs: list[BasePair3D]) -> tuple[str, str]:
         bpseq_index = {}
         bpseq_entries = []
-        chain = None
-        shifts = {}
-        shift_value = 0
-        i = 1
 
-        for nt in sorted(
-            filter(lambda nt: nt.is_nucleotide, self.structure3d.residues),
-            key=lambda nt: self.global_index[nt],
-        ):
-            if chain and chain != nt.chain:
-                shift_value += 1
-            shifts[nt] = shift_value
-            chain = nt.chain
-            bpseq_index[nt] = i
-            bpseq_entries.append(Entry(i, nt.one_letter_name, 0))
-            i += 1
+        for offset, (_, letter, residue) in enumerate(self.sequence_entries):
+            if residue is not None:
+                bpseq_index[residue] = offset + 1
+            bpseq_entries.append(Entry(offset + 1, letter, 0))
 
         for pair in pairs:
             ni = bpseq_index[pair.nt1_3d]
@@ -2913,23 +3093,21 @@ class Analysis:
             bpseq_entries[ni - 1].pair = nj
             bpseq_entries[nj - 1].pair = ni
 
-        dot_bracket = BpSeq(bpseq_entries).fcfs
+        structure_rendering = BpSeq(bpseq_entries).fcfs.structure
 
-        def insert_dashes(string, indices):
-            result = []
-            for i, c in enumerate(string):
-                if i in indices:
-                    result.append("-")
-                result.append(c)
-            return "".join(result)
-
-        arr = numpy.array(list(shifts.values()))
-        changes = numpy.where(arr[1:] != arr[:-1])[0]
-
-        return (
-            insert_dashes(dot_bracket.sequence, changes),
-            insert_dashes(dot_bracket.structure, changes),
-        )
+        sequence_chars = []
+        structure_chars = []
+        previous_chain = None
+        for offset, (chain, letter, residue) in enumerate(self.sequence_entries):
+            if previous_chain is not None and chain != previous_chain:
+                sequence_chars.append("-")
+                structure_chars.append("-")
+            sequence_chars.append(letter)
+            structure_chars.append(
+                "?" if residue is None else structure_rendering[offset]
+            )
+            previous_chain = chain
+        return "".join(sequence_chars), "".join(structure_chars)
 
     def __str__(self):
         builder = f"Chain order: {' '.join(self.__chain_order())}\n"
@@ -3004,7 +3182,9 @@ class Visualizer:
         # on process exit, so it deliberately stays open without a context manager
         fasta = tempfile.NamedTemporaryFile("w+", suffix=".fasta")  # noqa: SIM115
         fasta.write(f">{prefix}-{suffix}\n")
-        fasta.write(self.analysis.sequence)
+        # keep the fasta in the modelled-residue index space used by the .helix
+        # file below (the enriched report sequence would shift the coordinates)
+        fasta.write("".join(nt.one_letter_name for nt in self.__modelled_nucleotides()))
         fasta.flush()
 
         layer1, layer2 = [], []
@@ -3054,6 +3234,9 @@ class Visualizer:
                 run.stderr.decode(),
             )
 
+    def __modelled_nucleotides(self) -> list[Residue3D]:
+        return [nt for nt in self.analysis.structure3d.residues if nt.is_nucleotide]
+
     def __to_helix(
         self, layer: list[BasePair3D], canonical: list[BasePair3D] | None = None
     ) -> IO[str]:
@@ -3065,9 +3248,7 @@ class Visualizer:
             ONZ.Z_PLUS: 5,
             ONZ.Z_MINUS: 6,
         }
-        nucleotides = [
-            nt for nt in self.analysis.structure3d.residues if nt.is_nucleotide
-        ]
+        nucleotides = self.__modelled_nucleotides()
         chain = None
         shifts = {}
         shift_value = 0
@@ -3081,7 +3262,7 @@ class Visualizer:
         # the .helix file is returned to the caller (consumed by the R
         # subprocess), so it deliberately stays open without a context manager
         helix = tempfile.NamedTemporaryFile("w+", suffix=".helix")  # noqa: SIM115
-        helix.write(f"#{len(self.analysis.sequence) + 1}\n")
+        helix.write(f"#{len(self.__modelled_nucleotides()) + 1}\n")
         helix.write("i\tj\tlength\tvalue\n")
 
         for pair in layer:

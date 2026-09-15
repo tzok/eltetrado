@@ -79,12 +79,20 @@ class TetradPairDTO:
 class LoopDTO:
     type: str | None
     nucleotides: list[str]
+    missing: list[str]
 
 
 @dataclass
 class SnapbackDTO:
     orientation: str
     nucleotides: list[str]
+    missing: list[str]
+
+
+@dataclass
+class BulgeDTO:
+    nucleotides: list[str]
+    missing: list[str]
 
 
 @dataclass
@@ -104,7 +112,7 @@ class QuadruplexDTO:
     gbaClassification: list[str]
     tracts: list[list[str]]
     path: list[str]
-    bulges: list[str]
+    bulges: list[BulgeDTO]
     loops: list[LoopDTO]
     snapbacks: list[SnapbackDTO]
     tags: list[str]
@@ -260,16 +268,20 @@ def convert_quadruplexes(quadruplexes: list[Quadruplex]) -> list[QuadruplexDTO]:
                 nts_(q.tracts[3].nucleotides),
             ],
             q.path,
-            [nt.full_name for nt in q.bulges],
+            [
+                BulgeDTO(nts_(bulge.nucleotides), list(bulge.missing))
+                for bulge in q.bulges
+            ],
             [
                 LoopDTO(
                     loop.loop_type.value if loop.loop_type is not None else None,
                     nts_(loop.nucleotides),
+                    list(loop.missing),
                 )
                 for loop in q.loops
             ],
             [
-                SnapbackDTO(s.orientation.value, nts_(s.nucleotides))
+                SnapbackDTO(s.orientation.value, nts_(s.nucleotides), list(s.missing))
                 for s in q.snapbacks
             ],
             list(q.tags),
@@ -322,24 +334,33 @@ def convert_quadruplex_dot_bracket(analysis: Analysis) -> QuadruplexDotBracketDT
         structures.append(lines[i + 2])
         i += 3
 
+    # Position of every modelled residue within the dashed, gap-aware
+    # strings: the mapping's BpSeq covers residues and gap placeholders
+    # alike, and strand lengths account for both.
+    index_to_residue = analysis.mapping.bpseq_index_to_residue_map
+    strands = analysis.mapping.strands_sequences
     mapping = {}
-    i = 0
-    current_chain = None
+    gap_positions = set()
+    bpseq_offset = 0
+    dashed_offset = 0
 
-    for residue in analysis.structure3d.residues:
-        if residue.is_nucleotide:
-            if current_chain is None:
-                current_chain = residue.chain
-            if residue.chain != current_chain:
-                current_chain = residue.chain
-                i += 1
-            mapping[residue] = i
-            i += 1
+    for (chain, strand_sequence), strand_structure in zip(
+        strands, structures, strict=True
+    ):
+        assert chain and len(strand_sequence) == len(strand_structure)
+        for j in range(len(strand_sequence)):
+            residue = index_to_residue.get(bpseq_offset + j + 1)
+            if residue is not None:
+                mapping[residue] = dashed_offset + j
+            else:
+                gap_positions.add(dashed_offset + j)
+        bpseq_offset += len(strand_sequence)
+        dashed_offset += len(strand_sequence) + 1  # the '-' separator
 
     sequence = "-".join(sequences)
     structure = list("-".join(structures))
     assert len(sequence) == len(structure)
-    assert len(sequence) == i
+    assert len(sequence) == dashed_offset - 1
 
     for i, tetrad in enumerate(analysis.tetrads):
         nt1, nt2, nt3, nt4 = sorted(tetrad.nucleotides)
@@ -378,6 +399,10 @@ def convert_quadruplex_dot_bracket(analysis: Analysis) -> QuadruplexDotBracketDT
 
     chi_line = list(re.sub(r"[^-]", ".", sequence))
     sugar_line = list(re.sub(r"[^-]", ".", sequence))
+    # residues without coordinates are marked '?' in all annotation lines
+    for line in (structure, chi_line, sugar_line):
+        for position in gap_positions:
+            line[position] = "?"
 
     for nt in analysis.structure3d.residues:
         if nt.is_nucleotide and nt in analysis.global_index:
@@ -399,6 +424,8 @@ def convert_quadruplex_dot_bracket(analysis: Analysis) -> QuadruplexDotBracketDT
             )
 
     loop_line = list(re.sub(r"[^-]", ".", sequence))
+    for position in gap_positions:
+        loop_line[position] = "?"
 
     for helix in analysis.helices:
         for quadruplex in helix.quadruplexes:
@@ -418,8 +445,9 @@ def convert_quadruplex_dot_bracket(analysis: Analysis) -> QuadruplexDotBracketDT
                         else "?"
                     )
             # mark bulges
-            for nt in quadruplex.bulges:
-                loop_line[mapping[nt]] = "b"
+            for bulge in quadruplex.bulges:
+                for nt in bulge.nucleotides:
+                    loop_line[mapping[nt]] = "b"
             # mark snapbacks
             for snapback in quadruplex.snapbacks:
                 for nt in snapback.nucleotides:

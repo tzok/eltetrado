@@ -51,6 +51,7 @@ from eltetrado.analysis import (
     collect_nucleobase_atoms,
     get_plane_vectors,
     residue_c1prime_coordinates,
+    sequence_entries_with_missing,
 )
 from eltetrado.model import SugarPucker
 
@@ -120,7 +121,7 @@ def generate_g4composer_entry(
     name: str,
     mode: G4ComposerMode = G4ComposerMode.CLASSIC,
 ) -> G4ComposerEntry:
-    residues = export_residues(analysis, quadruplex)
+    entries = export_entries(analysis, quadruplex)
     build_order = tetrads_in_build_order(quadruplex)
     tetrad_labels = quadruplex.tetrad_labels_by_5p_order()
     tetrad_to_label = {
@@ -129,10 +130,10 @@ def generate_g4composer_entry(
 
     return G4ComposerEntry(
         name=name,
-        sequence=export_sequence(residues),
-        structure=export_structure(analysis, quadruplex, residues),
-        chi=export_chi(residues),
-        sugar=export_sugar(analysis, residues),
+        sequence=export_sequence(entries, molecule_by_chain(entries)),
+        structure=export_structure(analysis, quadruplex, entries),
+        chi=export_chi(entries),
+        sugar=export_sugar(analysis, entries),
         orient=export_orient(quadruplex, build_order, tetrad_to_label),
         rise=export_rise(quadruplex),
         twist=export_twist(quadruplex, mode),
@@ -169,19 +170,44 @@ def export_chains(quadruplex: Quadruplex) -> list[str]:
     )
 
 
-def export_sequence(residues: Sequence[Residue3D]) -> str:
+def export_entries(
+    analysis: Analysis, quadruplex: Quadruplex
+) -> list[tuple[str, str, Residue3D | None]]:
+    """Full chain-span entries for the export: modelled residues interleaved
+    with residues reported missing in the file header (their real one-letter
+    codes when the header sequence is available, else '?')."""
+    return sequence_entries_with_missing(
+        export_residues(analysis, quadruplex),
+        getattr(analysis.structure3d, "missing_residues", None),
+        getattr(analysis.structure3d, "sequence_by_entity", None),
+    )
+
+
+def molecule_by_chain(entries) -> dict[str, Molecule]:
+    molecules: dict[str, Molecule] = {}
+    for chain, _, residue in entries:
+        if residue is not None and chain not in molecules:
+            molecules[chain] = residue.molecule_type
+    return molecules
+
+
+def export_sequence(
+    entries: Sequence[tuple[str, str, Residue3D | None]],
+    molecules: dict[str, Molecule],
+) -> str:
     letters = []
-    for residue in residues:
-        letter = residue.one_letter_name
-        if residue.molecule_type == Molecule.RNA:
-            letters.append(letter.upper())
-        else:
-            letters.append(letter.lower())
+    for chain, letter, residue in entries:
+        is_rna = (
+            residue.molecule_type if residue else molecules[chain]
+        ) == Molecule.RNA
+        letters.append(letter.upper() if is_rna else letter.lower())
     return "".join(letters)
 
 
 def export_structure(
-    analysis: Analysis, quadruplex: Quadruplex, residues: Sequence[Residue3D]
+    analysis: Analysis,
+    quadruplex: Quadruplex,
+    entries: Sequence[tuple[str, str, Residue3D | None]],
 ) -> str:
     """Overlay tetrad markers on canonical-base-pair brackets.
 
@@ -189,27 +215,40 @@ def export_structure(
     the exported chain span and then overwrite tetrad residues with ``^`` to make
     quadruplex participation explicit. When a tetrad residue participates in a
     canonical base pair, the partner's bracket is neutralized to ``.`` so the
-    dot-bracket stays balanced.
+    dot-bracket stays balanced. Entries without coordinates (missing
+    residues) are marked ``?`` and never paired.
     """
-    structure = list(canonical_dot_bracket(analysis, residues))
-    tetrad_residues = {nt for tetrad in quadruplex.tetrads for nt in tetrad.nucleotides}
+    modelled = [residue for _, _, residue in entries if residue is not None]
+    position_of = {residue: i for i, residue in enumerate(modelled)}
+    brackets = canonical_dot_bracket(analysis, modelled)
 
-    residue_to_index = {residue: i for i, residue in enumerate(residues)}
     partner: dict[int, int] = {}
     for base_pair in analysis.canonical():
         nt1 = base_pair.nt1_3d
         nt2 = base_pair.nt2_3d
-        if nt1 in residue_to_index and nt2 in residue_to_index:
-            i = residue_to_index[nt1]
-            j = residue_to_index[nt2]
+        if nt1 in position_of and nt2 in position_of:
+            i = position_of[nt1]
+            j = position_of[nt2]
             partner[i] = j
             partner[j] = i
 
-    for i, residue in enumerate(residues):
+    tetrad_residues = {nt for tetrad in quadruplex.tetrads for nt in tetrad.nucleotides}
+
+    structure = []
+    modelled_position = 0
+    for _, _, residue in entries:
+        if residue is None:
+            structure.append("?")
+            continue
+        char = brackets[modelled_position]
         if residue in tetrad_residues:
-            structure[i] = "^"
-            if i in partner and residues[partner[i]] not in tetrad_residues:
-                structure[partner[i]] = "."
+            char = "^"
+            if modelled_position in partner and (
+                modelled[partner[modelled_position]] not in tetrad_residues
+            ):
+                char = "."
+        structure.append(char)
+        modelled_position += 1
     return "".join(structure)
 
 
@@ -238,15 +277,28 @@ def canonical_dot_bracket(analysis: Analysis, residues: Sequence[Residue3D]) -> 
     return BpSeq(entries).fcfs.structure
 
 
-def export_chi(residues: Sequence[Residue3D]) -> str:
+def export_chi(
+    entries: Sequence[tuple[str, str, Residue3D | None]],
+) -> str:
     return "".join(
-        "S" if residue.chi_class == GlycosidicBond.syn else "." for residue in residues
+        "S"
+        if residue is not None and residue.chi_class == GlycosidicBond.syn
+        else "?"
+        if residue is None
+        else "."
+        for _, _, residue in entries
     )
 
 
-def export_sugar(analysis: Analysis, residues: Sequence[Residue3D]) -> str:
+def export_sugar(
+    analysis: Analysis,
+    entries: Sequence[tuple[str, str, Residue3D | None]],
+) -> str:
     symbols = []
-    for residue in residues:
+    for _, _, residue in entries:
+        if residue is None:
+            symbols.append("?")
+            continue
         sugar = analysis.sugar_puckers.get(residue)
         if sugar == SugarPucker.NORTH:
             symbols.append("N")
