@@ -499,16 +499,18 @@ def test_g4composer_non_linear_intervals_follow_build_order():
     quadruplex = analysis.helices[0].quadruplexes[0]
     entry = generate_g4composer_entry(analysis, quadruplex, "5zev-assembly1")
 
-    assert entry.orient == "A-;B+;C-"
+    assert entry.orient == "A+;B-;C+"
     assert entry.rise == "2.9;-6.3"
     assert entry.twist == "31.8;-63.5"
 
 
 def test_g4composer_consistent_mode_in_5zev():
-    """Consistent mode shifts tetrad C's numbering cyclically (its chain
-    visits start at classic C3) and signs the torsion by the interval's rise:
-    the second interval (rise -6.3) flips the torsion sign to follow the
-    fixed, rise-positive quadruplex axis."""
+    """Consistent mode numbers each tetrad geometrically: the first guanine
+    visited by the chain becomes 1 and the remaining guanines follow in the
+    direction that is clockwise along the g4 axis (validated against the
+    expert's canonical 5ZEV entry). The orient follows the H-bond successor
+    cycle direction around the same axis; the torsion is signed by the
+    interval's rise."""
     cif = handle_input_file("tests/files/5zev-assembly1.cif.gz")
     structure3d = rnapolis.parser.read_3d_structure(cif, 1, nucleic_acid_only=False)
     base_interactions = parse_external_output(
@@ -521,8 +523,8 @@ def test_g4composer_consistent_mode_in_5zev():
         analysis, quadruplex, "5zev-assembly1", G4ComposerMode.CONSISTENT
     )
 
-    assert entry.path == "A1;B1;B3;A3;C1;B2;A2;C4;C3;B4;A4;C2"
-    assert entry.orient == "A-;B+;C-"
+    assert entry.path == "A1;B1;B3;A3;C1;B4;A4;C2;C3;B2;A2;C4"
+    assert entry.orient == "A+;B-;C+"
     assert entry.rise == "2.9;-6.3"
     assert entry.twist == "31;116.2"
 
@@ -936,3 +938,31 @@ def test_spurious_reasons_ignores_nan_geometry():
 
     quadruplex = _StubQuadruplex(pairs=[(math.nan, math.nan)])
     assert quadruplex_spurious_reasons(quadruplex) == []
+
+
+def test_g4composer_8tns_matches_expert_canonical():
+    """8TNS is the expert-validated canonical entry: the orient is judged
+    from the H-bond successor cycle direction around the g4 axis (the axis
+    oriented so the first build-order rise is positive), and the consistent
+    numbering starts at the first guanine visited by the chain going
+    clockwise along the same axis. Both modes must keep this output."""
+    cif = handle_input_file("tests/files/8tns-assembly1.cif.gz")
+    structure3d = rnapolis.parser.read_3d_structure(cif, 1, nucleic_acid_only=False)
+    base_interactions = parse_external_output(
+        ["tests/files/8tns-assembly1.json"], ExternalTool.DSSR, structure3d
+    )
+    analysis = eltetrado(base_interactions, structure3d, False)
+
+    quadruplex = analysis.helices[0].quadruplexes[0]
+
+    classic = generate_g4composer_entry(analysis, quadruplex, "8tns-assembly1")
+    assert classic.orient == "A-;B+;C-;D+"
+    assert classic.rise == "3.3;6.7;-3.1"
+    assert classic.path == "A1;B1;C1;D1;A2;B2;C2;D2;A3;B3;C3;D3;A4;B4;C4;D4"
+
+    consistent = generate_g4composer_entry(
+        analysis, quadruplex, "8tns-assembly1", G4ComposerMode.CONSISTENT
+    )
+    assert consistent.orient == "A-;B+;C-;D+"
+    assert consistent.twist == "-13.6;-18.1;-38.7"
+    assert consistent.path == classic.path

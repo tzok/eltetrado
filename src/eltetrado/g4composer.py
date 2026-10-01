@@ -356,39 +356,53 @@ def export_path(
 
 
 def consistent_path(quadruplex: Quadruplex) -> list[str]:
-    """Return path entries numbered by a cyclic shift of the classic
-    (clockwise) column numbering within each tetrad.
+    """Return path entries numbered per tetrad by the chain-visit order and
+    the g4-axis geometry.
 
-    The first nucleotide of a tetrad visited by the chain becomes number 1
-    and every other nucleotide of that tetrad keeps its original cyclic
-    position: classic ``A1;...;B4;...;B3;...;B2;...;B1`` becomes
-    ``A1;...;B1;...;B4;...;B3;...;B2`` (B4->1, B1->2, B2->3, B3->4), so the
-    numbering is shifted, not re-ranked.
+    The first guanine of a tetrad visited by the chain becomes number 1 and
+    every other guanine of that tetrad follows in the direction that is
+    clockwise when viewed along the g4 axis (the export axis, oriented so
+    that the first build-order rise is positive). The numbering is therefore
+    geometric, independent of both the orient and the classic tract ids.
     """
     tetrad_labels = quadruplex.tetrad_labels_by_5p_order()
-    tract_of: dict[Residue3D, int] = {}
-    for tract_index, tract in enumerate(quadruplex.tracts, start=1):
-        for nt in tract.nucleotides:
-            if nt not in tract_of:
-                tract_of[nt] = tract_index
+    axis, centroids = quadruplex_axis_and_centroids(quadruplex)
+    if axis is None:
+        raise ValueError("g4composer consistent export requires the quadruplex axis")
+
     labels: dict[Residue3D, str] = {}
     for tetrad, tetrad_label in zip(quadruplex.tetrads, tetrad_labels, strict=True):
-        ordered = sorted(tetrad.nucleotides, key=lambda nt: quadruplex.global_index[nt])
-        first_column = clockwise_column(tract_of[ordered[0]])
-        for nt in ordered:
-            original = clockwise_column(tract_of[nt])
-            shifted = ((original - first_column) % 4) + 1
-            labels[nt] = f"{tetrad_label}{shifted}"
+        visited = sorted(tetrad.nucleotides, key=lambda nt: quadruplex.global_index[nt])
+        first = visited[0]
+        center = centroids[tetrad]
+        angles = {}
+        for nt in tetrad.nucleotides:
+            point = residue_c1prime_coordinates(nt)
+            if point is None:
+                raise ValueError(
+                    f"g4composer consistent export requires C1' for {nt.full_name}"
+                )
+            vector = point - center
+            vector = vector - numpy.dot(vector, axis) * axis
+            reference = numpy.array([1.0, 0.0, 0.0])
+            if abs(float(numpy.dot(reference, axis))) > 0.9:
+                reference = numpy.array([0.0, 1.0, 0.0])
+            reference = reference - numpy.dot(reference, axis) * axis
+            angles[nt] = math.atan2(
+                float(numpy.dot(numpy.cross(reference, vector), axis)),
+                float(numpy.dot(reference, vector)),
+            )
+        # the axis-clockwise cycle: guanines by decreasing angle, rotated to
+        # start at the first guanine visited by the chain
+        cycle = sorted(tetrad.nucleotides, key=lambda nt: angles[nt], reverse=True)
+        start = next(position for position, nt in enumerate(cycle) if nt is first)
+        numbering = cycle[start:] + cycle[:start]
+        for rank, nt in enumerate(numbering, start=1):
+            labels[nt] = f"{tetrad_label}{rank}"
     return [
         labels[nt]
         for nt in sorted(labels.keys(), key=lambda nt: quadruplex.global_index[nt])
     ]
-
-
-def clockwise_column(tract_index: int) -> int:
-    """Map an ElTetrado tract index (anticlockwise numbering) to the
-    g4composer clockwise column number."""
-    return {1: 1, 2: 4, 3: 3, 4: 2}.get(tract_index, tract_index)
 
 
 def remap_path_entry_to_clockwise(entry: str) -> str:

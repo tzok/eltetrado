@@ -1633,11 +1633,20 @@ class Quadruplex:
         return result
 
     def __find_tetrad_polarities(self) -> list[TetradPolarity | None]:
-        axis = self.__compute_axis()
+        """Judge each tetrad's H-bond successor cycle around the g4 axis.
+
+        The g4 axis is the analysis axis re-oriented so that the centroid
+        displacement between the first two tetrads in build (path) order is
+        positive - the direction g4composer describes the quadruplex in. The
+        polarity is CLOCKWISE when the hydrogen-bond successor cycle runs in
+        the direction that is clockwise when viewed along that axis
+        (guanines ordered by decreasing angle around it), ANTICLOCKWISE when
+        it runs the opposite way.
+        """
+        axis = self.__polarities_axis()
         polarities: list[TetradPolarity | None] = []
 
-        for i, tetrad in enumerate(self.tetrads):
-            column1 = self.tracts[0].nucleotides[i]
+        for tetrad in self.tetrads:
             geometry = self.__tetrad_geometry(tetrad)
             if geometry is None or axis is None:
                 polarities.append(None)
@@ -1645,35 +1654,94 @@ class Quadruplex:
 
             center, _ = geometry
             successor = self.__hydrogen_bond_successor_map(tetrad)
-
-            if len(successor) != 4 or column1 not in successor:
+            if len(successor) != 4:
                 polarities.append(None)
                 continue
 
-            reference_point = residue_topology_point(column1)
-            next_nt = successor[column1]
-            next_point = residue_topology_point(next_nt)
-            if reference_point is None or next_point is None:
+            ordered = self.__axis_clockwise_order(tetrad, center, axis)
+            if ordered is None:
                 polarities.append(None)
                 continue
 
-            try:
-                delta = calculate_angle_around_axis(
-                    next_point - center,
-                    axis,
-                    reference_point - center,
-                ) % (2.0 * math.pi)
-            except ValueError:
+            next_nt = successor.get(ordered[0])
+            if next_nt == ordered[1]:
+                polarities.append(TetradPolarity.CLOCKWISE)
+            elif next_nt == ordered[3]:
+                polarities.append(TetradPolarity.ANTICLOCKWISE)
+            else:
                 polarities.append(None)
-                continue
-
-            polarities.append(
-                TetradPolarity.ANTICLOCKWISE
-                if delta < math.pi
-                else TetradPolarity.CLOCKWISE
-            )
 
         return polarities
+
+    def __polarities_axis(self) -> numpy.ndarray | None:
+        """The g4 axis for the polarity judgement: the analysis axis oriented
+        so that the first build-order interval's centroid displacement is
+        positive."""
+        axis = self.__compute_axis()
+        if axis is None:
+            return None
+        build_order = self.__build_order_tetrads()
+        if len(build_order) < 2:
+            return axis
+        first = self.__tetrad_geometry(build_order[0])
+        second = self.__tetrad_geometry(build_order[1])
+        if first is None or second is None:
+            return axis
+        displacement = second[0] - first[0]
+        if numpy.dot(axis, displacement) < 0:
+            axis = -axis
+        return axis
+
+    def __build_order_tetrads(self) -> list[Tetrad]:
+        """Tetrads in g4composer build order: the first-appearance order of
+        the tetrad labels along the chain."""
+        labels = self.tetrad_labels_by_5p_order()
+        label_of: dict[Residue3D, str] = {
+            nt: labels[index]
+            for index, tetrad in enumerate(self.tetrads)
+            for nt in tetrad.nucleotides
+        }
+        ordered: list[Tetrad] = []
+        seen: set[str] = set()
+        for nt in sorted(label_of, key=lambda nt: self.global_index[nt]):
+            label = label_of[nt]
+            if label in seen:
+                continue
+            seen.add(label)
+            ordered.append(
+                next(tetrad for tetrad in self.tetrads if nt in tetrad.nucleotides)
+            )
+        return ordered
+
+    def __axis_clockwise_order(
+        self,
+        tetrad: Tetrad,
+        center: numpy.ndarray,
+        axis: numpy.ndarray,
+    ) -> list[Residue3D] | None:
+        """The tetrad's nucleotides ordered clockwise when viewed along the
+        g4 axis: by decreasing angle of C1' (or the topology point) projected
+        onto the plane perpendicular to the axis."""
+        angles: list[tuple[float, Residue3D]] = []
+        for nt in tetrad.nucleotides:
+            point = residue_c1prime_coordinates(nt)
+            if point is None:
+                point = residue_topology_point(nt)
+            if point is None:
+                return None
+            vector = point - center
+            vector = vector - numpy.dot(vector, axis) * axis
+            reference = numpy.array([1.0, 0.0, 0.0])
+            if abs(float(numpy.dot(reference, axis))) > 0.9:
+                reference = numpy.array([0.0, 1.0, 0.0])
+            reference = reference - numpy.dot(reference, axis) * axis
+            angle = math.atan2(
+                float(numpy.dot(numpy.cross(reference, vector), axis)),
+                float(numpy.dot(reference, vector)),
+            )
+            angles.append((angle, nt))
+        angles.sort(key=lambda item: item[0], reverse=True)
+        return [nt for _, nt in angles]
 
     def __hydrogen_bond_successor_map(
         self, tetrad: Tetrad
