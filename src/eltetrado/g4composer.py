@@ -30,6 +30,7 @@ Two export modes are available (``G4ComposerMode``):
 """
 
 import itertools
+import logging
 import math
 import os
 from collections.abc import Sequence
@@ -54,6 +55,8 @@ from eltetrado.analysis import (
     sequence_entries_with_missing,
 )
 from eltetrado.model import SugarPucker
+
+logger = logging.getLogger(__name__)
 
 
 class G4ComposerMode(Enum):
@@ -142,11 +145,13 @@ def generate_g4composer_entry(
 
 
 def export_residues(analysis: Analysis, quadruplex: Quadruplex) -> list[Residue3D]:
-    """Export full nucleotide chains participating in the selected quadruplex.
+    """Export full polymer chains participating in the selected quadruplex.
 
     g4composer expects the quadruplex together with its 5' and 3' flanking
     single-stranded context, so we export every nucleotide from the involved
-    chain(s), not only residues that belong to tetrads.
+    chain(s), not only residues that belong to tetrads. Ligand nucleotides
+    (GTP, cGMP, ...) are excluded; some of them are re-added by
+    ``export_entries`` when they extend the chain termini.
     """
     chains = export_chains(quadruplex)
     return [
@@ -155,7 +160,7 @@ def export_residues(analysis: Analysis, quadruplex: Quadruplex) -> list[Residue3
             analysis.structure3d.residues,
             key=lambda residue: analysis.global_index[residue],
         )
-        if residue.is_nucleotide and residue.chain in chains
+        if residue.chain in chains and residue in analysis.polymer_residues
     ]
 
 
@@ -172,132 +177,313 @@ def export_chains(quadruplex: Quadruplex) -> list[str]:
 
 def export_entries(
     analysis: Analysis, quadruplex: Quadruplex
-) -> list[tuple[str, str, Residue3D | None]]:
-    """Full chain-span entries for the export: modelled residues interleaved
-    with residues reported missing in the file header (their real one-letter
-    codes when the header sequence is available, else '?')."""
-    return sequence_entries_with_missing(
+) -> list[tuple[str, str, Residue3D | None, bool]]:
+    """Full chain-span entries for the export: modelled polymer residues
+    interleaved with residues missing from the coordinates (their real
+    one-letter codes when the header sequence is available, else '?').
+
+    Ligand nucleotides that covalently extend the involved chain (5'/3'
+    terminal nucleosides, e.g. 8wa4) or form a canonical base pair with its
+    terminal residue (e.g. the 7oa3 GTP ligand) are re-added as extra
+    sequence letters at the appropriate sequence end."""
+    entries = sequence_entries_with_missing(
         export_residues(analysis, quadruplex),
         getattr(analysis.structure3d, "missing_residues", None),
         getattr(analysis.structure3d, "sequence_by_entity", None),
     )
+    return extend_entries_with_terminal_ligands(analysis, quadruplex, entries)
+
+
+def terminal_ligand_letters(
+    analysis: Analysis, quadruplex: Quadruplex, entries
+) -> list[tuple[int, tuple[str, str, Residue3D | None, bool]]]:
+    """Compute ligand entries to insert into the export span.
+
+    Returns (insertion index, entry) pairs. Insertion positions are indices
+    into the ligand-free ``entries`` list, so adding them from the largest
+    index first keeps earlier positions valid.
+    """
+    chains = export_chains(quadruplex)
+    span_residues = [residue for _, _, residue, _ in entries if residue is not None]
+    if not span_residues:
+        return []
+    first_by_chain: dict[str, Residue3D] = {}
+    last_by_chain: dict[str, Residue3D] = {}
+    for residue in span_residues:
+        first_by_chain.setdefault(residue.chain, residue)
+        last_by_chain[residue.chain] = residue
+
+    ligands = [
+        residue
+        for residue in analysis.structure3d.residues
+        if residue.is_nucleotide
+        and residue.chain in chains
+        and residue not in analysis.polymer_residues
+    ]
+    if not ligands:
+        return []
+
+    canonical = analysis.canonical()
+    block_start: dict[str, int] = {}
+    block_end: dict[str, int] = {}
+    for index, (chain, _, residue, _) in enumerate(entries):
+        if residue is not None:
+            block_start.setdefault(chain, index)
+            block_end[chain] = index + 1
+
+    insertions = []
+    for ligand in ligands:
+        # covalent extension: the ligand nucleoside bonds to a polymer residue
+        bonded = None
+        for partner in (
+            first_by_chain.get(ligand.chain),
+            last_by_chain.get(ligand.chain),
+        ):
+            if partner is not None and (
+                partner.is_connected(ligand) or ligand.is_connected(partner)
+            ):
+                bonded = partner
+                break
+        if bonded is None:
+            bonded = next(
+                (
+                    partner
+                    for partner in span_residues
+                    if partner.chain == ligand.chain
+                    and (partner.is_connected(ligand) or ligand.is_connected(partner))
+                ),
+                None,
+            )
+            if bonded is not None:
+                logger.warning(
+                    "Ligand %s is covalently bonded to a non-terminal residue %s; "
+                    "it cannot be placed in the g4composer export",
+                    ligand.full_name,
+                    bonded.full_name,
+                )
+                continue
+        if bonded is not None:
+            if bonded is first_by_chain[ligand.chain]:
+                # ligand is the 5'-side neighbor of the first residue
+                index = block_start[ligand.chain]
+                insertions.append(
+                    (
+                        index,
+                        (ligand.chain, ligand.one_letter_name, ligand, False),
+                    )
+                )
+                block_start[ligand.chain] += 1
+            else:
+                index = block_end[ligand.chain]
+                insertions.append(
+                    (
+                        index,
+                        (ligand.chain, ligand.one_letter_name, ligand, False),
+                    )
+                )
+                block_end[ligand.chain] += 1
+            continue
+
+        # base-paired ligand: place it at the sequence end opposite its partner
+        pair = next(
+            (
+                base_pair
+                for base_pair in canonical
+                if (base_pair.nt1_3d is ligand and base_pair.nt2_3d in span_residues)
+                or (base_pair.nt2_3d is ligand and base_pair.nt1_3d in span_residues)
+            ),
+            None,
+        )
+        if pair is None:
+            continue
+        partner = pair.nt2_3d if pair.nt1_3d is ligand else pair.nt1_3d
+        if partner is last_by_chain[ligand.chain]:
+            index = block_start[ligand.chain]
+        elif partner is first_by_chain[ligand.chain]:
+            index = block_end[ligand.chain]
+        else:
+            logger.warning(
+                "Ligand %s base-pairs with non-terminal residue %s; "
+                "it cannot be placed in the g4composer export",
+                ligand.full_name,
+                partner.full_name,
+            )
+            continue
+        insertions.append(
+            (index, (ligand.chain, ligand.one_letter_name, ligand, False))
+        )
+        if index == block_start[ligand.chain]:
+            block_start[ligand.chain] += 1
+        else:
+            block_end[ligand.chain] += 1
+    return insertions
+
+
+def extend_entries_with_terminal_ligands(analysis: Analysis, quadruplex, entries):
+    insertions = terminal_ligand_letters(analysis, quadruplex, entries)
+    if not insertions:
+        return entries
+    result = list(entries)
+    for index, insertion in sorted(insertions, key=lambda item: item[0], reverse=True):
+        result.insert(index, insertion)
+    return result
+
+
+def unplaced_ligands(analysis: Analysis, quadruplex: Quadruplex) -> list[str]:
+    """Return descriptions of nucleotide ligands that neither belong to the
+    exported sequence nor were placed at the chain termini.
+
+    Such a ligand (e.g. 4BW in 6k3y) hangs around the quadruplex chain without
+    being representable in the g4composer input - it may be filling a vacant
+    tetrad position that no annotator can see, so the entry cannot be trusted.
+    """
+    chains = export_chains(quadruplex)
+    exported = {
+        residue
+        for _, _, residue, _ in export_entries(analysis, quadruplex)
+        if residue is not None
+    }
+    names = []
+    for residue in analysis.structure3d.residues:
+        if (
+            residue.is_nucleotide
+            and residue.chain in chains
+            and residue not in analysis.polymer_residues
+            and residue not in exported
+            and all(residue not in tetrad.nucleotides for tetrad in quadruplex.tetrads)
+        ):
+            names.append(residue.full_name)
+    return names
 
 
 def molecule_by_chain(entries) -> dict[str, Molecule]:
     molecules: dict[str, Molecule] = {}
-    for chain, _, residue in entries:
+    for chain, _, residue, _ in entries:
         if residue is not None and chain not in molecules:
             molecules[chain] = residue.molecule_type
     return molecules
 
 
 def export_sequence(
-    entries: Sequence[tuple[str, str, Residue3D | None]],
+    entries: Sequence[tuple[str, str, Residue3D | None, bool]],
     molecules: dict[str, Molecule],
 ) -> str:
     letters = []
-    for chain, letter, residue in entries:
+    for chain, entry_letter, residue, _ in entries:
         is_rna = (
             residue.molecule_type if residue else molecules[chain]
         ) == Molecule.RNA
-        letters.append(letter.upper() if is_rna else letter.lower())
+        letter = entry_letter.upper() if is_rna else entry_letter.lower()
+        if not is_rna and letter == "u":
+            # DNA residues detected by atom heuristics (e.g. thymidine
+            # ligands) may carry the RNA one-letter code from rnapolis
+            letter = "t"
+        if letter.upper() not in "ACGTU":
+            letter = "n"
+        letters.append(letter)
     return "".join(letters)
 
 
 def export_structure(
     analysis: Analysis,
     quadruplex: Quadruplex,
-    entries: Sequence[tuple[str, str, Residue3D | None]],
+    entries: Sequence[tuple[str, str, Residue3D | None, bool]],
 ) -> str:
     """Overlay tetrad markers on canonical-base-pair brackets.
 
     g4composer uses one structure line, so we keep canonical base-pair context in
     the exported chain span and then overwrite tetrad residues with ``^`` to make
-    quadruplex participation explicit. When a tetrad residue participates in a
-    canonical base pair, the partner's bracket is neutralized to ``.`` so the
-    dot-bracket stays balanced. Entries without coordinates (missing
-    residues) are marked ``?`` and never paired.
+    quadruplex participation explicit.     Canonical pairs involving a tetrad
+    residue are dropped entirely (on both sides) so the dot-bracket stays
+    balanced and no stray brackets remain around the quadruplex core. Entries
+    without coordinates (missing residues, numbering gaps) are rendered as
+    ``.`` and never paired.
     """
-    modelled = [residue for _, _, residue in entries if residue is not None]
-    position_of = {residue: i for i, residue in enumerate(modelled)}
-    brackets = canonical_dot_bracket(analysis, modelled)
-
-    partner: dict[int, int] = {}
-    for base_pair in analysis.canonical():
-        nt1 = base_pair.nt1_3d
-        nt2 = base_pair.nt2_3d
-        if nt1 in position_of and nt2 in position_of:
-            i = position_of[nt1]
-            j = position_of[nt2]
-            partner[i] = j
-            partner[j] = i
-
+    modelled = [residue for _, _, residue, _ in entries if residue is not None]
     tetrad_residues = {nt for tetrad in quadruplex.tetrads for nt in tetrad.nucleotides}
+    brackets = canonical_dot_bracket(analysis, modelled, tetrad_residues)
 
     structure = []
     modelled_position = 0
-    for _, _, residue in entries:
-        if residue is None:
-            structure.append("?")
+    for _, _, residue, unknown in entries:
+        if unknown:
+            # missing / numbering-gap slots: no coordinates, rendered inert
+            structure.append(".")
             continue
         char = brackets[modelled_position]
         if residue in tetrad_residues:
             char = "^"
-            if modelled_position in partner and (
-                modelled[partner[modelled_position]] not in tetrad_residues
-            ):
-                char = "."
         structure.append(char)
         modelled_position += 1
     return "".join(structure)
 
 
-def canonical_dot_bracket(analysis: Analysis, residues: Sequence[Residue3D]) -> str:
-    """Return a canonical-base-pair-only dot-bracket string for the export span."""
+def canonical_dot_bracket(
+    analysis: Analysis,
+    residues: Sequence[Residue3D],
+    tetrad_residues: set[Residue3D] | None = None,
+) -> str:
+    """Return a canonical-base-pair-only dot-bracket string for the export span.
+
+    Pairs with at least one tetrad nucleotide are skipped so that the
+    quadruplex core is rendered purely with ``^`` markers and the remaining
+    context brackets stay balanced. A residue found in several canonical pairs
+    (e.g. a bifurcated terminal pairing in 6ftu) keeps only its longest-range
+    pair - the stem pairing - so every residue is bracketed at most once.
+    """
     residue_to_index = {residue: i + 1 for i, residue in enumerate(residues)}
     entries = [
         Entry(i + 1, residue.one_letter_name, 0) for i, residue in enumerate(residues)
     ]
-    seen = set()
 
+    candidates: list[tuple[int, int]] = []
     for base_pair in analysis.canonical():
         nt1 = base_pair.nt1_3d
         nt2 = base_pair.nt2_3d
         if nt1 not in residue_to_index or nt2 not in residue_to_index:
             continue
-        key = tuple(sorted((residue_to_index[nt1], residue_to_index[nt2])))
-        if key in seen:
+        if tetrad_residues and (nt1 in tetrad_residues or nt2 in tetrad_residues):
             continue
-        seen.add(key)
         i = residue_to_index[nt1]
         j = residue_to_index[nt2]
-        entries[i - 1].pair = j
-        entries[j - 1].pair = i
+        if i == j:
+            continue
+        candidates.append((i, j) if i < j else (j, i))
+
+    assigned: dict[int, int] = {}
+    for i, j in sorted(
+        set(candidates), key=lambda pair: pair[1] - pair[0], reverse=True
+    ):
+        if i in assigned or j in assigned:
+            continue
+        assigned[i] = j
+        assigned[j] = i
+
+    for i, j in assigned.items():
+        if i < j:
+            entries[i - 1].pair = j
+            entries[j - 1].pair = i
 
     return BpSeq(entries).fcfs.structure
 
 
 def export_chi(
-    entries: Sequence[tuple[str, str, Residue3D | None]],
+    entries: Sequence[tuple[str, str, Residue3D | None, bool]],
 ) -> str:
     return "".join(
-        "S"
-        if residue is not None and residue.chi_class == GlycosidicBond.syn
-        else "?"
-        if residue is None
-        else "."
-        for _, _, residue in entries
+        "S" if residue is not None and residue.chi_class == GlycosidicBond.syn else "."
+        for _, _, residue, _ in entries
     )
 
 
 def export_sugar(
     analysis: Analysis,
-    entries: Sequence[tuple[str, str, Residue3D | None]],
+    entries: Sequence[tuple[str, str, Residue3D | None, bool]],
 ) -> str:
     symbols = []
-    for _, _, residue in entries:
+    for _, _, residue, _ in entries:
         if residue is None:
-            symbols.append("?")
+            symbols.append(".")
             continue
         sugar = analysis.sugar_puckers.get(residue)
         if sugar == SugarPucker.NORTH:
@@ -646,31 +832,90 @@ def write_g4composer(
     input_path: str,
     output_path: str,
     mode: G4ComposerMode = G4ComposerMode.CLASSIC,
+    allow_abasic_nucleotides: bool = False,
+    allow_non_g_tetrads: bool = False,
 ) -> None:
-    """Always write a single file at ``output_path``.
+    """Write one g4composer input file per involved chain.
 
-    For each g4composer-eligible quadruplex we attempt to build an entry;
-    quadruplexes that raise during export are skipped. The remaining entries
-    are deduplicated by their serialized content. If no valid entry remains an
-    empty file is written. When more than one distinct entry is produced they
-    are concatenated into the single output file, separated by one blank line.
+    The ``output_path`` acts as a name template: ``/dir/4ni9-assembly1.inp``
+    produces ``4ni9-assembly1-A.inp``, ``4ni9-assembly1-B.inp`` ... (a second
+    distinct entry for the same chain becomes ``4ni9-assembly1-Aq2.inp``).
+    Quadruplexes that raise during export are skipped; quadruplexes with a
+    tetrad completed by a ligand nucleotide are skipped with a warning, as
+    g4composer cannot model them. Quadruplexes containing a mixed-base tetrad
+    (e.g. G·C·G·C) are skipped as well unless ``allow_non_g_tetrads`` is set -
+    a partial view built of the remaining G-tetrads would misrepresent the
+    structure. Entries containing unresolvable nucleotide letters (N/X) are
+    skipped unless ``allow_abasic_nucleotides`` is set, in which case they are
+    exported with ``n`` in the sequence. If no valid entry remains, an empty
+    file is written at ``output_path``.
     """
-    quadruplexes = eligible_quadruplexes(analysis)
+    directory = os.path.dirname(output_path)
+    root, _ = os.path.splitext(os.path.basename(output_path))
 
-    seen: set[str] = set()
-    blocks: list[str] = []
+    quadruplexes = eligible_quadruplexes(analysis)
+    per_chain: dict[str, list[str]] = {}
     for quad in quadruplexes:
+        chains = export_chains(quad)
+        if not allow_non_g_tetrads and any(
+            len({nt.one_letter_name.upper() for nt in tetrad.nucleotides}) > 1
+            for tetrad in quad.tetrads
+        ):
+            logger.warning(
+                "Quadruplex contains a mixed-base tetrad; no g4composer input "
+                "is generated for it unless --allow-non-g-tetrads is set"
+            )
+            continue
+        if any(
+            nt not in analysis.polymer_residues
+            for tetrad in quad.tetrads
+            for nt in tetrad.nucleotides
+        ):
+            logger.warning(
+                "Quadruplex contains a tetrad completed by a ligand nucleotide; "
+                "g4composer input cannot be generated for it"
+            )
+            continue
         try:
             entry = generate_g4composer_entry(
                 analysis, quad, input_name(input_path), mode
             )
         except ValueError:
             continue
-        serialized = entry.serialize()
-        if serialized in seen:
+        unplaced = unplaced_ligands(analysis, quad)
+        if unplaced:
+            logger.warning(
+                "Skipping g4composer entry for %s: unplaced ligand nucleotide(s) "
+                "%s may fill a quadruplex position that g4composer cannot model",
+                entry.name,
+                ", ".join(unplaced),
+            )
             continue
-        seen.add(serialized)
+        if not allow_abasic_nucleotides:
+            unresolved = sorted(
+                {letter for letter in entry.sequence.upper() if letter not in "ACGTU"}
+            )
+            if unresolved:
+                logger.warning(
+                    "Skipping g4composer entry for %s: unresolvable nucleotide letter(s) %s "
+                    "(use --allow-abasic-nucleotides to export them as n)",
+                    entry.name,
+                    ", ".join(unresolved),
+                )
+                continue
+        blocks = per_chain.setdefault(chains[0], [])
+        serialized = entry.serialize()
+        if serialized in blocks:
+            continue
         blocks.append(serialized)
 
-    with open(output_path, "w") as handle:
-        handle.write("\n".join(blocks))
+    if not per_chain:
+        with open(output_path, "w") as handle:
+            handle.write("")
+        return
+    for chain, blocks in sorted(per_chain.items()):
+        for number, block in enumerate(blocks, start=1):
+            suffix = "" if number == 1 else f"q{number}"
+            path = os.path.join(directory, f"{root}-{chain}{suffix}.inp")
+            with open(path, "w") as handle:
+                handle.write(block)

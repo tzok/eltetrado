@@ -19,6 +19,7 @@ from rnapolis.common import (
     Entry,
     GlycosidicBond,
     LeontisWesthof,
+    Molecule,
     Residue,
 )
 from rnapolis.tertiary import (
@@ -992,45 +993,63 @@ TOPOLOGY_NAMES = {
 }
 
 
+def polymer_nucleotides(structure3d: Structure3D) -> set[Residue3D]:
+    """Return the set of nucleotide residues belonging to polymer chains.
+
+    A residue is a polymer nucleotide when its mmCIF entity has a canonical
+    sequence in the file header, or - for PDB-format files (and entities
+    without header data) - when it is covalently connected to a neighbouring
+    nucleotide of the same chain. Ligand nucleotides (GTP, cGMP, dGMP, ...)
+    and ions are excluded. Residues modelled without base atoms (backbone
+    only, e.g. 6pnk DT5) still count as polymer when their entity is a
+    nucleic-acid polymer.
+    """
+    sequence_by_entity = getattr(structure3d, "sequence_by_entity", None) or {}
+    result: set[Residue3D] = set()
+    pending: dict[str, list[Residue3D]] = {}
+    nucleic = (Molecule.RNA, Molecule.DNA)
+    for residue in structure3d.residues:
+        if residue.molecule_type not in nucleic:
+            continue
+        entity = residue.atoms[0].entity_id if residue.atoms else None
+        if entity and sequence_by_entity.get(entity):
+            result.add(residue)
+        else:
+            pending.setdefault(residue.chain, []).append(residue)
+
+    for residues in pending.values():
+        for index, residue in enumerate(residues):
+            neighbors = [
+                residues[position]
+                for position in (index - 1, index + 1)
+                if 0 <= position < len(residues)
+            ]
+            if any(
+                other.is_nucleotide
+                and (residue.is_connected(other) or other.is_connected(residue))
+                for other in neighbors
+            ):
+                result.add(residue)
+    return result
+
+
 def sequence_entries_with_missing(
     nucleotides: list[Residue3D],
     missing_residues: "list[MissingResidue] | None",
     sequence_by_entity: "dict[str, str] | None",
-) -> list[tuple[str, str, Residue3D | None]]:
+) -> list[tuple[str, str, Residue3D | None, bool]]:
     """Build the full per-chain sequence entries for the report and exports.
 
-    Returns (chain, one-letter code, residue or None) triples in the given
-    nucleotide order (already chain-ordered by the caller), with residues
-    reported missing in the file header interleaved at their numbering
-    positions. Missing residues take their real one-letter code from the
-    entity sequence when available and carry ``residue=None``; without the
-    header data only numbering-based '?' placeholders (unknown identity) are
-    inserted for internal breaks.
+    Returns (chain, one-letter code, residue or None, unknown-geometry flag)
+    quadruples in the given nucleotide order (already chain-ordered by the
+    caller), with residues missing from the coordinates interleaved at their
+    numbering positions. Missing residues take their real one-letter code from
+    the entity sequence when available; internal numbering gaps not covered by
+    the header also get the entity-sequence letter when possible. The
+    unknown-geometry flag is True for entries without coordinates, which
+    renders as '?' in the report but as '.' in the g4composer export.
     """
-    if not missing_residues:
-        # degraded fallback: only internal numbering gaps between
-        # geometrically disconnected residues are marked with '?'
-        entries: list[tuple[str, str, Residue3D | None]] = []
-        for position, residue in enumerate(nucleotides):
-            if (
-                position > 0
-                and residue.chain == nucleotides[position - 1].chain
-                and not nucleotides[position - 1].is_connected(residue)
-            ):
-                previous_number = nucleotides[position - 1].number
-                modelled_numbers = {
-                    other.number
-                    for other in nucleotides
-                    if other.chain == residue.chain
-                }
-                for number in range(
-                    min(previous_number, residue.number) + 1,
-                    max(previous_number, residue.number),
-                ):
-                    if number not in modelled_numbers:
-                        entries.append((residue.chain, "?", None))
-            entries.append((residue.chain, residue.one_letter_name, residue))
-        return entries
+    missing_list = missing_residues or []
 
     modelled_by_chain: dict[str, dict[int, Residue3D]] = {}
     chain_order: list[str] = []
@@ -1044,34 +1063,61 @@ def sequence_entries_with_missing(
             )
 
     missing_by_chain: dict[str, dict[int, MissingResidue]] = {}
-    for missing in missing_residues:
+    for missing in missing_list:
         if missing.chain not in modelled_by_chain or missing.number is None:
             continue
         missing_by_chain.setdefault(missing.chain, {})[missing.number] = missing
 
-    entries: list[tuple[str, str, Residue3D | None]] = []
+    entries = []
     for chain in chain_order:
         modelled = modelled_by_chain[chain]
         missing = missing_by_chain.get(chain, {})
         entity_id = entity_by_chain.get(chain)
-        sequence = sequence_by_entity.get(entity_id) if entity_id else None
-        for number in sorted(set(modelled) | set(missing)):
+        sequence = (
+            sequence_by_entity.get(entity_id)
+            if sequence_by_entity and entity_id
+            else None
+        )
+
+        # auth-numbering -> label_seq_id offset, used to resolve letters of
+        # unmodelled residues that the file header does not report
+        differences = {
+            residue.label.number - residue.number
+            for residue in modelled.values()
+            if residue.label is not None and residue.label.number is not None
+        }
+        offset = next(iter(differences)) if len(differences) == 1 else None
+
+        slots = set(missing)
+        for previous, following in itertools.pairwise(sorted(modelled)):
+            if not modelled[previous].is_connected(modelled[following]):
+                for number in range(
+                    min(previous, following) + 1, max(previous, following)
+                ):
+                    if number not in modelled:
+                        slots.add(number)
+
+        for number in sorted(set(modelled) | slots):
             residue = modelled.get(number)
             if residue is not None:
-                entries.append((chain, residue.one_letter_name, residue))
+                entries.append((chain, residue.one_letter_name, residue, False))
                 continue
-            missing_residue = missing[number]
-            letter = missing_residue.one_letter_name
-            label_number = (
-                missing_residue.label.number if missing_residue.label else None
-            )
+            letter = None
+            label_number = None
+            missing_residue = missing.get(number)
+            if missing_residue is not None:
+                letter = missing_residue.one_letter_name
+                if missing_residue.label is not None:
+                    label_number = missing_residue.label.number
+            if label_number is None and offset is not None:
+                label_number = number + offset
             if (
                 sequence is not None
-                and label_number
+                and label_number is not None
                 and 1 <= label_number <= len(sequence)
             ):
                 letter = sequence[label_number - 1]
-            entries.append((chain, letter, None))
+            entries.append((chain, letter if letter is not None else "?", None, True))
     return entries
 
 
@@ -2528,6 +2574,7 @@ class Analysis:
     structure3d: Structure3D
     no_reorder: bool
     keep_spurious: bool = False
+    polymer_residues: set[Residue3D] = field(init=False)
     global_index: dict[Residue3D, int] = field(init=False)
     mapping: Mapping2D3D = field(init=False)
     tetrads: list[Tetrad] = field(init=False)
@@ -2536,12 +2583,13 @@ class Analysis:
     helices: list[Helix] = field(init=False)
     ions: list[Atom] = field(init=False)
     sugar_puckers: dict[Residue3D, SugarPucker | None] = field(init=False)
-    sequence_entries: list[tuple[str, Residue3D | None]] = field(init=False)
+    sequence_entries: list[tuple[str, str, Residue3D | None, bool]] = field(init=False)
     sequence: str = field(init=False)
     line1: str = field(init=False)
     line2: str = field(init=False)
 
     def __post_init__(self):
+        self.polymer_residues = polymer_nucleotides(self.structure3d)
         self.global_index = self.__prepare_global_index()
         self.mapping = Mapping2D3D(
             self.structure3d,
@@ -2549,7 +2597,6 @@ class Analysis:
             self.base_interactions.stackings,
             True,
         )
-        self.sequence_entries = self.__prepare_sequence_entries()
         self.sequence_entries = self.__prepare_sequence_entries()
         self.tetrads = self.__find_tetrads(self.no_reorder)
         self.tetrad_scores = self.__calculate_tetrad_scores()
@@ -2599,13 +2646,18 @@ class Analysis:
                 helices.append(helix)
         return helices
 
-    def __prepare_sequence_entries(self) -> list[tuple[str, Residue3D | None]]:
+    def __prepare_sequence_entries(
+        self,
+    ) -> list[tuple[str, str, Residue3D | None, bool]]:
         """Full per-chain sequence entries (chain, letter, residue or None)
         for the report and exports, including residues missing from the 3D
         coordinates."""
         return sequence_entries_with_missing(
             sorted(
-                filter(lambda nt: nt.is_nucleotide, self.structure3d.residues),
+                filter(
+                    lambda nt: nt in self.polymer_residues,
+                    self.structure3d.residues,
+                ),
                 key=lambda nt: self.global_index[nt],
             ),
             getattr(self.structure3d, "missing_residues", None),
@@ -3150,12 +3202,15 @@ class Analysis:
         bpseq_index = {}
         bpseq_entries = []
 
-        for offset, (_, letter, residue) in enumerate(self.sequence_entries):
+        for offset, (_, letter, residue, _) in enumerate(self.sequence_entries):
             if residue is not None:
                 bpseq_index[residue] = offset + 1
             bpseq_entries.append(Entry(offset + 1, letter, 0))
 
         for pair in pairs:
+            if pair.nt1_3d not in bpseq_index or pair.nt2_3d not in bpseq_index:
+                # ligand nucleotides are not part of the polymer sequence span
+                continue
             ni = bpseq_index[pair.nt1_3d]
             nj = bpseq_index[pair.nt2_3d]
             bpseq_entries[ni - 1].pair = nj
@@ -3166,7 +3221,7 @@ class Analysis:
         sequence_chars = []
         structure_chars = []
         previous_chain = None
-        for offset, (chain, letter, residue) in enumerate(self.sequence_entries):
+        for offset, (chain, letter, residue, _) in enumerate(self.sequence_entries):
             if previous_chain is not None and chain != previous_chain:
                 sequence_chars.append("-")
                 structure_chars.append("-")

@@ -28,7 +28,9 @@ def eltetrado_cli(args=sys.argv[1:]):
     parser.add_argument("-o", "--output", help="(optional) path for output JSON file")
     parser.add_argument(
         "--g4composer-output",
-        help="(optional) path for g4composer plain-text export; requires exactly one unimolecular quadruplex and exports the full involved chain",
+        help="(optional) path template for g4composer plain-text exports; one "
+        "file per involved chain is written as {stem}-{chain}.inp; a second "
+        "distinct entry for the same chain becomes {stem}-{chain}q2.inp",
     )
     parser.add_argument(
         "--g4composer-consistent",
@@ -80,6 +82,27 @@ def eltetrado_cli(args=sys.argv[1:]):
         "such quadruplexes are discarded",
     )
     parser.add_argument(
+        "--allow-non-g-tetrads",
+        action="store_true",
+        help="generate g4composer inputs also for quadruplexes containing "
+        "tetrads that mix different nucleobases (e.g. G·C·G·C, A·T·G·G); by "
+        "default such quadruplexes produce no g4composer input at all",
+    )
+    parser.add_argument(
+        "--allow-mirrored",
+        action="store_true",
+        help="analyze also mirror-image L-nucleotides (PDB chemical components "
+        "prefixed with 0, e.g. 0G in mirror-image L-RNA/L-DNA aptamers); by "
+        "default such residues are ignored",
+    )
+    parser.add_argument(
+        "--allow-abasic-nucleotides",
+        action="store_true",
+        help="export g4composer inputs even when the sequence contains "
+        "unresolvable nucleotide letters (e.g. abasic residues); they are "
+        "written as n; by default such g4composer entries are skipped",
+    )
+    parser.add_argument(
         "-v", "--version", action="version", version=f"%(prog)s {__version__}"
     )
     args = parser.parse_args(args)
@@ -92,6 +115,17 @@ def eltetrado_cli(args=sys.argv[1:]):
     structure3d = rnapolis.parser.read_3d_structure(
         cif_or_pdb, args.model, nucleic_acid_only=False
     )
+
+    if not args.allow_mirrored:
+        structure3d = Structure3D(
+            [
+                residue
+                for residue in structure3d.residues
+                if not residue.name.startswith("0")
+            ],
+            missing_residues=structure3d.missing_residues,
+            sequence_by_entity=structure3d.sequence_by_entity,
+        )
 
     external_files: list[str] = args.external_files
     selected_tool: ExternalTool | None = ExternalTool(args.tool) if args.tool else None
@@ -112,10 +146,7 @@ def eltetrado_cli(args=sys.argv[1:]):
         )
 
     analysis = eltetrado(
-        base_interactions,
-        structure3d,
-        args.no_reorder,
-        args.keep_spurious,
+        base_interactions, structure3d, args.no_reorder, args.keep_spurious
     )
     print(analysis)
 
@@ -166,7 +197,14 @@ def eltetrado_cli(args=sys.argv[1:]):
             if args.g4composer_consistent
             else G4ComposerMode.CLASSIC
         )
-        write_g4composer(analysis, args.input, args.g4composer_output, mode)
+        write_g4composer(
+            analysis,
+            args.input,
+            args.g4composer_output,
+            mode,
+            args.allow_abasic_nucleotides,
+            args.allow_non_g_tetrads,
+        )
 
 
 def has_tetrad_cli(args=sys.argv[1:]):
@@ -174,6 +212,12 @@ def has_tetrad_cli(args=sys.argv[1:]):
     parser.add_argument("-i", "--input", help="path to input PDB or PDBx/mmCIF file")
     parser.add_argument(
         "-m", "--model", help="(optional) model number to process", default=1, type=int
+    )
+    parser.add_argument(
+        "--allow-mirrored",
+        action="store_true",
+        help="consider also mirror-image L-nucleotides (PDB chemical components "
+        "prefixed with 0); by default such residues are ignored",
     )
     parser.add_argument(
         "-e",
@@ -200,6 +244,17 @@ def has_tetrad_cli(args=sys.argv[1:]):
     structure3d = rnapolis.parser.read_3d_structure(
         cif_or_pdb, args.model, nucleic_acid_only=False
     )
+
+    if not args.allow_mirrored:
+        structure3d = Structure3D(
+            [
+                residue
+                for residue in structure3d.residues
+                if not residue.name.startswith("0")
+            ],
+            missing_residues=structure3d.missing_residues,
+            sequence_by_entity=structure3d.sequence_by_entity,
+        )
 
     external_files: list[str] = args.external_files
     selected_tool: ExternalTool | None = ExternalTool(args.tool) if args.tool else None

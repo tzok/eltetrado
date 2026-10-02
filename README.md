@@ -60,16 +60,18 @@ it.
                      [--g4composer-consistent] [-m MODEL] [--no-reorder]
                      [--complete-2d] [--image DIR] [-e [EXTERNAL_FILES ...]]
                      [--tool {fr3d,dssr,rnaview,bpnet,maxit,barnaba,mc-annotate,dnatco}]
-                     [--keep-spurious] [-v]
+                     [--keep-spurious] [--allow-non-g-tetrads]
+                     [--allow-mirrored] [--allow-abasic-nucleotides] [-v]
 
     options:
       -h, --help            show this help message and exit
       -i, --input INPUT     path to input PDB or PDBx/mmCIF file
       -o, --output OUTPUT   (optional) path for output JSON file
       --g4composer-output G4COMPOSER_OUTPUT
-                            (optional) path for g4composer plain-text export;
-                            requires exactly one unimolecular quadruplex and
-                            exports the full involved chain
+                            (optional) path template for g4composer plain-text
+                            exports; one file per involved chain is written as
+                            {stem}-{chain}.inp (a second distinct entry for the
+                            same chain becomes {stem}-{chain}q2.inp)
       --g4composer-consistent
                             number nucleotides within each tetrad by 5'-3' chain
                             visitation order and export twist as the torsion angle
@@ -94,6 +96,20 @@ it.
       --keep-spurious       report quadruplexes even if they are classified as
                             spurious (e.g. bulges that are too long or unrealistic
                             rise); by default such quadruplexes are discarded
+      --allow-non-g-tetrads
+                            generate g4composer inputs also for quadruplexes
+                            containing tetrads that mix different nucleobases
+                            (e.g. G·C·G·C, A·T·G·G); by default such quadruplexes
+                            produce no g4composer input at all
+      --allow-mirrored      analyze also mirror-image L-nucleotides (PDB chemical
+                            components prefixed with 0, e.g. 0G in mirror-image
+                            L-RNA/L-DNA aptamers); by default such residues are
+                            ignored
+      --allow-abasic-nucleotides
+                            export g4composer inputs even when the sequence
+                            contains unresolvable nucleotide letters (e.g. abasic
+                            residues); they are written as n; by default such
+                            g4composer entries are skipped
       -v, --version         show program's version number and exit
 
 # Chains reorder
@@ -131,8 +147,23 @@ The g4composer exporter uses the same structural analysis as the main
 ElTetrado output, but it applies g4composer-specific conventions at
 export time:
 
-- Only a single unimolecular quadruplex with at least two tetrads is
-  supported.
+- Each unimolecular quadruplex with at least two tetrads is considered
+  independently and written to a separate file for its chain. The
+  `--g4composer-output <stem.inp>` argument is a filename template:
+  output files are named `<stem>-<chain>.inp`; additional entries for
+  that chain use `<stem>-<chain>q2.inp`, etc.
+- A quadruplex containing any mixed-base tetrad (for example G·C·G·C) is
+  not exported by default, because exporting only its G-tetrads would
+  misrepresent the structure. `--allow-non-g-tetrads` enables the
+  complete entry.
+- Entries with unresolvable nucleotide identities (including abasic
+  residues) are skipped by default. `--allow-abasic-nucleotides` writes
+  those identities as `n`.
+- Nucleotide ligands that complete a tetrad, or cannot be placed
+  reliably in the sequence, cause that entry to be skipped with a
+  warning. Terminal ligands covalently connected to the chain or
+  canonically paired with a terminal nucleotide are placed at the
+  appropriate sequence end.
 - The exported residue span covers the whole chain containing the
   quadruplex, including 5’ and 3’ flanking single strands.
 - Tetrad letters (`A`, `B`, `C`, …) still follow tetrad 5’ order.

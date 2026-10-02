@@ -88,6 +88,7 @@ def test_eltetrado_without_dssr(capfd):
 
 def test_g4composer_export_for_6fc9(tmp_path, capfd):
     output_path = tmp_path / "6fc9.g4c"
+    chain_output = tmp_path / "6fc9-A.inp"
 
     eltetrado_cli(
         [
@@ -103,7 +104,7 @@ def test_g4composer_export_for_6fc9(tmp_path, capfd):
         assert out == f.read()
 
     assert (
-        output_path.read_text() == "name        6fc9-assembly-1\n"
+        chain_output.read_text() == "name        6fc9-assembly-1\n"
         "sequence    ggttggcgcgaagcattcgcgggttgg\n"
         "structure   ^^..^^((((((...))))))^^..^^\n"
         "chi         S...S................S...S.\n"
@@ -117,6 +118,7 @@ def test_g4composer_export_for_6fc9(tmp_path, capfd):
 
 def test_g4composer_export_consistent_mode_for_5dea(tmp_path, capfd):
     output_path = tmp_path / "5dea.g4c"
+    chain_output = tmp_path / "5dea-A.inp"
 
     eltetrado_cli(
         [
@@ -130,7 +132,7 @@ def test_g4composer_export_consistent_mode_for_5dea(tmp_path, capfd):
 
     _out, _err = capfd.readouterr()
     assert (
-        output_path.read_text() == "name        5dea-assembly1\n"
+        chain_output.read_text() == "name        5dea-assembly1\n"
         "sequence    GCUGCGGUGUGGAAGGAGUGGCUGGGUUGCGCAGC\n"
         "structure   (((((^((^.^^..^^.^.^^..^^^..)))))))\n"
         "chi         ............SS.....................\n"
@@ -161,3 +163,23 @@ def test_g4composer_export_creates_empty_file_for_2awe(tmp_path, capfd):
     _out, _err = capfd.readouterr()
     assert output_path.exists()
     assert output_path.read_text() == ""
+
+
+def test_mirrored_residues_ignored_by_default(capfd):
+    eltetrado_cli(["--input", "tests/files/4wb2-assembly1.cif.gz"])
+    out, _err = capfd.readouterr()
+    assert "helix" not in out
+
+    eltetrado_cli(["--input", "tests/files/4wb2-assembly1.cif.gz", "--allow-mirrored"])
+    out, _err = capfd.readouterr()
+    assert "n4-helix with 2 tetrads" in out
+
+
+def test_has_tetrad_allows_mirrored_residues(capfd):
+    has_tetrad_cli(["--input", "tests/files/4wb2-assembly1.cif.gz"])
+    out, _err = capfd.readouterr()
+    assert out == "False\n"
+
+    has_tetrad_cli(["--input", "tests/files/4wb2-assembly1.cif.gz", "--allow-mirrored"])
+    out, _err = capfd.readouterr()
+    assert out == "True\n"

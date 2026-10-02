@@ -1,3 +1,4 @@
+import logging
 import math
 from pathlib import Path
 
@@ -14,6 +15,7 @@ from eltetrado.g4composer import (
     canonical_dot_bracket,
     export_residues,
     generate_g4composer_entry,
+    write_g4composer,
 )
 from eltetrado.model import SnapbackOrientation, StrandPolarity
 
@@ -225,14 +227,17 @@ def test_g4composer_exports_multiple_quadruplexes_in_2rsk(tmp_path):
     output_path = str(tmp_path / "2rsk-assembly1.inp")
     write_g4composer(analysis, "tests/files/2rsk-assembly1.cif.gz", output_path)
 
-    outputs = sorted(tmp_path.glob("2rsk-assembly1*.inp"))
-    assert len(outputs) == 1
-    assert outputs[0] == tmp_path / "2rsk-assembly1.inp"
+    # one file per involved chain, each with a single entry
+    outputs = sorted(tmp_path.glob("2rsk-assembly1-*.inp"))
+    assert outputs == [
+        tmp_path / "2rsk-assembly1-A.inp",
+        tmp_path / "2rsk-assembly1-B.inp",
+    ]
 
-    content = outputs[0].read_text()
-    blocks = content.split("\n\n")
-    assert len(blocks) == 2
-    assert all(b.startswith("name        2rsk-assembly1\n") for b in blocks)
+    for output in outputs:
+        content = output.read_text()
+        assert content.startswith("name        2rsk-assembly1\n")
+        assert content.count("name        2rsk-assembly1\n") == 1
 
 
 def test_2ms9_is_left_handed():
@@ -966,3 +971,148 @@ def test_g4composer_8tns_matches_expert_canonical():
     assert consistent.orient == "A-;B+;C-;D+"
     assert consistent.twist == "-13.6;-18.1;-38.7"
     assert consistent.path == classic.path
+
+
+def test_g4composer_6ftu_balanced_brackets_and_resolved_gaps():
+    """6FTU assembly 2, chain B: the numbering-gap residue (unmodelled A20)
+    takes its letter from the entity sequence and renders inert dots in every
+    annotation line, and the bifurcated T19 pairing keeps only the
+    longer-range stem pair so the brackets stay balanced."""
+    cif = handle_input_file("tests/files/6ftu-assembly2.cif.gz")
+    structure3d = rnapolis.parser.read_3d_structure(cif, 1, nucleic_acid_only=False)
+    base_interactions = parse_external_output(
+        ["tests/files/6ftu-assembly2.json"], ExternalTool.DSSR, structure3d
+    )
+    analysis = eltetrado(base_interactions, structure3d, False)
+    quadruplex = analysis.helices[0].quadruplexes[0]
+
+    entry = generate_g4composer_entry(
+        analysis, quadruplex, "6ftu-assembly2", G4ComposerMode.CONSISTENT
+    )
+
+    assert entry.sequence == "gggggaggggtacaggggtacagggg"
+    assert entry.structure == "^^^^((^^^^....^^^^).).^^^^"
+    assert entry.chi == "S.S...S.S.....S.S.....S.S."
+    assert entry.sugar == "SSSNNNSSNNSSNSSSSSN.SSSNSS"
+    assert entry.orient == "A+;B-;C+;D-"
+    assert entry.rise == "3.5;3.4;3.5"
+    assert entry.twist == "16.4;36.5;15.7"
+    assert entry.path == "A1;B1;C1;D1;D2;C2;B2;A2;A4;B4;C4;D4;D3;C3;B3;A3"
+
+
+def test_g4composer_7oa3_prepends_terminal_gtp_ligand():
+    """7OA3: the GTP ligand canonically paired with the 3'-most residue is
+    placed at the 5' end of the sequence, so the pair renders as the
+    outermost brackets; no phantom ? padding fills the numbering gap
+    between the polymer and the ligand."""
+    cif = handle_input_file("tests/files/7oa3-assembly1.cif.gz")
+    structure3d = rnapolis.parser.read_3d_structure(cif, 1, nucleic_acid_only=False)
+    base_interactions = parse_external_output(
+        ["tests/files/7oa3-assembly1.json"], ExternalTool.DSSR, structure3d
+    )
+    analysis = eltetrado(base_interactions, structure3d, False)
+    quadruplex = analysis.helices[0].quadruplexes[0]
+
+    entry = generate_g4composer_entry(
+        analysis, quadruplex, "7oa3-assembly1", G4ComposerMode.CONSISTENT
+    )
+
+    assert entry.sequence == "GGCUAGCUGGAGGGGCGCCAGUUCGCUGGUGGUUGGGUGCGGUCGGCUAGCC"
+    assert entry.structure == "((((((((^(.^^.(((((((....))))).^...^^.))^^.)))))))))"
+    assert entry.chi == "........................S..........................."
+    assert entry.sugar == "NNNNNNNNSSNNSSNNNNNNNNSSNNNNNNSSNSNNSSNNNSSNNNNNNNNN"
+    assert entry.orient == "A-;B+"
+    assert entry.rise == "3.5"
+    assert entry.twist == "58.4"
+    assert entry.path == "A1;A4;B1;B2;A2;B3;B4;A3"
+
+
+def _analyse(path, json_path):
+    cif = handle_input_file(path)
+    structure3d = rnapolis.parser.read_3d_structure(cif, 1, nucleic_acid_only=False)
+    base_interactions = parse_external_output(
+        [json_path], ExternalTool.DSSR, structure3d
+    )
+    return eltetrado(base_interactions, structure3d, False)
+
+
+def test_g4composer_7wgw_skips_ligand_completed_tetrad(tmp_path, caplog):
+    """7WGW: a cGMP ligand completes a tetrad, which g4composer cannot model;
+    the whole entry is skipped with a warning and an empty file is written."""
+    analysis = _analyse(
+        "tests/files/7wgw-assembly1.cif.gz", "tests/files/7wgw-assembly1.json"
+    )
+    output_path = str(tmp_path / "7wgw-assembly1.inp")
+
+    with caplog.at_level(logging.WARNING, logger="eltetrado.g4composer"):
+        write_g4composer(analysis, "tests/files/7wgw-assembly1.cif.gz", output_path)
+
+    assert Path(output_path).read_text() == ""
+    assert "tetrad completed by a ligand" in caplog.text
+
+
+def test_g4composer_6k3y_skips_unplaced_ligand(tmp_path, caplog):
+    """6K3Y: a guanine-like ligand (4BW) hangs around the quadruplex chain
+    without being placeable in the export; the entry is skipped with a
+    warning instead of exported as a partial view."""
+    analysis = _analyse(
+        "tests/files/6k3y-assembly1.cif.gz", "tests/files/6k3y-assembly1.json"
+    )
+    output_path = str(tmp_path / "6k3y-assembly1.inp")
+
+    with caplog.at_level(logging.WARNING, logger="eltetrado.g4composer"):
+        write_g4composer(analysis, "tests/files/6k3y-assembly1.cif.gz", output_path)
+
+    assert Path(output_path).read_text() == ""
+    assert "4BW" in caplog.text
+
+
+def test_g4composer_4lz1_abasic_residues_skip_unless_allowed(tmp_path, caplog):
+    """4LZ1: the abasic 3DR residue cannot be resolved to a real nucleobase
+    letter, so the entry is skipped by default and exported with an n in the
+    sequence only when explicitly allowed."""
+    analysis = _analyse(
+        "tests/files/4lz1-assembly1.cif.gz", "tests/files/4lz1-assembly1.json"
+    )
+    output_path = str(tmp_path / "4lz1-assembly1.inp")
+
+    with caplog.at_level(logging.WARNING, logger="eltetrado.g4composer"):
+        write_g4composer(analysis, "tests/files/4lz1-assembly1.cif.gz", output_path)
+    assert Path(output_path).read_text() == ""
+    assert "unresolvable nucleotide letter" in caplog.text
+
+    chain_output = tmp_path / "4lz1-assembly1-D.inp"
+    write_g4composer(
+        analysis,
+        "tests/files/4lz1-assembly1.cif.gz",
+        output_path,
+        allow_abasic_nucleotides=True,
+    )
+    lines = chain_output.read_text().splitlines()
+    assert lines[1] == "sequence    ggttggtgtggntgg"
+
+
+def test_g4composer_2km3_mixed_tetrads_skip_unless_allowed(tmp_path, caplog):
+    """2KM3: the quadruplex contains a slipped G-C-G-C tetrad; by default no
+    g4composer input is generated for it (a partial view of the remaining
+    G-tetrads would misrepresent the structure), with the flag the full
+    quadruplex is exported."""
+    analysis = _analyse(
+        "tests/files/2km3-assembly1.cif.gz", "tests/files/2km3-assembly1.json"
+    )
+    output_path = str(tmp_path / "2km3-assembly1.inp")
+
+    with caplog.at_level(logging.WARNING, logger="eltetrado.g4composer"):
+        write_g4composer(analysis, "tests/files/2km3-assembly1.cif.gz", output_path)
+    assert Path(output_path).read_text() == ""
+    assert "mixed-base tetrad" in caplog.text
+
+    write_g4composer(
+        analysis,
+        "tests/files/2km3-assembly1.cif.gz",
+        output_path,
+        allow_non_g_tetrads=True,
+    )
+    outputs = list(tmp_path.glob("2km3-assembly1-*.inp"))
+    assert len(outputs) == 1
+    assert "orient      " in outputs[0].read_text()
