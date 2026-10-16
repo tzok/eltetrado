@@ -17,7 +17,11 @@ from rnapolis.tertiary import Structure3D
 from eltetrado import __version__
 from eltetrado.analysis import Visualizer, eltetrado, has_tetrad
 from eltetrado.dto import generate_dto
-from eltetrado.g4composer import G4ComposerMode, write_g4composer
+from eltetrado.g4composer import (
+    DEFAULT_MAX_SEQUENCE_LENGTH,
+    G4ComposerMode,
+    write_g4composer,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -38,6 +42,14 @@ def eltetrado_cli(args=sys.argv[1:]):
         help="number nucleotides within each tetrad by 5'-3' chain visitation order and "
         "export twist as the torsion angle between the first nucleotides of consecutive "
         "tetrads (affects only the g4composer export)",
+    )
+    parser.add_argument(
+        "--g4composer-max-sequence-length",
+        type=int,
+        default=DEFAULT_MAX_SEQUENCE_LENGTH,
+        metavar="NT",
+        help="skip g4composer entries whose full-chain sequence exceeds NT nt "
+        "(default: 100; use 0 to disable the limit)",
     )
     parser.add_argument(
         "-m", "--model", help="(optional) model number to process", default=1, type=int
@@ -85,8 +97,9 @@ def eltetrado_cli(args=sys.argv[1:]):
         "--allow-non-g-tetrads",
         action="store_true",
         help="generate g4composer inputs also for quadruplexes containing "
-        "tetrads that mix different nucleobases (e.g. G·C·G·C, A·T·G·G); by "
-        "default such quadruplexes produce no g4composer input at all",
+        "mixed-base tetrads (e.g. G·C·G·C, A·T·G·G); homogeneous G4, T4, "
+        "and U4 tetrads are already supported by default; mixed-base "
+        "quadruplexes produce no input unless this flag is set",
     )
     parser.add_argument(
         "--allow-mirrored",
@@ -106,6 +119,9 @@ def eltetrado_cli(args=sys.argv[1:]):
         "-v", "--version", action="version", version=f"%(prog)s {__version__}"
     )
     args = parser.parse_args(args)
+
+    if args.g4composer_max_sequence_length < 0:
+        parser.error("--g4composer-max-sequence-length must be non-negative")
 
     if not args.input:
         print(parser.print_help())
@@ -204,6 +220,7 @@ def eltetrado_cli(args=sys.argv[1:]):
             mode,
             args.allow_abasic_nucleotides,
             args.allow_non_g_tetrads,
+            args.g4composer_max_sequence_length,
         )
 
 

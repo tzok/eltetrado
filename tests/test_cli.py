@@ -104,7 +104,7 @@ def test_g4composer_export_for_6fc9(tmp_path, capfd):
         assert out == f.read()
 
     assert (
-        chain_output.read_text() == "name        6fc9-assembly-1\n"
+        chain_output.read_text() == "name        6fc9-A\n"
         "sequence    ggttggcgcgaagcattcgcgggttgg\n"
         "structure   ^^..^^((((((...))))))^^..^^\n"
         "chi         S...S................S...S.\n"
@@ -132,7 +132,7 @@ def test_g4composer_export_consistent_mode_for_5dea(tmp_path, capfd):
 
     _out, _err = capfd.readouterr()
     assert (
-        chain_output.read_text() == "name        5dea-assembly1\n"
+        chain_output.read_text() == "name        5dea-A\n"
         "sequence    GCUGCGGUGUGGAAGGAGUGGCUGGGUUGCGCAGC\n"
         "structure   (((((^((^.^^..^^.^.^^..^^^..)))))))\n"
         "chi         ............SS.....................\n"

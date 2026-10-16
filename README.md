@@ -57,7 +57,8 @@ it.
 
     usage: eltetrado [-h] [-i INPUT] [-o OUTPUT]
                      [--g4composer-output G4COMPOSER_OUTPUT]
-                     [--g4composer-consistent] [-m MODEL] [--no-reorder]
+                     [--g4composer-consistent]
+                     [--g4composer-max-sequence-length NT] [-m MODEL] [--no-reorder]
                      [--complete-2d] [--image DIR] [-e [EXTERNAL_FILES ...]]
                      [--tool {fr3d,dssr,rnaview,bpnet,maxit,barnaba,mc-annotate,dnatco}]
                      [--keep-spurious] [--allow-non-g-tetrads]
@@ -77,6 +78,9 @@ it.
                             visitation order and export twist as the torsion angle
                             between the first nucleotides of consecutive tetrads
                             (affects only the g4composer export)
+      --g4composer-max-sequence-length NT
+                            skip g4composer entries whose full-chain sequence
+                            exceeds NT nt (default: 100; use 0 to disable the limit)
       -m, --model MODEL     (optional) model number to process
       --no-reorder          chains of bi- and tetramolecular quadruplexes should
                             be reordered to be able to have them classified; when
@@ -98,9 +102,10 @@ it.
                             rise); by default such quadruplexes are discarded
       --allow-non-g-tetrads
                             generate g4composer inputs also for quadruplexes
-                            containing tetrads that mix different nucleobases
-                            (e.g. G·C·G·C, A·T·G·G); by default such quadruplexes
-                            produce no g4composer input at all
+                            containing mixed-base tetrads (e.g. G·C·G·C, A·T·G·G);
+                            homogeneous G4, T4, and U4 tetrads are supported by
+                            default; mixed-base quadruplexes produce no input
+                            unless this flag is set
       --allow-mirrored      analyze also mirror-image L-nucleotides (PDB chemical
                             components prefixed with 0, e.g. 0G in mirror-image
                             L-RNA/L-DNA aptamers); by default such residues are
@@ -151,9 +156,16 @@ export time:
   independently and written to a separate file for its chain. The
   `--g4composer-output <stem.inp>` argument is a filename template:
   output files are named `<stem>-<chain>.inp`; additional entries for
-  that chain use `<stem>-<chain>q2.inp`, etc.
-- A quadruplex containing any mixed-base tetrad (for example G·C·G·C) is
-  not exported by default, because exporting only its G-tetrads would
+  that chain use `<stem>-<chain>q2.inp`, etc. The `name` field inside
+  each file matches its filename without the `.inp` extension.
+- By default, entries whose exported full-chain sequence is longer than
+  100 nucleotides are skipped. Set `--g4composer-max-sequence-length` to
+  change the limit, or pass `0` to disable it. This avoids exporting
+  quadruplexes that occupy only a small fragment of an unusually long
+  chain.
+- Homogeneous G4, T4, and U4 tetrads are supported by default. A
+  quadruplex containing any mixed-base tetrad (for example G·C·G·C) is
+  not exported by default, because exporting only some tetrads would
   misrepresent the structure. `--allow-non-g-tetrads` enables the
   complete entry.
 - Entries with unresolvable nucleotide identities (including abasic

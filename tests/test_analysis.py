@@ -1,6 +1,7 @@
 import logging
 import math
 from pathlib import Path
+from types import SimpleNamespace
 
 import numpy
 import rnapolis.annotator
@@ -8,13 +9,16 @@ import rnapolis.parser
 from rnapolis.adapter import ExternalTool, parse_external_output
 
 import eltetrado.analysis as analysis_module
+import eltetrado.g4composer as g4composer_module
 from eltetrado.analysis import calculate_best_fit_rotation_around_axis, eltetrado
 from eltetrado.cli import handle_input_file, read_secondary_structure_from_dssr
 from eltetrado.g4composer import (
+    G4ComposerEntry,
     G4ComposerMode,
     canonical_dot_bracket,
     export_residues,
     generate_g4composer_entry,
+    has_mixed_base_tetrad,
     write_g4composer,
 )
 from eltetrado.model import SnapbackOrientation, StrandPolarity
@@ -236,8 +240,8 @@ def test_g4composer_exports_multiple_quadruplexes_in_2rsk(tmp_path):
 
     for output in outputs:
         content = output.read_text()
-        assert content.startswith("name        2rsk-assembly1\n")
-        assert content.count("name        2rsk-assembly1\n") == 1
+        assert content.startswith(f"name        {output.stem}\n")
+        assert content.count(f"name        {output.stem}\n") == 1
 
 
 def test_2ms9_is_left_handed():
@@ -1116,3 +1120,134 @@ def test_g4composer_2km3_mixed_tetrads_skip_unless_allowed(tmp_path, caplog):
     outputs = list(tmp_path.glob("2km3-assembly1-*.inp"))
     assert len(outputs) == 1
     assert "orient      " in outputs[0].read_text()
+
+
+def test_g4composer_default_length_limit_and_disable_option(
+    tmp_path, monkeypatch, caplog
+):
+    quadruplex = SimpleNamespace(tetrads=[])
+    analysis = SimpleNamespace(polymer_residues=set())
+    sequence_length = 101
+
+    monkeypatch.setattr(
+        g4composer_module, "eligible_quadruplexes", lambda _: [quadruplex]
+    )
+    monkeypatch.setattr(g4composer_module, "export_chains", lambda _: ["A"])
+    monkeypatch.setattr(g4composer_module, "unplaced_ligands", lambda *_: [])
+
+    def make_entry(_analysis, _quadruplex, name, _mode):
+        sequence = "G" * sequence_length
+        return G4ComposerEntry(
+            name=name,
+            sequence=sequence,
+            structure="." * len(sequence),
+            chi="." * len(sequence),
+            sugar="N" * len(sequence),
+            orient="A+;B+",
+            rise="3.4",
+            twist="12",
+            path="A1;A2;A3;A4",
+        )
+
+    monkeypatch.setattr(g4composer_module, "generate_g4composer_entry", make_entry)
+
+    filtered_template = str(tmp_path / "filtered.inp")
+    with caplog.at_level(logging.WARNING, logger="eltetrado.g4composer"):
+        write_g4composer(analysis, "input.cif", filtered_template)
+    assert Path(filtered_template).read_text() == ""
+    assert "sequence length 101 nt exceeds the 100 nt limit" in caplog.text
+
+    sequence_length = 100
+    boundary_template = str(tmp_path / "boundary.inp")
+    write_g4composer(analysis, "input.cif", boundary_template)
+    boundary_output = tmp_path / "boundary-A.inp"
+    assert boundary_output.exists()
+    assert boundary_output.read_text().splitlines()[0] == "name        boundary-A"
+
+    unfiltered_template = str(tmp_path / "unfiltered.inp")
+    sequence_length = 101
+    write_g4composer(
+        analysis,
+        "input.cif",
+        unfiltered_template,
+        max_sequence_length=0,
+    )
+    output = tmp_path / "unfiltered-A.inp"
+    assert output.exists()
+    assert output.read_text().splitlines()[0] == "name        unfiltered-A"
+
+
+def test_g4composer_homogeneous_g_t_u_tetrads_are_supported_by_default():
+    def tetrad(base):
+        return SimpleNamespace(
+            nucleotides=[SimpleNamespace(one_letter_name=base) for _ in range(4)]
+        )
+
+    for base in "GTU":
+        assert not has_mixed_base_tetrad(SimpleNamespace(tetrads=[tetrad(base)]))
+    mixed_tetrad = SimpleNamespace(
+        nucleotides=[
+            SimpleNamespace(one_letter_name=base) for base in ("G", "C", "G", "G")
+        ]
+    )
+    assert has_mixed_base_tetrad(SimpleNamespace(tetrads=[mixed_tetrad]))
+
+
+def test_g4composer_q2_name_matches_output_filename(tmp_path, monkeypatch):
+    quadruplexes = [
+        SimpleNamespace(tetrads=[], token="A"),
+        SimpleNamespace(tetrads=[], token="C"),
+    ]
+    analysis = SimpleNamespace(polymer_residues=set())
+
+    monkeypatch.setattr(
+        g4composer_module, "eligible_quadruplexes", lambda _: quadruplexes
+    )
+    monkeypatch.setattr(g4composer_module, "export_chains", lambda _: ["E"])
+    monkeypatch.setattr(g4composer_module, "unplaced_ligands", lambda *_: [])
+
+    def make_entry(_analysis, quadruplex, name, _mode):
+        sequence = "G" * 8 + quadruplex.token[0]
+        return G4ComposerEntry(
+            name=name,
+            sequence=sequence,
+            structure="." * len(sequence),
+            chi="." * len(sequence),
+            sugar="N" * len(sequence),
+            orient="A+;B+",
+            rise="3.4",
+            twist="12",
+            path=f"A1;A2;A3;A4;{quadruplex.token}",
+        )
+
+    monkeypatch.setattr(g4composer_module, "generate_g4composer_entry", make_entry)
+    write_g4composer(
+        analysis,
+        "input.cif",
+        str(tmp_path / "multi.inp"),
+        max_sequence_length=0,
+    )
+
+    outputs = sorted(tmp_path.glob("multi-*.inp"))
+    assert [output.name for output in outputs] == ["multi-E.inp", "multi-Eq2.inp"]
+    for output in outputs:
+        assert output.read_text().splitlines()[0] == f"name        {output.stem}"
+
+
+def test_g4composer_8tns_exports_u4_tetrad_by_default_and_names_file(tmp_path):
+    analysis = _analyse(
+        "tests/files/8tns-assembly1.cif.gz", "tests/files/8tns-assembly1.json"
+    )
+    assert any(
+        {nt.one_letter_name.upper() for nt in tetrad.nucleotides} == {"U"}
+        for helix in analysis.helices
+        for quadruplex in helix.quadruplexes
+        for tetrad in quadruplex.tetrads
+    )
+
+    template = str(tmp_path / "8tns-assembly1.inp")
+    write_g4composer(analysis, "tests/files/8tns-assembly1.cif.gz", template)
+
+    outputs = list(tmp_path.glob("8tns-assembly1-*.inp"))
+    assert len(outputs) == 1
+    assert outputs[0].read_text().splitlines()[0] == f"name        {outputs[0].stem}"

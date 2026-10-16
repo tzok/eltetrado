@@ -34,7 +34,7 @@ import logging
 import math
 import os
 from collections.abc import Sequence
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from enum import Enum
 
 import numpy
@@ -55,6 +55,8 @@ from eltetrado.analysis import (
     sequence_entries_with_missing,
 )
 from eltetrado.model import SugarPucker
+
+DEFAULT_MAX_SEQUENCE_LENGTH = 100
 
 logger = logging.getLogger(__name__)
 
@@ -116,6 +118,17 @@ def eligible_quadruplexes(analysis: Analysis) -> list[Quadruplex]:
         for quadruplex in helix.quadruplexes
         if len(quadruplex.tetrads) >= 2 and len(export_chains(quadruplex)) == 1
     ]
+
+
+def has_mixed_base_tetrad(quadruplex: Quadruplex) -> bool:
+    """Return whether any tetrad contains more than one nucleotide base.
+
+    Homogeneous G4, T4, and U4 tetrads are all supported by default.
+    """
+    return any(
+        len({nt.one_letter_name.upper() for nt in tetrad.nucleotides}) > 1
+        for tetrad in quadruplex.tetrads
+    )
 
 
 def generate_g4composer_entry(
@@ -834,6 +847,7 @@ def write_g4composer(
     mode: G4ComposerMode = G4ComposerMode.CLASSIC,
     allow_abasic_nucleotides: bool = False,
     allow_non_g_tetrads: bool = False,
+    max_sequence_length: int = DEFAULT_MAX_SEQUENCE_LENGTH,
 ) -> None:
     """Write one g4composer input file per involved chain.
 
@@ -844,8 +858,11 @@ def write_g4composer(
     tetrad completed by a ligand nucleotide are skipped with a warning, as
     g4composer cannot model them. Quadruplexes containing a mixed-base tetrad
     (e.g. G·C·G·C) are skipped as well unless ``allow_non_g_tetrads`` is set -
-    a partial view built of the remaining G-tetrads would misrepresent the
-    structure. Entries containing unresolvable nucleotide letters (N/X) are
+    a partial view built of the remaining tetrads would misrepresent the
+    structure. Homogeneous G4, T4, and U4 tetrads are supported by default.
+    Entries whose full-chain sequence exceeds ``max_sequence_length`` (100 nt
+    by default) are skipped; pass zero to disable the limit. Entries containing
+    unresolvable nucleotide letters (N/X) are
     skipped unless ``allow_abasic_nucleotides`` is set, in which case they are
     exported with ``n`` in the sequence. If no valid entry remains, an empty
     file is written at ``output_path``.
@@ -853,14 +870,14 @@ def write_g4composer(
     directory = os.path.dirname(output_path)
     root, _ = os.path.splitext(os.path.basename(output_path))
 
+    if max_sequence_length < 0:
+        raise ValueError("max_sequence_length must be non-negative")
+
     quadruplexes = eligible_quadruplexes(analysis)
-    per_chain: dict[str, list[str]] = {}
+    per_chain: dict[str, list[G4ComposerEntry]] = {}
     for quad in quadruplexes:
         chains = export_chains(quad)
-        if not allow_non_g_tetrads and any(
-            len({nt.one_letter_name.upper() for nt in tetrad.nucleotides}) > 1
-            for tetrad in quad.tetrads
-        ):
+        if not allow_non_g_tetrads and has_mixed_base_tetrad(quad):
             logger.warning(
                 "Quadruplex contains a mixed-base tetrad; no g4composer input "
                 "is generated for it unless --allow-non-g-tetrads is set"
@@ -881,6 +898,15 @@ def write_g4composer(
                 analysis, quad, input_name(input_path), mode
             )
         except ValueError:
+            continue
+        if max_sequence_length and len(entry.sequence) > max_sequence_length:
+            logger.warning(
+                "Skipping g4composer entry for %s: full-chain sequence length %d nt "
+                "exceeds the %d nt limit",
+                entry.name,
+                len(entry.sequence),
+                max_sequence_length,
+            )
             continue
         unplaced = unplaced_ligands(analysis, quad)
         if unplaced:
@@ -904,10 +930,9 @@ def write_g4composer(
                 )
                 continue
         blocks = per_chain.setdefault(chains[0], [])
-        serialized = entry.serialize()
-        if serialized in blocks:
+        if any(existing.serialize() == entry.serialize() for existing in blocks):
             continue
-        blocks.append(serialized)
+        blocks.append(entry)
 
     if not per_chain:
         with open(output_path, "w") as handle:
@@ -916,6 +941,7 @@ def write_g4composer(
     for chain, blocks in sorted(per_chain.items()):
         for number, block in enumerate(blocks, start=1):
             suffix = "" if number == 1 else f"q{number}"
-            path = os.path.join(directory, f"{root}-{chain}{suffix}.inp")
+            output_stem = f"{root}-{chain}{suffix}"
+            path = os.path.join(directory, f"{output_stem}.inp")
             with open(path, "w") as handle:
-                handle.write(block)
+                handle.write(replace(block, name=output_stem).serialize())
