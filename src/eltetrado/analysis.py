@@ -7,8 +7,9 @@ import subprocess
 import sys
 import tempfile
 from collections import Counter, defaultdict
+from collections.abc import Iterable
 from dataclasses import dataclass, field
-from typing import IO, Dict, FrozenSet, Iterable, List, Optional, Set, Tuple
+from typing import IO, TYPE_CHECKING
 
 import numpy
 import numpy.typing
@@ -18,6 +19,8 @@ from rnapolis.common import (
     Entry,
     GlycosidicBond,
     LeontisWesthof,
+    Molecule,
+    Residue,
 )
 from rnapolis.tertiary import (
     Atom,
@@ -29,12 +32,12 @@ from rnapolis.tertiary import (
 )
 
 from eltetrado.model import (
-    HelixHandedness,
     ONZ,
     ONZM,
     Direction,
     GbaQuadruplexClassification,
     GbaTetradClassification,
+    HelixHandedness,
     Ion,
     LoopClassification,
     LoopType,
@@ -44,7 +47,11 @@ from eltetrado.model import (
     TetradPolarity,
 )
 
+if TYPE_CHECKING:
+    from rnapolis.common import MissingResidue
+
 logging.basicConfig(level=os.environ.get("LOGLEVEL", "INFO"))
+logger = logging.getLogger(__name__)
 
 # Limits of the spurious quadruplex filter.
 #
@@ -69,7 +76,7 @@ MIN_QUADRUPLEX_RISE = 2.0
 MAX_QUADRUPLEX_RISE = 12.0
 
 
-def get_plane_vectors(coords: numpy.ndarray) -> Tuple[numpy.ndarray, numpy.ndarray]:
+def get_plane_vectors(coords: numpy.ndarray) -> tuple[numpy.ndarray, numpy.ndarray]:
     """
     Helper function to get centroid and normal for a single set of coordinates.
 
@@ -81,13 +88,13 @@ def get_plane_vectors(coords: numpy.ndarray) -> Tuple[numpy.ndarray, numpy.ndarr
     """
     centroid = numpy.mean(coords, axis=0)
     centered = coords - centroid
-    u, s, vt = numpy.linalg.svd(centered)
+    _u, _s, vt = numpy.linalg.svd(centered)
     # The normal is the last row of Vt (smallest variance)
     normal = vt[2, :]
     return centroid, normal
 
 
-def calculate_planarity_deviation(atom_coords: numpy.ndarray) -> Dict[str, float]:
+def calculate_planarity_deviation(atom_coords: numpy.ndarray) -> dict[str, float]:
     """
     Calculates the RMSD of atom coordinates from their best-fit plane.
 
@@ -119,7 +126,7 @@ def calculate_planarity_deviation(atom_coords: numpy.ndarray) -> Dict[str, float
     return {"rmsd": rmsd, "max": max_deviation, "avg": avg_deviation}
 
 
-def collect_nucleobase_atoms(nucleotides: Tuple[Residue3D, ...]) -> List[numpy.ndarray]:
+def collect_nucleobase_atoms(nucleotides: tuple[Residue3D, ...]) -> list[numpy.ndarray]:
     """
     Collect all heavy atoms from nucleobases of given nucleotides.
 
@@ -278,7 +285,7 @@ def calculate_best_fit_rotation_around_axis(
     return math.degrees(math.atan2(sine, cosine))
 
 
-def collect_residue_base_like_atoms(residue: Residue3D) -> List[numpy.ndarray]:
+def collect_residue_base_like_atoms(residue: Residue3D) -> list[numpy.ndarray]:
     coords = []
 
     for atom in residue.atoms:
@@ -291,7 +298,7 @@ def collect_residue_base_like_atoms(residue: Residue3D) -> List[numpy.ndarray]:
     return coords
 
 
-def residue_topology_point(residue: Residue3D) -> Optional[numpy.ndarray]:
+def residue_topology_point(residue: Residue3D) -> numpy.ndarray | None:
     coords = collect_nucleobase_atoms((residue,))
     if not coords:
         coords = collect_residue_base_like_atoms(residue)
@@ -307,7 +314,7 @@ def residue_base_centroid(residue: Residue3D) -> numpy.ndarray:
     return point
 
 
-def residue_c1prime_coordinates(residue: Residue3D) -> Optional[numpy.ndarray]:
+def residue_c1prime_coordinates(residue: Residue3D) -> numpy.ndarray | None:
     for atom_name in ("C1'", "C1*"):
         atom = residue.find_atom(atom_name)
         if atom is not None:
@@ -334,7 +341,7 @@ def residue_backbone_anchor(residue: Residue3D) -> numpy.ndarray:
     raise ValueError(f"Missing anchor atoms for residue {residue.full_name}")
 
 
-def residue_backbone_direction(residue: Residue3D) -> Optional[numpy.ndarray]:
+def residue_backbone_direction(residue: Residue3D) -> numpy.ndarray | None:
     p = residue.find_atom("P")
     c3 = residue.find_atom("C3'")
     if p is not None and c3 is not None:
@@ -345,7 +352,7 @@ def residue_backbone_direction(residue: Residue3D) -> Optional[numpy.ndarray]:
     return None
 
 
-def sugar_torsion(residue: Residue3D, atom_names: Tuple[str, str, str, str]) -> float:
+def sugar_torsion(residue: Residue3D, atom_names: tuple[str, str, str, str]) -> float:
     atoms = [residue.find_atom(atom_name) for atom_name in atom_names]
     if any(atom is None for atom in atoms):
         return math.nan
@@ -376,7 +383,7 @@ def sugar_pseudorotation(residue: Residue3D) -> float:
     return angle
 
 
-def classify_sugar_pucker(residue: Residue3D) -> Optional[SugarPucker]:
+def classify_sugar_pucker(residue: Residue3D) -> SugarPucker | None:
     phase = sugar_pseudorotation(residue)
     if math.isnan(phase):
         return None
@@ -389,8 +396,8 @@ def classify_sugar_pucker(residue: Residue3D) -> Optional[SugarPucker]:
 def calculate_quadruplex_twist_centroids(
     tetrad1_all_coords: numpy.ndarray,
     tetrad2_all_coords: numpy.ndarray,
-    nt_list1: List[numpy.ndarray],
-    nt_list2: List[numpy.ndarray],
+    nt_list1: list[numpy.ndarray],
+    nt_list2: list[numpy.ndarray],
 ) -> float:
     """
     Calculate the legacy centroid-based twist using matched base centroids.
@@ -437,7 +444,7 @@ def calculate_quadruplex_twist_centroids(
 
 def calculate_tetrad_common_axis(
     tetrad1_all_coords: numpy.ndarray, tetrad2_all_coords: numpy.ndarray
-) -> Optional[numpy.ndarray]:
+) -> numpy.ndarray | None:
     c_T1, n_T1 = get_plane_vectors(tetrad1_all_coords)
     c_T2, n_T2 = get_plane_vectors(tetrad2_all_coords)
 
@@ -494,7 +501,7 @@ class Tetrad:
         nt2: Residue3D,
         nt3: Residue3D,
         nt4: Residue3D,
-        pair_dictionary: Dict[Tuple[Residue3D, Residue3D], BasePair3D],
+        pair_dictionary: dict[tuple[Residue3D, Residue3D], BasePair3D],
     ) -> bool:
         lw1 = pair_dictionary[(nt1, nt2)].lw
         lw2 = pair_dictionary[(nt2, nt3)].lw
@@ -513,12 +520,12 @@ class Tetrad:
     pair_23: BasePair3D
     pair_34: BasePair3D
     pair_41: BasePair3D
-    global_index: Dict[Residue3D, int]
+    global_index: dict[Residue3D, int]
     onz: ONZ = field(init=False)
-    gba_class: Optional[GbaTetradClassification] = field(init=False)
-    planarity_deviation: Dict[str, float] = field(init=False)
-    ions_channel: List[Atom] = field(default_factory=list)
-    ions_outside: Dict[Residue3D, List[Atom]] = field(default_factory=dict)
+    gba_class: GbaTetradClassification | None = field(init=False)
+    planarity_deviation: dict[str, float] = field(init=False)
+    ions_channel: list[Atom] = field(default_factory=list)
+    ions_outside: dict[Residue3D, list[Atom]] = field(default_factory=dict)
 
     def __post_init__(self):
         self.reorder_to_match_5p_3p()
@@ -526,7 +533,7 @@ class Tetrad:
 
     def reorder_to_match_5p_3p(self):
         # transform into (0, 1, 2, 3)
-        ni, nj, nk, nl = map(lambda nt: self.global_index[nt], self.nucleotides)
+        ni, nj, nk, nl = (self.global_index[nt] for nt in self.nucleotides)
         indices = sorted((ni, nj, nk, nl))
         ni, nj, nk, nl = (indices.index(x) for x in (ni, nj, nk, nl))
 
@@ -593,7 +600,7 @@ class Tetrad:
         self.gba_class = self.__classify_by_gba()
 
     def reorder_to_match_other_tetrad(
-        self, order: Tuple[Residue3D, Residue3D, Residue3D, Residue3D]
+        self, order: tuple[Residue3D, Residue3D, Residue3D, Residue3D]
     ):
         if order == (self.nt1, self.nt2, self.nt3, self.nt4):
             pass
@@ -676,19 +683,17 @@ class Tetrad:
 
         raise RuntimeError(f"Impossible combination: {ni} {nj} {nk} {nl}")
 
-    def __classify_by_gba(self) -> Optional[GbaTetradClassification]:
+    def __classify_by_gba(self) -> GbaTetradClassification | None:
         """
         See: Webba da Silva, M. (2007). Geometric Formalism for DNA Quadruplex Folding.
-        Chemistry - A European Journal, 13(35), 9738–9745. https://doi.org/10.1002/chem.200701255
+        Chemistry - A European Journal, 13(35), 9738-9745. https://doi.org/10.1002/chem.200701255
 
         :return: Classification according to Webba da Silva or n/a
         """
         # without all nucleotides having a valid syn/anti, this classification is impossible
         if not all(
-            [
-                nt.chi_class in (GlycosidicBond.syn, GlycosidicBond.anti)
-                for nt in self.nucleotides
-            ]
+            nt.chi_class in (GlycosidicBond.syn, GlycosidicBond.anti)
+            for nt in self.nucleotides
         ):
             return None
 
@@ -716,25 +721,26 @@ class Tetrad:
         }
 
         if fingerprint not in gba_classes:
-            logging.error(
-                f"Impossible combination of syn/anti: {[nt.chi_class for nt in self.nucleotides]}"
+            logger.error(
+                "Impossible combination of syn/anti: %s",
+                [nt.chi_class for nt in self.nucleotides],
             )
             return None
         return gba_classes[fingerprint]
 
-    def __calculate_planarity_deviation(self) -> Dict[str, float]:
+    def __calculate_planarity_deviation(self) -> dict[str, float]:
         atom_coords = collect_nucleobase_atoms(self.nucleotides)
         return calculate_planarity_deviation(numpy.array(atom_coords))
 
     @property
-    def nucleotides(self) -> Tuple[Residue3D, Residue3D, Residue3D, Residue3D]:
+    def nucleotides(self) -> tuple[Residue3D, Residue3D, Residue3D, Residue3D]:
         return self.nt1, self.nt2, self.nt3, self.nt4
 
     def __hash__(self):
         return hash(frozenset([self.nt1, self.nt2, self.nt3, self.nt4]))
 
     def __repr__(self):
-        return f"{repr(self.nt1)}-{repr(self.nt2)}-{repr(self.nt3)}-{repr(self.nt4)}"
+        return f"{self.nt1!r}-{self.nt2!r}-{self.nt3!r}-{self.nt4!r}"
 
     def __str__(self):
         return (
@@ -747,8 +753,8 @@ class Tetrad:
             f"{self.__ions_outside_str()}\n"
         )
 
-    def chains(self) -> Set[str]:
-        return set([nt.chain for nt in self.nucleotides])
+    def chains(self) -> set[str]:
+        return {nt.chain for nt in self.nucleotides}
 
     def is_disjoint(self, other) -> bool:
         return frozenset(self.nucleotides).isdisjoint(frozenset(other.nucleotides))
@@ -756,10 +762,10 @@ class Tetrad:
     def center(self) -> numpy.ndarray:
         return center_of_mass(self.outer_and_inner_atoms())
 
-    def outer_and_inner_atoms(self) -> List[Atom]:
-        return list(
-            map(lambda residue: residue.outermost_atom, self.nucleotides)
-        ) + list(map(lambda residue: residue.innermost_atom, self.nucleotides))
+    def outer_and_inner_atoms(self) -> list[Atom]:
+        return [residue.outermost_atom for residue in self.nucleotides] + [
+            residue.innermost_atom for residue in self.nucleotides
+        ]
 
     def __ions_channel_str(self) -> str:
         if self.ions_channel:
@@ -789,9 +795,9 @@ class TetradPair:
 
     tetrad1: Tetrad
     tetrad2: Tetrad
-    stacked: Dict[Residue3D, Residue3D]
-    global_index: Dict[Residue3D, int]
-    tetrad2_nts_best_order: Tuple[Residue3D, Residue3D, Residue3D, Residue3D] = field(
+    stacked: dict[Residue3D, Residue3D]
+    global_index: dict[Residue3D, int]
+    tetrad2_nts_best_order: tuple[Residue3D, Residue3D, Residue3D, Residue3D] = field(
         init=False
     )
     direction: Direction = field(init=False)
@@ -810,17 +816,14 @@ class TetradPair:
         self.twist = self.__calculate_twist()
 
     def __determine_direction(self) -> Direction:
-        indices1 = list(map(lambda nt: self.global_index[nt], self.tetrad1.nucleotides))
-        indices2 = list(
-            map(
-                lambda nt: self.global_index[nt],
-                self.tetrad2_nts_best_order,
-            )
-        )
+        indices1 = [self.global_index[nt] for nt in self.tetrad1.nucleotides]
+        indices2 = [self.global_index[nt] for nt in self.tetrad2_nts_best_order]
 
         # count directions 5' -> 3' as +1 or -1
-        counter = Counter(1 if j - i > 0 else -1 for i, j in zip(indices1, indices2))
-        direction, count = counter.most_common()[0]
+        counter = Counter(
+            1 if j - i > 0 else -1 for i, j in zip(indices1, indices2, strict=True)
+        )
+        _direction, count = counter.most_common()[0]
 
         if count == 4:
             # all in the same direction
@@ -885,28 +888,33 @@ class TetradScore:
 
     sequential: int  # strictly sequential nucleotide matches
     stacking: int  # stacking-graph matches
-    nts1: Tuple[Residue3D, ...]  # order in the first tetrad
-    nts2: Tuple[Residue3D, ...]  # corresponding order in the second tetrad
+    nts1: tuple[Residue3D, ...]  # order in the first tetrad
+    nts2: tuple[Residue3D, ...]  # corresponding order in the second tetrad
 
 
 @dataclass
 class Tract:
-    nucleotides: List[Residue3D]
+    nucleotides: list[Residue3D]
 
     def __str__(self):
-        return f"      {', '.join(map(lambda nt: nt.full_name, self.nucleotides))}"
+        return f"      {', '.join(nt.full_name for nt in self.nucleotides)}"
 
 
 @dataclass
 class Loop:
-    nucleotides: List[Residue3D]
-    loop_type: Optional[LoopType]
+    nucleotides: list[Residue3D]
+    loop_type: LoopType | None
+    missing: list[str] = field(default_factory=list)
 
     def __str__(self):
         return (
             f"      {self.loop_type.value if self.loop_type else 'n/a'} "
-            f"{', '.join(map(lambda nt: nt.full_name, self.nucleotides))}"
+            f"{', '.join(nt.full_name for nt in self.nucleotides)}"
+            f"{self.__missing_suffix()}"
         )
+
+    def __missing_suffix(self) -> str:
+        return f" (missing: {', '.join(self.missing)})" if self.missing else ""
 
 
 @dataclass
@@ -916,14 +924,33 @@ class Snapback:
     same-column Gs (possibly empty); orientation says which side of the
     connector is the isolated one."""
 
-    nucleotides: List[Residue3D]
+    nucleotides: list[Residue3D]
     orientation: SnapbackOrientation
+    missing: list[str] = field(default_factory=list)
 
     def __str__(self):
         return (
             f"      snapback {self.orientation.value} "
-            f"{', '.join(map(lambda nt: nt.full_name, self.nucleotides))}"
+            f"{', '.join(nt.full_name for nt in self.nucleotides)}"
+            f"{self.__missing_suffix()}"
         )
+
+    def __missing_suffix(self) -> str:
+        return f" (missing: {', '.join(self.missing)})" if self.missing else ""
+
+
+@dataclass
+class BulgeGroup:
+    """Nucleotides bulging out between two stacked nucleotides of one tract,
+    together with any residues reported missing between the flanks."""
+
+    nucleotides: list[Residue3D]
+    missing: list[str] = field(default_factory=list)
+
+    def __str__(self):
+        names = [nt.full_name for nt in self.nucleotides]
+        names.extend(self.missing)
+        return ", ".join(names)
 
 
 # Mapping from the Webba da Silva loop-classification value (the loop
@@ -966,7 +993,135 @@ TOPOLOGY_NAMES = {
 }
 
 
-def quadruplex_spurious_reasons(quadruplex: "Quadruplex") -> List[str]:
+def polymer_nucleotides(structure3d: Structure3D) -> set[Residue3D]:
+    """Return the set of nucleotide residues belonging to polymer chains.
+
+    A residue is a polymer nucleotide when its mmCIF entity has a canonical
+    sequence in the file header, or - for PDB-format files (and entities
+    without header data) - when it is covalently connected to a neighbouring
+    nucleotide of the same chain. Ligand nucleotides (GTP, cGMP, dGMP, ...)
+    and ions are excluded. Residues modelled without base atoms (backbone
+    only, e.g. 6pnk DT5) still count as polymer when their entity is a
+    nucleic-acid polymer.
+    """
+    sequence_by_entity = getattr(structure3d, "sequence_by_entity", None) or {}
+    result: set[Residue3D] = set()
+    pending: dict[str, list[Residue3D]] = {}
+    nucleic = (Molecule.RNA, Molecule.DNA)
+    for residue in structure3d.residues:
+        if residue.molecule_type not in nucleic:
+            continue
+        entity = residue.atoms[0].entity_id if residue.atoms else None
+        if entity and sequence_by_entity.get(entity):
+            result.add(residue)
+        else:
+            pending.setdefault(residue.chain, []).append(residue)
+
+    for residues in pending.values():
+        for index, residue in enumerate(residues):
+            neighbors = [
+                residues[position]
+                for position in (index - 1, index + 1)
+                if 0 <= position < len(residues)
+            ]
+            if any(
+                other.is_nucleotide
+                and (residue.is_connected(other) or other.is_connected(residue))
+                for other in neighbors
+            ):
+                result.add(residue)
+    return result
+
+
+def sequence_entries_with_missing(
+    nucleotides: list[Residue3D],
+    missing_residues: "list[MissingResidue] | None",
+    sequence_by_entity: "dict[str, str] | None",
+) -> list[tuple[str, str, Residue3D | None, bool]]:
+    """Build the full per-chain sequence entries for the report and exports.
+
+    Returns (chain, one-letter code, residue or None, unknown-geometry flag)
+    quadruples in the given nucleotide order (already chain-ordered by the
+    caller), with residues missing from the coordinates interleaved at their
+    numbering positions. Missing residues take their real one-letter code from
+    the entity sequence when available; internal numbering gaps not covered by
+    the header also get the entity-sequence letter when possible. The
+    unknown-geometry flag is True for entries without coordinates, which
+    renders as '?' in the report but as '.' in the g4composer export.
+    """
+    missing_list = missing_residues or []
+
+    modelled_by_chain: dict[str, dict[int, Residue3D]] = {}
+    chain_order: list[str] = []
+    entity_by_chain: dict[str, str | None] = {}
+    for residue in nucleotides:
+        modelled_by_chain.setdefault(residue.chain, {})[residue.number] = residue
+        if residue.chain not in chain_order:
+            chain_order.append(residue.chain)
+            entity_by_chain[residue.chain] = (
+                residue.atoms[0].entity_id if residue.atoms else None
+            )
+
+    missing_by_chain: dict[str, dict[int, MissingResidue]] = {}
+    for missing in missing_list:
+        if missing.chain not in modelled_by_chain or missing.number is None:
+            continue
+        missing_by_chain.setdefault(missing.chain, {})[missing.number] = missing
+
+    entries = []
+    for chain in chain_order:
+        modelled = modelled_by_chain[chain]
+        missing = missing_by_chain.get(chain, {})
+        entity_id = entity_by_chain.get(chain)
+        sequence = (
+            sequence_by_entity.get(entity_id)
+            if sequence_by_entity and entity_id
+            else None
+        )
+
+        # auth-numbering -> label_seq_id offset, used to resolve letters of
+        # unmodelled residues that the file header does not report
+        differences = {
+            residue.label.number - residue.number
+            for residue in modelled.values()
+            if residue.label is not None and residue.label.number is not None
+        }
+        offset = next(iter(differences)) if len(differences) == 1 else None
+
+        slots = set(missing)
+        for previous, following in itertools.pairwise(sorted(modelled)):
+            if not modelled[previous].is_connected(modelled[following]):
+                for number in range(
+                    min(previous, following) + 1, max(previous, following)
+                ):
+                    if number not in modelled:
+                        slots.add(number)
+
+        for number in sorted(set(modelled) | slots):
+            residue = modelled.get(number)
+            if residue is not None:
+                entries.append((chain, residue.one_letter_name, residue, False))
+                continue
+            letter = None
+            label_number = None
+            missing_residue = missing.get(number)
+            if missing_residue is not None:
+                letter = missing_residue.one_letter_name
+                if missing_residue.label is not None:
+                    label_number = missing_residue.label.number
+            if label_number is None and offset is not None:
+                label_number = number + offset
+            if (
+                sequence is not None
+                and label_number is not None
+                and 1 <= label_number <= len(sequence)
+            ):
+                letter = sequence[label_number - 1]
+            entries.append((chain, letter if letter is not None else "?", None, True))
+    return entries
+
+
+def quadruplex_spurious_reasons(quadruplex: "Quadruplex") -> list[str]:
     """Return reasons why a quadruplex should be discarded as spurious.
 
     An empty list means the quadruplex passed all filter limits.
@@ -979,10 +1134,10 @@ def quadruplex_spurious_reasons(quadruplex: "Quadruplex") -> List[str]:
             f"minimum is {MIN_QUADRUPLEX_TETRADS}"
         )
 
-    if len(quadruplex.bulges) > MAX_QUADRUPLEX_BULGES:
+    bulge_count = sum(len(bulge.nucleotides) for bulge in quadruplex.bulges)
+    if bulge_count > MAX_QUADRUPLEX_BULGES:
         reasons.append(
-            f"bulge of {len(quadruplex.bulges)} nucleotides "
-            f"(limit is {MAX_QUADRUPLEX_BULGES})"
+            f"bulge of {bulge_count} nucleotides (limit is {MAX_QUADRUPLEX_BULGES})"
         )
 
     for tetrad_pair in quadruplex.tetrad_pairs:
@@ -998,25 +1153,95 @@ def quadruplex_spurious_reasons(quadruplex: "Quadruplex") -> List[str]:
     return reasons
 
 
+def is_pure_g_tetrad(tetrad: "Tetrad") -> bool:
+    """True when all tetrad nucleotides are guanines (including modified
+    guanines such as 8OG or LCG)."""
+    return all(nt.one_letter_name.upper() == "G" for nt in tetrad.nucleotides)
+
+
+def quadruplex_tract_runs(quadruplex: "Quadruplex") -> list[list[list[Residue3D]]]:
+    """Split each tract into runs of nucleotides that are consecutive in the
+    chain-ordered sequence of all tetrad nucleotides (result is aligned with
+    ``quadruplex.tracts``).
+
+    A run breaks wherever the chain leaves the tract and visits another
+    tract's tetrad nucleotide(s) before coming back (a re-entry excursion).
+    Bulges between two stacked nucleotides of the same tract and direct 0-nt
+    reversals do NOT break a run.
+    """
+    tract_of: dict[Residue3D, int] = {}
+    for tract_index, tract in enumerate(quadruplex.tracts):
+        for nt in tract.nucleotides:
+            if nt not in tract_of:
+                tract_of[nt] = tract_index
+    chain_ordered = sorted(tract_of, key=lambda nt: quadruplex.global_index[nt])
+    runs: list[list[list[Residue3D]]] = [[] for _ in quadruplex.tracts]
+    last_seen_at: dict[int, int] = {}
+    last_run: dict[int, list[Residue3D]] = {}
+    for position, nt in enumerate(chain_ordered):
+        tract_index = tract_of[nt]
+        if (
+            last_seen_at.get(tract_index) == position - 1
+            and last_run[tract_index][-1].chain == nt.chain
+        ):
+            last_run[tract_index].append(nt)
+        else:
+            last_run[tract_index] = [nt]
+            runs[tract_index].append(last_run[tract_index])
+        last_seen_at[tract_index] = position
+    return runs
+
+
+def isolated_run_nucleotides(
+    tract_runs: list[list[list[Residue3D]]],
+) -> set[Residue3D]:
+    """Nucleotides forming a single-nucleotide run of a tract that the chain
+    visits in more than one run (the "snapped" guanines of re-entries)."""
+    isolated: set[Residue3D] = set()
+    for runs in tract_runs:
+        if len(runs) >= 2:
+            for run in runs:
+                if len(run) == 1:
+                    isolated.add(run[0])
+    return isolated
+
+
+def quadruplex_row_partition_boundaries(quadruplex: "Quadruplex") -> list[int]:
+    """Tetrad-row boundaries at which every column splits into two
+    chain-homogeneous halves (each side of the boundary is owned by a single
+    chain in every tract). Empty for staggered arrangements such as 1jjp or
+    1nyd; vacuously full for unimolecular quadruplexes."""
+    tetrad_count = len(quadruplex.tetrads)
+    return [
+        boundary
+        for boundary in range(1, tetrad_count)
+        if all(
+            len({nt.chain for nt in tract.nucleotides[:boundary]}) <= 1
+            and len({nt.chain for nt in tract.nucleotides[boundary:]}) <= 1
+            for tract in quadruplex.tracts
+        )
+    ]
+
+
 @dataclass
 class Quadruplex:
-    tetrads: List[Tetrad]
-    tetrad_pairs: List[TetradPair]
+    tetrads: list[Tetrad]
+    tetrad_pairs: list[TetradPair]
     structure3d: Structure3D
-    global_index: Dict[Residue3D, int]
-    base_pairs: List[BasePair3D] = field(default_factory=list)
-    onzm: Optional[ONZM] = field(init=False)
-    gba_classes: List[GbaQuadruplexClassification] = field(init=False)
-    tracts: List[Tract] = field(init=False)
-    bulges: List[Residue3D] = field(init=False)
-    loops: List[Loop] = field(init=False)
-    snapbacks: List[Snapback] = field(init=False)
-    tags: List[str] = field(init=False)
-    path: List[str] = field(init=False)
-    handedness: Optional[HelixHandedness] = field(init=False)
-    tetrad_polarities: List[Optional[TetradPolarity]] = field(init=False)
-    strand_polarities: List[List[Optional[StrandPolarity]]] = field(init=False)
-    loop_class: Optional[LoopClassification] = field(init=False)
+    global_index: dict[Residue3D, int]
+    base_pairs: list[BasePair3D] = field(default_factory=list)
+    onzm: ONZM | None = field(init=False)
+    gba_classes: list[GbaQuadruplexClassification] = field(init=False)
+    tracts: list[Tract] = field(init=False)
+    bulges: list[Residue3D] = field(init=False)
+    loops: list[Loop] = field(init=False)
+    snapbacks: list[Snapback] = field(init=False)
+    tags: list[str] = field(init=False)
+    path: list[str] = field(init=False)
+    handedness: HelixHandedness | None = field(init=False)
+    tetrad_polarities: list[TetradPolarity | None] = field(init=False)
+    strand_polarities: list[list[StrandPolarity | None]] = field(init=False)
+    loop_class: LoopClassification | None = field(init=False)
 
     def __post_init__(self):
         self.onzm = self.__classify_onzm()
@@ -1032,10 +1257,10 @@ class Quadruplex:
         self.loop_class = self.__classify_by_loops()
         self.tags = self.__find_tags()
 
-    def __classify_onzm(self) -> Optional[ONZM]:
+    def __classify_onzm(self) -> ONZM | None:
         if len(self.tetrads) == 1:
             return None
-        if any([t.onz is None for t in self.tetrads]):
+        if any(t.onz is None for t in self.tetrads):
             return None
 
         counter = Counter([t.onz.value[0] for t in self.tetrads])
@@ -1055,7 +1280,7 @@ class Quadruplex:
 
         return ONZM.from_value(f"{onz}{direction}{plus_minus}")
 
-    def __classify_by_gba(self) -> List[GbaQuadruplexClassification]:
+    def __classify_by_gba(self) -> list[GbaQuadruplexClassification]:
         gbas = set()
         for t in self.tetrads:
             gba = t.gba_class
@@ -1071,21 +1296,19 @@ class Quadruplex:
             "VII": 7,
             "VIII": 8,
         }
-        return list(
-            map(
-                lambda x: GbaQuadruplexClassification[x],
-                sorted(gbas, key=lambda gba: roman_numerals.get(gba, 100)),
-            )
-        )
+        return [
+            GbaQuadruplexClassification[x]
+            for x in sorted(gbas, key=lambda gba: roman_numerals.get(gba, 100))
+        ]
 
-    def __find_tracts(self) -> List[Tract]:
+    def __find_tracts(self) -> list[Tract]:
         tracts = [
             Tract(nts)
             for nts in self.__build_tracts(self.__first_tetrad_column_order())
         ]
         return self.__rotate_tracts_to_tetrad_a(tracts)
 
-    def __rotate_tracts_to_tetrad_a(self, tracts: List[Tract]) -> List[Tract]:
+    def __rotate_tracts_to_tetrad_a(self, tracts: list[Tract]) -> list[Tract]:
         """Re-anchor tract numbering so tract ``1`` always belongs to tetrad A.
 
         ``__first_tetrad_column_order`` anchors column ``1`` on
@@ -1116,8 +1339,8 @@ class Quadruplex:
         return tracts
 
     def __build_tracts(
-        self, first_tetrad_order: List[Residue3D]
-    ) -> List[List[Residue3D]]:
+        self, first_tetrad_order: list[Residue3D]
+    ) -> list[list[Residue3D]]:
         tracts = [[nt] for nt in first_tetrad_order]
 
         for tetrad_pair in self.tetrad_pairs:
@@ -1132,7 +1355,7 @@ class Quadruplex:
 
         return tracts
 
-    def __first_tetrad_column_order(self) -> List[Residue3D]:
+    def __first_tetrad_column_order(self) -> list[Residue3D]:
         tetrad = self.tetrads[0]
         geometry = self.__tetrad_geometry(tetrad)
         if geometry is None:
@@ -1170,7 +1393,7 @@ class Quadruplex:
 
     def __tetrad_geometry(
         self, tetrad: Tetrad
-    ) -> Optional[Tuple[numpy.ndarray, numpy.ndarray]]:
+    ) -> tuple[numpy.ndarray, numpy.ndarray] | None:
         atom_coords = collect_nucleobase_atoms(tetrad.nucleotides)
         if len(atom_coords) >= 3:
             return get_plane_vectors(numpy.array(atom_coords))
@@ -1199,7 +1422,7 @@ class Quadruplex:
 
     def __strand_progression_vector(
         self, tetrad_index: int, tetrad: Tetrad, residue: Residue3D
-    ) -> Optional[numpy.ndarray]:
+    ) -> numpy.ndarray | None:
         if tetrad_index < len(self.tetrad_pairs):
             stacked = self.tetrad_pairs[tetrad_index].stacked.get(residue)
             if stacked is not None:
@@ -1216,7 +1439,7 @@ class Quadruplex:
 
         return self.__local_backbone_direction(residue)
 
-    def __local_backbone_direction(self, residue: Residue3D) -> Optional[numpy.ndarray]:
+    def __local_backbone_direction(self, residue: Residue3D) -> numpy.ndarray | None:
         nucleotides = [
             nt
             for nt in self.structure3d.residues
@@ -1276,7 +1499,7 @@ class Quadruplex:
             )
             yield nt_prev, nt_cur, in_between
 
-    def __find_loops(self) -> List[Loop]:
+    def __find_loops(self) -> list[Loop]:
         if len(self.tetrads) == 1:
             return []
 
@@ -1287,10 +1510,16 @@ class Quadruplex:
             if tract_prev is None or tract_cur is None or tract_prev == tract_cur:
                 continue
             loop_type = self.__detect_loop_type(nt_prev, nt_cur)
-            loops.append(Loop(in_between, loop_type))
+            loops.append(
+                Loop(
+                    in_between,
+                    loop_type,
+                    self.__missing_residue_names_between(nt_prev, nt_cur),
+                )
+            )
         return loops
 
-    def __find_path(self) -> List[str]:
+    def __find_path(self) -> list[str]:
         labels = {}
         tetrad_labels = self.__tetrad_labels_by_5p_order()
 
@@ -1303,7 +1532,7 @@ class Quadruplex:
             for nt in sorted(labels.keys(), key=lambda nt: self.global_index[nt])
         ]
 
-    def __tetrad_labels_by_5p_order(self) -> List[str]:
+    def __tetrad_labels_by_5p_order(self) -> list[str]:
         tetrad_indices = sorted(
             range(len(self.tetrads)),
             key=lambda i: min(
@@ -1317,12 +1546,12 @@ class Quadruplex:
 
         return labels
 
-    def tetrad_labels_by_5p_order(self) -> List[str]:
+    def tetrad_labels_by_5p_order(self) -> list[str]:
         return self.__tetrad_labels_by_5p_order()
 
     def tetrad_geometry(
         self, tetrad: Tetrad
-    ) -> Optional[Tuple[numpy.ndarray, numpy.ndarray]]:
+    ) -> tuple[numpy.ndarray, numpy.ndarray] | None:
         return self.__tetrad_geometry(tetrad)
 
     def oriented_tetrad_normal(
@@ -1334,7 +1563,7 @@ class Quadruplex:
     ) -> numpy.ndarray:
         return self.__orient_tetrad_normal(tetrad_index, tetrad, normal, reference_nt)
 
-    def __find_handedness(self) -> Optional[HelixHandedness]:
+    def __find_handedness(self) -> HelixHandedness | None:
         if len(self.tetrads) < 2:
             return None
 
@@ -1367,13 +1596,13 @@ class Quadruplex:
             return None
         return HelixHandedness.RIGHT if mean_twist > 0.0 else HelixHandedness.LEFT
 
-    def __compute_axis(self) -> Optional[numpy.ndarray]:
+    def __compute_axis(self) -> numpy.ndarray | None:
         normals = []
         for tetrad in self.tetrads:
             geometry = self.__tetrad_geometry(tetrad)
             if geometry is None:
                 continue
-            center, normal = geometry
+            _center, normal = geometry
             normal = self.__orient_tetrad_normal(
                 self.tetrads.index(tetrad),
                 tetrad,
@@ -1404,13 +1633,13 @@ class Quadruplex:
                 axis = -axis
         return axis
 
-    def __find_strand_polarities(self) -> List[List[Optional[StrandPolarity]]]:
+    def __find_strand_polarities(self) -> list[list[StrandPolarity | None]]:
         axis = self.__compute_axis()
         if axis is None:
             return [[None] * len(t.nucleotides) for t in self.tracts]
 
         # Compute dot products for all nucleotides in all tetrads
-        all_dots: Dict[Residue3D, Optional[float]] = {}
+        all_dots: dict[Residue3D, float | None] = {}
         for tract in self.tracts:
             for nt in tract.nucleotides:
                 v = residue_backbone_direction(nt)
@@ -1421,7 +1650,7 @@ class Quadruplex:
 
         # Find the most 5' guanine with a clear dot product as the reference
         threshold = 0.1
-        reference_dot: Optional[float] = None
+        reference_dot: float | None = None
         for nt in sorted(all_dots.keys(), key=lambda n: self.global_index[n]):
             d = all_dots[nt]
             if d is not None and abs(d) > threshold:
@@ -1449,12 +1678,21 @@ class Quadruplex:
             result.append(tract_polarities)
         return result
 
-    def __find_tetrad_polarities(self) -> List[Optional[TetradPolarity]]:
-        axis = self.__compute_axis()
-        polarities: List[Optional[TetradPolarity]] = []
+    def __find_tetrad_polarities(self) -> list[TetradPolarity | None]:
+        """Judge each tetrad's H-bond successor cycle around the g4 axis.
 
-        for i, tetrad in enumerate(self.tetrads):
-            column1 = self.tracts[0].nucleotides[i]
+        The g4 axis is the analysis axis re-oriented so that the centroid
+        displacement between the first two tetrads in build (path) order is
+        positive - the direction g4composer describes the quadruplex in. The
+        polarity is CLOCKWISE when the hydrogen-bond successor cycle runs in
+        the direction that is clockwise when viewed along that axis
+        (guanines ordered by decreasing angle around it), ANTICLOCKWISE when
+        it runs the opposite way.
+        """
+        axis = self.__polarities_axis()
+        polarities: list[TetradPolarity | None] = []
+
+        for tetrad in self.tetrads:
             geometry = self.__tetrad_geometry(tetrad)
             if geometry is None or axis is None:
                 polarities.append(None)
@@ -1462,39 +1700,98 @@ class Quadruplex:
 
             center, _ = geometry
             successor = self.__hydrogen_bond_successor_map(tetrad)
-
-            if len(successor) != 4 or column1 not in successor:
+            if len(successor) != 4:
                 polarities.append(None)
                 continue
 
-            reference_point = residue_topology_point(column1)
-            next_nt = successor[column1]
-            next_point = residue_topology_point(next_nt)
-            if reference_point is None or next_point is None:
+            ordered = self.__axis_clockwise_order(tetrad, center, axis)
+            if ordered is None:
                 polarities.append(None)
                 continue
 
-            try:
-                delta = calculate_angle_around_axis(
-                    next_point - center,
-                    axis,
-                    reference_point - center,
-                ) % (2.0 * math.pi)
-            except ValueError:
+            next_nt = successor.get(ordered[0])
+            if next_nt == ordered[1]:
+                polarities.append(TetradPolarity.CLOCKWISE)
+            elif next_nt == ordered[3]:
+                polarities.append(TetradPolarity.ANTICLOCKWISE)
+            else:
                 polarities.append(None)
-                continue
-
-            polarities.append(
-                TetradPolarity.ANTICLOCKWISE
-                if delta < math.pi
-                else TetradPolarity.CLOCKWISE
-            )
 
         return polarities
 
+    def __polarities_axis(self) -> numpy.ndarray | None:
+        """The g4 axis for the polarity judgement: the analysis axis oriented
+        so that the first build-order interval's centroid displacement is
+        positive."""
+        axis = self.__compute_axis()
+        if axis is None:
+            return None
+        build_order = self.__build_order_tetrads()
+        if len(build_order) < 2:
+            return axis
+        first = self.__tetrad_geometry(build_order[0])
+        second = self.__tetrad_geometry(build_order[1])
+        if first is None or second is None:
+            return axis
+        displacement = second[0] - first[0]
+        if numpy.dot(axis, displacement) < 0:
+            axis = -axis
+        return axis
+
+    def __build_order_tetrads(self) -> list[Tetrad]:
+        """Tetrads in g4composer build order: the first-appearance order of
+        the tetrad labels along the chain."""
+        labels = self.tetrad_labels_by_5p_order()
+        label_of: dict[Residue3D, str] = {
+            nt: labels[index]
+            for index, tetrad in enumerate(self.tetrads)
+            for nt in tetrad.nucleotides
+        }
+        ordered: list[Tetrad] = []
+        seen: set[str] = set()
+        for nt in sorted(label_of, key=lambda nt: self.global_index[nt]):
+            label = label_of[nt]
+            if label in seen:
+                continue
+            seen.add(label)
+            ordered.append(
+                next(tetrad for tetrad in self.tetrads if nt in tetrad.nucleotides)
+            )
+        return ordered
+
+    def __axis_clockwise_order(
+        self,
+        tetrad: Tetrad,
+        center: numpy.ndarray,
+        axis: numpy.ndarray,
+    ) -> list[Residue3D] | None:
+        """The tetrad's nucleotides ordered clockwise when viewed along the
+        g4 axis: by decreasing angle of C1' (or the topology point) projected
+        onto the plane perpendicular to the axis."""
+        angles: list[tuple[float, Residue3D]] = []
+        for nt in tetrad.nucleotides:
+            point = residue_c1prime_coordinates(nt)
+            if point is None:
+                point = residue_topology_point(nt)
+            if point is None:
+                return None
+            vector = point - center
+            vector = vector - numpy.dot(vector, axis) * axis
+            reference = numpy.array([1.0, 0.0, 0.0])
+            if abs(float(numpy.dot(reference, axis))) > 0.9:
+                reference = numpy.array([0.0, 1.0, 0.0])
+            reference = reference - numpy.dot(reference, axis) * axis
+            angle = math.atan2(
+                float(numpy.dot(numpy.cross(reference, vector), axis)),
+                float(numpy.dot(reference, vector)),
+            )
+            angles.append((angle, nt))
+        angles.sort(key=lambda item: item[0], reverse=True)
+        return [nt for _, nt in angles]
+
     def __hydrogen_bond_successor_map(
         self, tetrad: Tetrad
-    ) -> Dict[Residue3D, Residue3D]:
+    ) -> dict[Residue3D, Residue3D]:
         """Build the cyclic successor map around a tetrad's base-pairing edges.
 
         Each base pair connects two edges (Watson-Crick, Hoogsteen, Sugar).
@@ -1507,8 +1804,8 @@ class Quadruplex:
         4-cycle from the directed pairs.
         """
         pairs = [tetrad.pair_12, tetrad.pair_23, tetrad.pair_34, tetrad.pair_41]
-        successor: Dict[Residue3D, Residue3D] = {}
-        tie_pairs: List[Tuple[Residue3D, Residue3D]] = []
+        successor: dict[Residue3D, Residue3D] = {}
+        tie_pairs: list[tuple[Residue3D, Residue3D]] = []
 
         for pair in pairs:
             score_org = BasePair3D.score_table.get(pair.lw, 20)
@@ -1528,7 +1825,7 @@ class Quadruplex:
         for choices in itertools.product((0, 1), repeat=len(tie_pairs)):
             candidate = dict(successor)
             valid = True
-            for (nt1, nt2), choice in zip(tie_pairs, choices):
+            for (nt1, nt2), choice in zip(tie_pairs, choices, strict=True):
                 src, dst = (nt1, nt2) if choice == 0 else (nt2, nt1)
                 if src in candidate:
                     valid = False
@@ -1551,7 +1848,7 @@ class Quadruplex:
 
     def __detect_loop_type(
         self, nt_first: Residue3D, nt_last: Residue3D
-    ) -> Optional[LoopType]:
+    ) -> LoopType | None:
         """Classify a loop by the column transition between its flanking tetrads.
 
         Columns are ElTetrado tract indices, numbered anticlockwise starting
@@ -1564,8 +1861,10 @@ class Quadruplex:
         column_first = self.__find_tract_index_with_nt(nt_first)
         column_last = self.__find_tract_index_with_nt(nt_last)
         if column_first is None or column_last is None:
-            logging.warning(
-                f"Failed to classify the loop between {nt_first} and {nt_last}"
+            logger.warning(
+                "Failed to classify the loop between %s and %s",
+                nt_first,
+                nt_last,
             )
             return None
 
@@ -1578,8 +1877,10 @@ class Quadruplex:
         tetrad_with_first = self.__find_tetrad_with_nt(nt_first)
         tetrad_with_last = self.__find_tetrad_with_nt(nt_last)
         if tetrad_with_first is None or tetrad_with_last is None:
-            logging.warning(
-                f"Failed to classify the loop between {nt_first} and {nt_last}"
+            logger.warning(
+                "Failed to classify the loop between %s and %s",
+                nt_first,
+                nt_last,
             )
             return None
 
@@ -1590,7 +1891,7 @@ class Quadruplex:
     # ------------------------------------------------------------------
     # Bulges
     # ------------------------------------------------------------------
-    def __find_bulges(self) -> List[Residue3D]:
+    def __find_bulges(self) -> list[BulgeGroup]:
         """
         Detect nucleotides bulging out between two stacked nucleotides of the
         same tract.  Example:
@@ -1605,7 +1906,7 @@ class Quadruplex:
             {nt: position for position, nt in enumerate(tract.nucleotides)}
             for tract in self.tracts
         ]
-        bulges: List[Residue3D] = []
+        bulges: list[BulgeGroup] = []
 
         for nt_prev, nt_cur, in_between in self.__chain_connectors():
             tract_prev = self.__find_tract_index_with_nt(nt_prev)
@@ -1619,27 +1920,49 @@ class Quadruplex:
                     - tract_positions[tract_prev][nt_cur]
                 )
                 == 1
+                and in_between
             ):
-                bulges.extend(in_between)
+                bulges.append(
+                    BulgeGroup(
+                        in_between,
+                        self.__missing_residue_names_between(nt_prev, nt_cur),
+                    )
+                )
 
-        # keep order, remove duplicates
-        seen: Set[Residue3D] = set()
-        unique_bulges: List[Residue3D] = []
-        for nt in bulges:
-            if nt not in seen:
-                unique_bulges.append(nt)
-                seen.add(nt)
+        # keep order, remove duplicate groups with identical nucleotides
+        seen: set[frozenset[Residue3D]] = set()
+        unique_bulges: list[BulgeGroup] = []
+        for bulge in bulges:
+            key = frozenset(bulge.nucleotides)
+            if key in seen:
+                continue
+            seen.add(key)
+            unique_bulges.append(bulge)
         return unique_bulges
 
-    def __find_snapbacks(self) -> List[Snapback]:
+    def __find_snapbacks(self) -> list[Snapback]:
         """
-        Detect snapbacks: chain re-entries into an already visited tract
-        (chain-consecutive tetrad nucleotides of the same tract whose
-        positions within the tract are not adjacent). The orientation says
-        which side of the connector is the isolated one: 3' when the
-        re-entering (post-connector) stacked run is shorter than the
-        pre-connector one — its first nucleotide is "injected" into the
-        column — and 5' for the mirror case. Ties default to 3'.
+        Detect snapbacks: chain re-entries into an already visited tract.
+
+        Two kinds are recognized:
+
+        - direct reversals: chain-consecutive tetrad nucleotides of the same
+          tract whose positions within the tract are not adjacent (e.g. the
+          0-nt snapbacks of 5de5/2la7 or the 2-nt one of 2m53); the
+          orientation says which side of the connector is the isolated one:
+          3' when the re-entering (post-connector) stacked run is shorter -
+          its first nucleotide is "injected" into the column - and 5' for the
+          mirror case; ties default to 3';
+        - re-entries: the chain leaves a tract and returns to it only after
+          visiting other columns (the run break is an excursion, not a
+          bulge); one of the two adjacent runs is a single nucleotide - the
+          "snapped" guanine (e.g. 2mgn G8,G9 -> G24 = 3', 6jcd G6 -> G19 =
+          3', 2kpr G1,G2 -> G11 = 5', 6xt7 G1 <- G10,G11,G12 = 5'). The
+          orientation follows the chain-terminal run: 5' when the run holding
+          the chain's first tetrad nucleotide is the snapped one, 3' when it
+          is the run holding the chain's last tetrad nucleotide; ties default
+          to the shorter-run rule above. Two stacked stems (two-block
+          re-entries such as 2ms9 or the 6jje family) are not snapbacks.
         """
         if len(self.tetrads) == 1:
             return []
@@ -1652,7 +1975,7 @@ class Quadruplex:
             {nt: position for position, nt in enumerate(tract.nucleotides)}
             for tract in self.tracts
         ]
-        snapbacks: List[Snapback] = []
+        snapbacks: list[Snapback] = []
 
         for i in range(1, len(tetrad_nucleotides)):
             nt_prev = tetrad_nucleotides[i - 1]
@@ -1668,7 +1991,12 @@ class Quadruplex:
             if abs(positions[nt_prev] - positions[nt_cur]) == 1:
                 continue  # stacked — a stack or a bulge connector
 
-            def run_length(start: int, step: int) -> int:
+            def run_length(
+                start: int,
+                step: int,
+                tract_index: int = tract_index,
+                positions: dict = positions,
+            ) -> int:
                 length = 1
                 j = start
                 while 0 <= j + step < len(tetrad_nucleotides):
@@ -1702,23 +2030,92 @@ class Quadruplex:
                     self.structure3d.residues,
                 )
             )
-            snapbacks.append(Snapback(in_between, orientation))
+            snapbacks.append(
+                Snapback(
+                    in_between,
+                    orientation,
+                    self.__missing_residue_names_between(nt_prev, nt_cur),
+                )
+            )
+
+        snapbacks.extend(self.__find_re_entry_snapbacks(tetrad_nucleotides))
         return snapbacks
 
-    def __find_tags(self) -> List[str]:
+    def __find_re_entry_snapbacks(
+        self, tetrad_nucleotides: list[Residue3D]
+    ) -> list[Snapback]:
+        """Snapbacks formed by tract re-entries after an excursion through
+        other columns (see ``__find_snapbacks``)."""
+        first_of_chain: dict[str, Residue3D] = {}
+        last_of_chain: dict[str, Residue3D] = {}
+        for nt in tetrad_nucleotides:
+            first_of_chain.setdefault(nt.chain, nt)
+            last_of_chain[nt.chain] = nt
+
+        def in_between_nucleotides(nt_prev: Residue3D, nt_cur: Residue3D):
+            return list(
+                filter(
+                    lambda nt: (
+                        nt.is_nucleotide
+                        and self.global_index[nt_prev]
+                        < self.global_index[nt]
+                        < self.global_index[nt_cur]
+                    ),
+                    self.structure3d.residues,
+                )
+            )
+
+        snapbacks: list[Snapback] = []
+        for tract_runs in quadruplex_tract_runs(self):
+            for run_prev, run_next in itertools.pairwise(tract_runs):
+                chain = run_prev[-1].chain
+                if chain != run_next[0].chain:
+                    continue  # a chain switch, not a re-entry
+                if len(run_prev) > 1 and len(run_next) > 1:
+                    continue  # two stacked stems — a two-block, not a snapback
+
+                orientation = None
+                for nt in run_prev + run_next:
+                    if nt is first_of_chain.get(chain):
+                        orientation = SnapbackOrientation.FIVE_PRIME
+                        break
+                    if nt is last_of_chain.get(chain):
+                        orientation = SnapbackOrientation.THREE_PRIME
+                        break
+                if orientation is None:
+                    orientation = (
+                        SnapbackOrientation.FIVE_PRIME
+                        if len(run_next) > len(run_prev)
+                        else SnapbackOrientation.THREE_PRIME
+                    )
+                snapbacks.append(
+                    Snapback(
+                        in_between_nucleotides(run_prev[-1], run_next[0]),
+                        orientation,
+                        self.__missing_residue_names_between(run_prev[-1], run_next[0]),
+                    )
+                )
+        return snapbacks
+
+    def __find_tags(self) -> list[str]:
         """Summarize the quadruplex's structural features as short tags,
         exposed in the text report and the JSON output."""
-        tags: List[str] = []
+        if not any(is_pure_g_tetrad(tetrad) for tetrad in self.tetrads):
+            return ["non_g4"]
+
+        tags: list[str] = []
         if self.bulges:
             tags.append("has_bulge")
         if self.snapbacks:
             tags.append("has_snapback")
         if self.__has_inverted_strand_polarity():
             tags.append("has_inverted_strand_polarity")
-        if any(not loop.nucleotides for loop in self.loops):
+        if self.__has_v_loop():
             tags.append("v_loop")
         if self.__is_two_block():
             tags.append("two_block")
+        if self.__is_interlocked():
+            tags.append("interlocked")
         if self.loop_class is not None:
             topology_name = TOPOLOGY_NAMES.get(self.loop_class.value)
             if topology_name is not None:
@@ -1726,6 +2123,132 @@ class Quadruplex:
         if self.__has_quadruplex_duplex():
             tags.append("quadruplex_duplex")
         return tags
+
+    def __tetrad_chains(self) -> set[str]:
+        return {nt.chain for tetrad in self.tetrads for nt in tetrad.nucleotides}
+
+    def __has_v_loop(self) -> bool:
+        """True when the quadruplex contains a V-loop: a cross-column
+        connector whose flanking nucleotides lie in different tetrads (a
+        propeller-type position) and where one flanking nucleotide is an
+        isolated single-nucleotide run of a broken column - the chain snaps
+        out of / into that lone guanine (e.g. 2kpr G11-G12, 5zev G20-G21,
+        1jjp G10-G11, 2mb4 G3-G5). The loop itself may hold nucleotides
+        (the 1-nt V-loops of 2mb4 or the 3qxr family).
+
+        Excluded: same-tetrad 0-nt connectors (lateral/diagonal positions,
+        e.g. 4p1d), connectors spanning unmodelled residues (missing loop
+        nucleotides, e.g. 7sxp), mirror-image L-nucleotide structures
+        (4wb2/4wb3) and non-G4 quadruplexes.
+        """
+        if self.__is_mirror_image():
+            return False
+        isolated = isolated_run_nucleotides(quadruplex_tract_runs(self))
+        if not isolated:
+            return False
+
+        tetrad_of = {
+            nt: index
+            for index, tetrad in enumerate(self.tetrads)
+            for nt in tetrad.nucleotides
+        }
+        for nt_prev, nt_cur, _ in self.__chain_connectors():
+            tract_prev = self.__find_tract_index_with_nt(nt_prev)
+            tract_cur = self.__find_tract_index_with_nt(nt_cur)
+            if tract_prev is None or tract_cur is None or tract_prev == tract_cur:
+                continue
+            if tetrad_of[nt_prev] == tetrad_of[nt_cur]:
+                continue
+            if nt_prev not in isolated and nt_cur not in isolated:
+                continue
+            if not self.__chain_numbering_is_continuous(nt_prev, nt_cur):
+                continue
+            return True
+        return False
+
+    def __chain_numbering_is_continuous(
+        self, nt_prev: Residue3D, nt_cur: Residue3D
+    ) -> bool:
+        """Residue numbering consistent with the modelled content - excludes
+        connectors that span unmodelled (missing) residues."""
+        return self.__missing_residue_count_between(nt_prev, nt_cur) == 0
+
+    def __missing_residue_count_between(
+        self, nt_prev: Residue3D, nt_cur: Residue3D
+    ) -> int:
+        """Number of unmodelled residues between two chain-consecutive
+        nucleotides: numbering slots minus the residues actually present."""
+        index_prev = self.global_index[nt_prev]
+        index_cur = self.global_index[nt_cur]
+        modelled = sum(
+            1
+            for residue in self.structure3d.residues
+            if residue.chain == nt_prev.chain
+            and index_prev < self.global_index[residue] < index_cur
+        )
+        return abs(nt_cur.number - nt_prev.number) - 1 - modelled
+
+    def __missing_residue_names_between(
+        self, nt_prev: Residue3D, nt_cur: Residue3D
+    ) -> list[str]:
+        """Full names of the residues missing between two chain-consecutive
+        nucleotides.
+
+        When the file header reports the unobserved residues (rnapolis >=
+        0.16.15) the real identifiers are returned; otherwise placeholders
+        (``A.?7`` style) are synthesized from the numbering so that the list
+        length always equals the number of missing residues.
+        """
+        low = min(nt_prev.number, nt_cur.number)
+        high = max(nt_prev.number, nt_cur.number)
+        slots = range(low + 1, high)
+        header_missing = getattr(self.structure3d, "missing_residues", None) or []
+        names = [
+            Residue(missing.label, missing.auth).full_name
+            or f"{missing.chain}.{missing.name}{missing.number}"
+            for missing in sorted(header_missing)
+            if missing.chain == nt_prev.chain
+            and missing.number is not None
+            and missing.number in slots
+        ]
+        if names or not slots:
+            return names
+        modelled_numbers = {
+            residue.number
+            for residue in self.structure3d.residues
+            if residue.chain == nt_prev.chain and low < residue.number < high
+        }
+        return [
+            f"{nt_prev.chain}.?{number}"
+            for number in slots
+            if number not in modelled_numbers
+        ]
+
+    def __is_mirror_image(self) -> bool:
+        """True when all tetrad nucleotides are L-configuration sugars (PDB
+        chemical component IDs prefixed with 0, e.g. 0G/0DA in mirror-image
+        L-RNA/L-DNA structures such as 4wb2/4wb3)."""
+        return all(
+            nt.name.startswith("0")
+            for tetrad in self.tetrads
+            for nt in tetrad.nucleotides
+        )
+
+    def __is_interlocked(self) -> bool:
+        """True for a multi-chain quadruplex whose chains share ALL columns
+        (tracts) and whose arrangement has no clean row partition - the
+        columns interpenetrate in a staggered fashion, e.g. the
+        interlocked/intercalated dimers such as 1jjp or the locked
+        tetramolecular quadruplex pairs such as 1nyd and 1xce. Mutually
+        exclusive with two_block, which requires a row partition."""
+        if len(self.__tetrad_chains()) < 2:
+            return False
+        mixed_tracts = sum(
+            1
+            for tract in self.tracts
+            if len({nt.chain for nt in tract.nucleotides}) > 1
+        )
+        return mixed_tracts == len(self.tracts) and not self.__has_row_partition()
 
     def __has_inverted_strand_polarity(self) -> bool:
         for tract_polarities in self.strand_polarities:
@@ -1738,12 +2261,29 @@ class Quadruplex:
         return False
 
     def __is_two_block(self) -> bool:
-        """True for a unimolecular quadruplex built from two separate blocks:
-        some column is visited by two or more chain segments that each stack
-        at least two guanines (the two stems share columns)."""
+        """True for a quadruplex built from two separate blocks: some column
+        is visited by two or more chain segments that each stack at least two
+        guanines (the stems share columns), and the blocks stack cleanly - a
+        row boundary exists at which every column splits into
+        chain-homogeneous halves (unimolecular quadruplexes satisfy this
+        vacuously; staggered interlocked arrangements do not). Applies to any
+        molecularity (e.g. the bimolecular 6jje/6jjf family and 6sx6/6syk);
+        1+2 or 2+1 tetrad caps (Mango, beetroot, sc1 aptamers) are NOT
+        two-blocks. 1oz8 is an accepted miss: its real 2+2 arrangement is
+        seen as 3 tetrads due to structure quality."""
         if len(self.tetrads) < 2:
             return False
 
+        return self.__has_shared_column_blocks() and self.__has_row_partition()
+
+    def __has_row_partition(self) -> bool:
+        """A boundary between stack-adjacent tetrads at which every column
+        splits into chain-homogeneous halves exists."""
+        return bool(quadruplex_row_partition_boundaries(self))
+
+    def __has_shared_column_blocks(self) -> bool:
+        """Vertical split: two chain segments of at least two tetrad
+        nucleotides visit the same column."""
         tetrad_nucleotides = sorted(
             [nt for tetrad in self.tetrads for nt in tetrad.nucleotides],
             key=lambda nt: self.global_index[nt],
@@ -1752,10 +2292,10 @@ class Quadruplex:
             {nt: position for position, nt in enumerate(tract.nucleotides)}
             for tract in self.tracts
         ]
-        segments: List[List[int]] = [[] for _ in self.tracts]
-        run_tract: Optional[int] = None
+        segments: list[list[int]] = [[] for _ in self.tracts]
+        run_tract: int | None = None
         run_length = 0
-        run_last: Optional[Residue3D] = None
+        run_last: Residue3D | None = None
 
         for nt in tetrad_nucleotides:
             tract_index = self.__find_tract_index_with_nt(nt)
@@ -1791,9 +2331,9 @@ class Quadruplex:
         """True when at least two canonical Watson-Crick base pairs are formed
         by the quadruplex's loop or bulge nucleotides - a duplex stem growing
         out of a loop (e.g. 6fc9)."""
-        loop_or_bulge = {nt for loop in self.loops for nt in loop.nucleotides} | set(
-            self.bulges
-        )
+        loop_or_bulge = {nt for loop in self.loops for nt in loop.nucleotides} | {
+            nt for bulge in self.bulges for nt in bulge.nucleotides
+        }
         if not loop_or_bulge:
             return False
 
@@ -1819,26 +2359,26 @@ class Quadruplex:
                     return True
         return False
 
-    def __find_tetrad_with_nt(self, nt: Residue3D) -> Optional[Tetrad]:
+    def __find_tetrad_with_nt(self, nt: Residue3D) -> Tetrad | None:
         for tetrad in self.tetrads:
             if nt in tetrad.nucleotides:
                 return tetrad
         return None
 
-    def __find_tract_with_nt(self, nt: Residue3D) -> Optional[Tract]:
+    def __find_tract_with_nt(self, nt: Residue3D) -> Tract | None:
         for tract in self.tracts:
             if nt in tract.nucleotides:
                 return tract
         return None
 
-    def __find_tract_index_with_nt(self, nt: Residue3D) -> Optional[int]:
+    def __find_tract_index_with_nt(self, nt: Residue3D) -> int | None:
         for index, tract in enumerate(self.tracts):
             if nt in tract.nucleotides:
                 return index
         return None
 
-    def __classify_by_loops(self) -> Optional[LoopClassification]:
-        if len(self.loops) != 3 or any([loop.loop_type is None for loop in self.loops]):
+    def __classify_by_loops(self) -> LoopClassification | None:
+        if len(self.loops) != 3 or any(loop.loop_type is None for loop in self.loops):
             return None
 
         loop_classes = {
@@ -1858,7 +2398,7 @@ class Quadruplex:
         }
         fingerprint = "".join([loop.loop_type.value[0] for loop in self.loops])  # type: ignore
         if fingerprint not in loop_classes:
-            logging.error(f"Unknown loop classification: {fingerprint}")
+            logger.error("Unknown loop classification: %s", fingerprint)
             return None
         subtype = (
             "a"
@@ -1877,7 +2417,7 @@ class Quadruplex:
             builder += f"      {', '.join(self.path)}\n"
         else:
             builder += f"  {self.onzm.value if self.onzm is not None else 'R'}"
-            builder += f" {','.join(map(lambda gba: gba.value, self.gba_classes))}"
+            builder += f" {','.join(gba.value for gba in self.gba_classes)}"
             if self.loop_class:
                 builder += (
                     f" {self.loop_class.value} {self.loop_class.loop_progression()}"
@@ -1907,6 +2447,7 @@ class Quadruplex:
                     for nt, polarity in zip(
                         self.tracts[tract_index].nucleotides,
                         tract_polarities,
+                        strict=True,
                     ):
                         suffix = ""
                         if polarity == StrandPolarity.PLUS:
@@ -1931,9 +2472,8 @@ class Quadruplex:
                     builder += f"{snapback}\n"
             if self.bulges:
                 builder += "\n    Bulges:\n"
-                builder += (
-                    "      " + ", ".join(nt.full_name for nt in self.bulges) + "\n"
-                )
+                for bulge in self.bulges:
+                    builder += f"      {bulge}\n"
             builder += "\n"
         return builder
 
@@ -1955,12 +2495,12 @@ class Quadruplex:
 
 @dataclass
 class Helix:
-    tetrads: List[Tetrad]
-    tetrad_pairs: List[TetradPair]
+    tetrads: list[Tetrad]
+    tetrad_pairs: list[TetradPair]
     structure3d: Structure3D
-    global_index: Dict[Residue3D, int]
-    base_pairs: List[BasePair3D] = field(default_factory=list)
-    quadruplexes: List[Quadruplex] = field(init=False)
+    global_index: dict[Residue3D, int]
+    base_pairs: list[BasePair3D] = field(default_factory=list)
+    quadruplexes: list[Quadruplex] = field(init=False)
 
     def __post_init__(self):
         self.quadruplexes = self.__find_quadruplexes()
@@ -1977,24 +2517,23 @@ class Helix:
                 )
             ]
 
-        quadruplexes = list()
-        tetrads = list()
+        quadruplexes = []
+        tetrads = []
 
         for tetrad in [self.tetrad_pairs[0].tetrad1] + [
             tetrad_pair.tetrad2 for tetrad_pair in self.tetrad_pairs
         ]:
-            if tetrads:
-                if tetrad.chains().isdisjoint(tetrads[-1].chains()):
-                    quadruplexes.append(
-                        Quadruplex(
-                            tetrads,
-                            self.__filter_tetrad_pairs(tetrads),
-                            self.structure3d,
-                            self.global_index,
-                            self.base_pairs,
-                        )
+            if tetrads and tetrad.chains().isdisjoint(tetrads[-1].chains()):
+                quadruplexes.append(
+                    Quadruplex(
+                        tetrads,
+                        self.__filter_tetrad_pairs(tetrads),
+                        self.structure3d,
+                        self.global_index,
+                        self.base_pairs,
                     )
-                    tetrads = list()
+                )
+                tetrads = []
             tetrads.append(tetrad)
 
         quadruplexes.append(
@@ -2009,7 +2548,7 @@ class Helix:
 
         return quadruplexes
 
-    def __filter_tetrad_pairs(self, tetrads: List[Tetrad]) -> List[TetradPair]:
+    def __filter_tetrad_pairs(self, tetrads: list[Tetrad]) -> list[TetradPair]:
         tetrad_set = set(tetrads)
         return [
             tp
@@ -2035,26 +2574,30 @@ class Analysis:
     structure3d: Structure3D
     no_reorder: bool
     keep_spurious: bool = False
-    global_index: Dict[Residue3D, int] = field(init=False)
+    polymer_residues: set[Residue3D] = field(init=False)
+    global_index: dict[Residue3D, int] = field(init=False)
     mapping: Mapping2D3D = field(init=False)
-    tetrads: List[Tetrad] = field(init=False)
-    tetrad_scores: Dict[Tetrad, Dict[Tetrad, "TetradScore"]] = field(init=False)
-    tetrad_pairs: List[TetradPair] = field(init=False)
-    helices: List[Helix] = field(init=False)
-    ions: List[Atom] = field(init=False)
-    sugar_puckers: Dict[Residue3D, Optional[SugarPucker]] = field(init=False)
+    tetrads: list[Tetrad] = field(init=False)
+    tetrad_scores: dict[Tetrad, dict[Tetrad, "TetradScore"]] = field(init=False)
+    tetrad_pairs: list[TetradPair] = field(init=False)
+    helices: list[Helix] = field(init=False)
+    ions: list[Atom] = field(init=False)
+    sugar_puckers: dict[Residue3D, SugarPucker | None] = field(init=False)
+    sequence_entries: list[tuple[str, str, Residue3D | None, bool]] = field(init=False)
     sequence: str = field(init=False)
     line1: str = field(init=False)
     line2: str = field(init=False)
 
     def __post_init__(self):
+        self.polymer_residues = polymer_nucleotides(self.structure3d)
         self.global_index = self.__prepare_global_index()
         self.mapping = Mapping2D3D(
             self.structure3d,
             self.base_interactions.base_pairs,
             self.base_interactions.stackings,
-            False,
+            True,
         )
+        self.sequence_entries = self.__prepare_sequence_entries()
         self.tetrads = self.__find_tetrads(self.no_reorder)
         self.tetrad_scores = self.__calculate_tetrad_scores()
         self.tetrad_pairs = self.__find_tetrad_pairs()
@@ -2079,7 +2622,7 @@ class Analysis:
         self.ions = self.__find_ions()
         self.__assign_ions_to_tetrads()
 
-    def __filter_spurious_quadruplexes(self) -> List[Helix]:
+    def __filter_spurious_quadruplexes(self) -> list[Helix]:
         """Discard quadruplexes that fail the spurious quadruplex filter.
 
         Helices left without a single quadruplex are dropped as well; this
@@ -2091,7 +2634,7 @@ class Analysis:
             for quadruplex in helix.quadruplexes:
                 reasons = quadruplex_spurious_reasons(quadruplex)
                 if reasons:
-                    logging.info(
+                    logger.info(
                         "Discarding spurious quadruplex (%s tetrads): %s",
                         len(quadruplex.tetrads),
                         "; ".join(reasons),
@@ -2103,7 +2646,25 @@ class Analysis:
                 helices.append(helix)
         return helices
 
-    def __prepare_global_index(self) -> Dict[Residue3D, int]:
+    def __prepare_sequence_entries(
+        self,
+    ) -> list[tuple[str, str, Residue3D | None, bool]]:
+        """Full per-chain sequence entries (chain, letter, residue or None)
+        for the report and exports, including residues missing from the 3D
+        coordinates."""
+        return sequence_entries_with_missing(
+            sorted(
+                filter(
+                    lambda nt: nt in self.polymer_residues,
+                    self.structure3d.residues,
+                ),
+                key=lambda nt: self.global_index[nt],
+            ),
+            getattr(self.structure3d, "missing_residues", None),
+            getattr(self.structure3d, "sequence_by_entity", None),
+        )
+
+    def __prepare_global_index(self) -> dict[Residue3D, int]:
         result = {}
         i = 1
         for residue in self.structure3d.residues:
@@ -2111,7 +2672,7 @@ class Analysis:
             i += 1
         return result
 
-    def __find_tetrads(self, no_reorder=False) -> List[Tetrad]:
+    def __find_tetrads(self, no_reorder=False) -> list[Tetrad]:
         # search for a tetrad: i -> j -> k -> l
         #                      ^--------------^
         tetrads = []
@@ -2122,20 +2683,20 @@ class Analysis:
                 for k in self.mapping.base_pair_graph[j]:
                     if k in (i, j):
                         continue
-                    for l in self.mapping.base_pair_graph[k]:
-                        if l in (i, j, k) or i not in self.mapping.base_pair_graph[l]:
+                    for n4 in self.mapping.base_pair_graph[k]:
+                        if n4 in (i, j, k) or i not in self.mapping.base_pair_graph[n4]:
                             continue
-                        if Tetrad.is_valid(i, j, k, l, self.mapping.base_pair_dict):
+                        if Tetrad.is_valid(i, j, k, n4, self.mapping.base_pair_dict):
                             pair_12 = self.mapping.base_pair_dict[(i, j)]
                             pair_23 = self.mapping.base_pair_dict[(j, k)]
-                            pair_34 = self.mapping.base_pair_dict[(k, l)]
-                            pair_41 = self.mapping.base_pair_dict[(l, i)]
+                            pair_34 = self.mapping.base_pair_dict[(k, n4)]
+                            pair_41 = self.mapping.base_pair_dict[(n4, i)]
                             tetrads.append(
                                 Tetrad(
                                     i,
                                     j,
                                     k,
-                                    l,
+                                    n4,
                                     pair_12,
                                     pair_23,
                                     pair_34,
@@ -2166,12 +2727,12 @@ class Analysis:
 
         return sorted(
             tetrads,
-            key=lambda t: min(map(lambda nt: self.global_index[nt], t.nucleotides)),
+            key=lambda t: min(self.global_index[nt] for nt in t.nucleotides),
         )
 
     def __calculate_tetrad_scores(
         self,
-    ) -> Dict[Tetrad, Dict[Tetrad, Tuple[int, Tuple, Tuple]]]:
+    ) -> dict[Tetrad, dict[Tetrad, tuple[int, tuple, tuple]]]:
         """Score every tetrad pair to decide how tetrads should be connected.
 
         Each candidate correspondence combines two independent signals:
@@ -2187,9 +2748,9 @@ class Analysis:
             """
             Return a *fractional* sequential-proximity score between two residues.
 
-            1.0  – same chain, immediately adjacent (|idx₁ - idx₂| == 1)
-            0.5  – same chain, one residue apart  (|idx₁ - idx₂| == 2)
-            0.0  – anything else
+            1.0  - same chain, immediately adjacent (|idx₁ - idx₂| == 1)
+            0.5  - same chain, one residue apart  (|idx₁ - idx₂| == 2)
+            0.0  - anything else
             """
             if nt1.chain != nt2.chain:
                 return 0.0
@@ -2198,7 +2759,7 @@ class Analysis:
             idx1 = self.global_index.get(nt1)
             idx2 = self.global_index.get(nt2)
             if idx1 is None or idx2 is None:
-                logging.warning(
+                logger.warning(
                     "Residue missing in global_index while scoring sequential proximity"
                 )
                 return 0.0
@@ -2210,9 +2771,9 @@ class Analysis:
                 return 0.5
             return 0.0
 
-        tetrad_scores: Dict[
+        tetrad_scores: dict[
             Tetrad,
-            Dict[Tetrad, Tuple[int, Tuple[Residue3D, ...], Tuple[Residue3D, ...]]],
+            dict[Tetrad, tuple[int, tuple[Residue3D, ...], tuple[Residue3D, ...]]],
         ] = defaultdict(dict)
 
         for ti, tj in itertools.combinations(self.tetrads, 2):
@@ -2234,10 +2795,10 @@ class Analysis:
             ]
 
             for permutation in viable_permutations:
-                flags_sequential: List[float] = [
+                flags_sequential: list[float] = [
                     is_next_sequentially(nts1[i], permutation[i]) for i in range(4)
                 ]
-                flags_stacking: List[int] = [
+                flags_stacking: list[int] = [
                     int(is_next_by_stacking(nts1[i], permutation[i])) for i in range(4)
                 ]
 
@@ -2269,16 +2830,16 @@ class Analysis:
             )
 
         # log information about tetrad scores
-        logging.debug("Tetrad scores:")
+        logger.debug("Tetrad scores:")
         for ti in self.tetrads:
-            logging.debug(f"{repr(ti)}")
+            logger.debug("%r", ti)
             for tj in self.tetrads:
                 if ti != tj:
-                    logging.debug(f"\t{repr(tj)}\t{tetrad_scores[ti][tj]}")
+                    logger.debug("\t%r\t%s", tj, tetrad_scores[ti][tj])
 
         return tetrad_scores
 
-    def __find_tetrad_pairs(self) -> List[TetradPair]:
+    def __find_tetrad_pairs(self) -> list[TetradPair]:
         """Construct a best adjacent-stack path through the detected tetrads.
 
         The resulting order is the internal stack order used for tract extension,
@@ -2288,7 +2849,7 @@ class Analysis:
 
         def next_tetrad_scoring(
             ti: Tetrad, tj: Tetrad, candidates: Iterable[Tetrad]
-        ) -> Tuple[int, float, int, int, int]:
+        ) -> tuple[int, float, int, int, int]:
             """
             Provide a sorting key that expresses how "good" a follow-up tetrad *tj*
             is when the current end of a tentative helix is *ti*.
@@ -2339,16 +2900,18 @@ class Analysis:
             score = [0, 0]
             order = [ti]
             candidates = set(self.tetrads) - {ti}
+            current = ti
 
             while candidates:
                 tj = max(
-                    candidates, key=lambda tk: next_tetrad_scoring(ti, tk, candidates)
+                    candidates,
+                    key=lambda tk: next_tetrad_scoring(current, tk, candidates),
                 )
-                score[0] += self.tetrad_scores[ti][tj].sequential
-                score[1] += self.tetrad_scores[ti][tj].stacking
+                score[0] += self.tetrad_scores[current][tj].sequential
+                score[1] += self.tetrad_scores[current][tj].stacking
                 order.append(tj)
                 candidates.remove(tj)
-                ti = tj
+                current = tj
 
             if score > best_score:
                 best_score = score
@@ -2418,7 +2981,7 @@ class Analysis:
             )
 
         for tetrad in self.tetrads:
-            if not any([tetrad in helix.tetrads for helix in helices]):
+            if not any(tetrad in helix.tetrads for helix in helices):
                 helices.append(
                     Helix(
                         [tetrad],
@@ -2442,8 +3005,10 @@ class Analysis:
                 for permutation in itertools.permutations(chains):
                     self.__reorder_chains(permutation)
                     classifications = [t.onz for h in self.helices for t in h.tetrads]
-                    logging.debug(
-                        f"Checking reorder: {' '.join(permutation)} {' '.join(map(lambda c: c.value, classifications))}"
+                    logger.debug(
+                        "Checking reorder: %s %s",
+                        " ".join(permutation),
+                        " ".join(c.value for c in classifications),
                     )
 
                     onz_score = sum(c.score() for c in classifications)
@@ -2455,17 +3020,17 @@ class Analysis:
                         best_permutation = permutation
                     elif score == best_score:
                         # in case of a tie, pick permutation earlier in lexicographical sense
-                        if permutation < best_permutation:
-                            best_permutation = permutation
+                        best_permutation = min(best_permutation, permutation)
 
             final_order.extend(best_permutation)
 
         if len(final_order) > 1:
             self.__reorder_chains(final_order)
             classifications = [t.onz for h in self.helices for t in h.tetrads]
-            logging.debug(
-                f"Selected chain order: {' '.join(final_order)} "
-                f"{' '.join(map(lambda onz: onz.value, classifications))}"
+            logger.debug(
+                "Selected chain order: %s %s",
+                " ".join(final_order),
+                " ".join(onz.value for onz in classifications),
             )
 
             self.tetrads = self.__find_tetrads(True)
@@ -2473,8 +3038,8 @@ class Analysis:
             self.tetrad_pairs = self.__find_tetrad_pairs()
             self.helices = self.__find_helices()
 
-    def __group_related_chains(self) -> List[List[str]]:
-        candidates_prior: Set[FrozenSet[str]] = set()
+    def __group_related_chains(self) -> list[list[str]]:
+        candidates_prior: set[frozenset[str]] = set()
 
         for h in self.helices:
             for t in h.tetrads:
@@ -2482,7 +3047,7 @@ class Analysis:
                     frozenset([t.nt1.chain, t.nt2.chain, t.nt3.chain, t.nt4.chain])
                 )
 
-        candidates: List[Set[str]] = [set(c) for c in candidates_prior]
+        candidates: list[set[str]] = [set(c) for c in candidates_prior]
         changed = True
 
         while changed:
@@ -2497,11 +3062,11 @@ class Analysis:
                     changed = True
                     break
 
-        candidates = sorted(candidates, key=lambda x: len(x), reverse=True)
-        groups: List[Set[str]] = []
+        candidates = sorted(candidates, key=len, reverse=True)
+        groups: list[set[str]] = []
 
         for candidate in candidates:
-            if any([group.issuperset(candidate) for group in groups]):
+            if any(group.issuperset(candidate) for group in groups):
                 continue
             groups.append(candidate)
 
@@ -2531,7 +3096,7 @@ class Analysis:
                 tp.tetrad2.reorder_to_match_5p_3p()  # this is required to recalculate ONZ
                 tp.tetrad2.reorder_to_match_other_tetrad(order)
 
-    def __chain_order_score(self, chain_order: Tuple[str, ...]) -> int:
+    def __chain_order_score(self, chain_order: tuple[str, ...]) -> int:
         chain_pairs = []
         for h in self.helices:
             for t in h.tetrads:
@@ -2545,8 +3110,8 @@ class Analysis:
             sum_sq += (chain_order.index(c1) - chain_order.index(c2)) ** 2
         return sum_sq
 
-    def __find_ions(self) -> List[Atom]:
-        metal_atom_names = set([ion.value.upper() for ion in Ion])
+    def __find_ions(self) -> list[Atom]:
+        metal_atom_names = {ion.value.upper() for ion in Ion}
         ions = []
         used = set()
         for residue in self.structure3d.residues:
@@ -2600,8 +3165,9 @@ class Analysis:
                 ions_outside[(min_tetrad, min_nt)].append(ion)
                 continue
 
-            logging.debug(
-                f"Skipping an ion, because it is too far from any tetrad (distance={min_distance})"
+            logger.debug(
+                "Skipping an ion, because it is too far from any tetrad (distance=%s)",
+                min_distance,
             )
 
         for tetrad, ions in ions_channel.items():
@@ -2612,7 +3178,7 @@ class Analysis:
 
     def __generate_twoline_dotbracket(
         self,
-    ) -> Tuple[str, str, str, Dict[Residue3D, int]]:
+    ) -> tuple[str, str, str, dict[Residue3D, int]]:
         layer1, layer2 = [], []
 
         for tetrad in self.tetrads:
@@ -2632,49 +3198,39 @@ class Analysis:
         _, line2 = self.__dot_bracket(layer2)
         return sequence, line1, line2
 
-    def __dot_bracket(self, pairs: List[BasePair3D]) -> Tuple[str, str]:
+    def __dot_bracket(self, pairs: list[BasePair3D]) -> tuple[str, str]:
         bpseq_index = {}
         bpseq_entries = []
-        chain = None
-        shifts = dict()
-        shift_value = 0
-        i = 1
 
-        for nt in sorted(
-            filter(lambda nt: nt.is_nucleotide, self.structure3d.residues),
-            key=lambda nt: self.global_index[nt],
-        ):
-            if chain and chain != nt.chain:
-                shift_value += 1
-            shifts[nt] = shift_value
-            chain = nt.chain
-            bpseq_index[nt] = i
-            bpseq_entries.append(Entry(i, nt.one_letter_name, 0))
-            i += 1
+        for offset, (_, letter, residue, _) in enumerate(self.sequence_entries):
+            if residue is not None:
+                bpseq_index[residue] = offset + 1
+            bpseq_entries.append(Entry(offset + 1, letter, 0))
 
         for pair in pairs:
+            if pair.nt1_3d not in bpseq_index or pair.nt2_3d not in bpseq_index:
+                # ligand nucleotides are not part of the polymer sequence span
+                continue
             ni = bpseq_index[pair.nt1_3d]
             nj = bpseq_index[pair.nt2_3d]
             bpseq_entries[ni - 1].pair = nj
             bpseq_entries[nj - 1].pair = ni
 
-        dot_bracket = BpSeq(bpseq_entries).fcfs
+        structure_rendering = BpSeq(bpseq_entries).fcfs.structure
 
-        def insert_dashes(string, indices):
-            result = []
-            for i, c in enumerate(string):
-                if i in indices:
-                    result.append("-")
-                result.append(c)
-            return "".join(result)
-
-        arr = numpy.array(list(shifts.values()))
-        changes = numpy.where(arr[1:] != arr[:-1])[0]
-
-        return (
-            insert_dashes(dot_bracket.sequence, changes),
-            insert_dashes(dot_bracket.structure, changes),
-        )
+        sequence_chars = []
+        structure_chars = []
+        previous_chain = None
+        for offset, (chain, letter, residue, _) in enumerate(self.sequence_entries):
+            if previous_chain is not None and chain != previous_chain:
+                sequence_chars.append("-")
+                structure_chars.append("-")
+            sequence_chars.append(letter)
+            structure_chars.append(
+                "?" if residue is None else structure_rendering[offset]
+            )
+            previous_chain = chain
+        return "".join(sequence_chars), "".join(structure_chars)
 
     def __str__(self):
         builder = f"Chain order: {' '.join(self.__chain_order())}\n"
@@ -2683,7 +3239,7 @@ class Analysis:
         builder += f"{self.sequence}\n{self.line1}\n{self.line2}"
         return builder
 
-    def __chain_order(self) -> List[str]:
+    def __chain_order(self) -> list[str]:
         only_nucleic_acids = filter(
             lambda nt: nt.is_nucleotide, self.structure3d.residues
         )
@@ -2712,7 +3268,7 @@ class Analysis:
         )
         return xi < xj < yi < yj or xj < xi < yj < yi
 
-    def canonical(self) -> List[BasePair3D]:
+    def canonical(self) -> list[BasePair3D]:
         return [
             base_pair for base_pair in self.mapping.base_pairs if base_pair.is_canonical
         ]
@@ -2736,18 +3292,22 @@ class Analysis:
 @dataclass
 class Visualizer:
     analysis: Analysis
-    tetrads: List[Tetrad]
+    tetrads: list[Tetrad]
     complete2d: bool
-    global_index: Dict[Residue3D, int]
-    onz_dict: Dict[BasePair3D, ONZ] = field(init=False)
+    global_index: dict[Residue3D, int]
+    onz_dict: dict[BasePair3D, ONZ] = field(init=False)
 
     def __post_init__(self):
         self.onz_dict = {}
 
-    def visualize(self, prefix: str, suffix: str, output_dir: Optional[str] = None):
-        fasta = tempfile.NamedTemporaryFile("w+", suffix=".fasta")
+    def visualize(self, prefix: str, suffix: str, output_dir: str | None = None):
+        # the temporary fasta is consumed by the R subprocess below and removed
+        # on process exit, so it deliberately stays open without a context manager
+        fasta = tempfile.NamedTemporaryFile("w+", suffix=".fasta")  # noqa: SIM115
         fasta.write(f">{prefix}-{suffix}\n")
-        fasta.write(self.analysis.sequence)
+        # keep the fasta in the modelled-residue index space used by the .helix
+        # file below (the enriched report sequence would shift the coordinates)
+        fasta.write("".join(nt.one_letter_name for nt in self.__modelled_nucleotides()))
         fasta.flush()
 
         layer1, layer2 = [], []
@@ -2786,18 +3346,22 @@ class Visualizer:
                 helix2.name,
                 output_pdf,
             ],
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
+            capture_output=True,
+            check=False,
         )
         if run.returncode == 0:
             print("\nPlot:", output_pdf)
         else:
-            logging.error(
-                f"Failed to prepare visualization, reason:\n  {run.stderr.decode()}"
+            logger.error(
+                "Failed to prepare visualization, reason:\n  %s",
+                run.stderr.decode(),
             )
 
+    def __modelled_nucleotides(self) -> list[Residue3D]:
+        return [nt for nt in self.analysis.structure3d.residues if nt.is_nucleotide]
+
     def __to_helix(
-        self, layer: List[BasePair3D], canonical: Optional[List[BasePair3D]] = None
+        self, layer: list[BasePair3D], canonical: list[BasePair3D] | None = None
     ) -> IO[str]:
         onz_value = {
             ONZ.O_PLUS: 1,
@@ -2807,11 +3371,9 @@ class Visualizer:
             ONZ.Z_PLUS: 5,
             ONZ.Z_MINUS: 6,
         }
-        nucleotides = [
-            nt for nt in self.analysis.structure3d.residues if nt.is_nucleotide
-        ]
+        nucleotides = self.__modelled_nucleotides()
         chain = None
-        shifts = dict()
+        shifts = {}
         shift_value = 0
 
         for nucleotide in nucleotides:
@@ -2820,8 +3382,10 @@ class Visualizer:
             shifts[nucleotide] = shift_value
             chain = nucleotide.chain
 
-        helix = tempfile.NamedTemporaryFile("w+", suffix=".helix")
-        helix.write(f"#{len(self.analysis.sequence) + 1}\n")
+        # the .helix file is returned to the caller (consumed by the R
+        # subprocess), so it deliberately stays open without a context manager
+        helix = tempfile.NamedTemporaryFile("w+", suffix=".helix")  # noqa: SIM115
+        helix.write(f"#{len(self.__modelled_nucleotides()) + 1}\n")
         helix.write("i\tj\tlength\tvalue\n")
 
         for pair in layer:
@@ -2861,17 +3425,17 @@ class AnalysisSimple:
                 for k in self.mapping.base_pair_graph[j]:
                     if k in (i, j):
                         continue
-                    for l in self.mapping.base_pair_graph[k]:
-                        if l in (i, j, k) or i not in self.mapping.base_pair_graph[l]:
+                    for n4 in self.mapping.base_pair_graph[k]:
+                        if n4 in (i, j, k) or i not in self.mapping.base_pair_graph[n4]:
                             continue
-                        if Tetrad.is_valid(i, j, k, l, self.mapping.base_pair_dict):
-                            tetrads.add(frozenset([i, j, k, l]))
+                        if Tetrad.is_valid(i, j, k, n4, self.mapping.base_pair_dict):
+                            tetrads.add(frozenset([i, j, k, n4]))
                         if len(tetrads) > 1:
                             return True
         return False
 
 
-def center_of_mass(atoms: List[Atom]) -> numpy.typing.NDArray[numpy.floating]:
+def center_of_mass(atoms: list[Atom]) -> numpy.typing.NDArray[numpy.floating]:
     coords = [atom.coordinates for atom in atoms]
     xs = (coord[0] for coord in coords)
     ys = (coord[1] for coord in coords)

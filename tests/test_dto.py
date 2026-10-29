@@ -96,8 +96,8 @@ def test_2awe():
         nt
         for h in dto.helices
         for q in h.quadruplexes
-        for l in q.loops
-        for nt in l.nucleotides
+        for loop in q.loops
+        for nt in loop.nucleotides
     ]
 
 
@@ -117,10 +117,10 @@ def test_5v3f():
     analysis = eltetrado(structure2d, structure3d, False)
     dto = generate_dto(analysis)
     assert (
-        dto.dotBracket.sequence == "GUGCGAAGGGACGGUGCGGAGAGGAGAGCA-CGGGACGGUGCGGAGAGGAG"
+        dto.dotBracket.sequence == "GUGCGAAGGGACGGUGCGGAGAGGAGAGCAC-GGGACGGUGCGGAGAGGAG"
     )
-    assert dto.dotBracket.line1 == ".......([{..)].(.[{.).]}.}....-.([{..)].(.[{.).]}.}"
-    assert dto.dotBracket.line2 == ".......([(..[{.).]}.{.)].}....-.([(..[{.).]}.{.)].}"
+    assert dto.dotBracket.line1 == ".......([{..)].(.[{.).]}.}.....-([{..)].(.[{.).]}.}"
+    assert dto.dotBracket.line2 == ".......([(..[{.).]}.{.)].}.....-([(..[{.).]}.{.)].}"
     assert len(dto.quadruplexDotBracket.sugar) == len(dto.quadruplexDotBracket.sequence)
     assert set(dto.quadruplexDotBracket.sugar) <= {"N", "S", "?", "-"}
 
@@ -138,15 +138,15 @@ def test_6a85():
     dto = generate_dto(analysis)
     assert (
         dto.dotBracket.sequence
-        == "AGAGAGATGGGTGCGT-TAGAGAGATGGGTGCGT-TAGAGAGATGGGTGCGT-TAGAGAGATGGGTGCGTT"
+        == "AGAGAGATGGGTGCGTT-AGAGAGATGGGTGCGTT-AGAGAGATGGGTGCGTT-AGAGAGATGGGTGCGTT"
     )
     assert (
         dto.dotBracket.line1
-        == ".([[{{.<ABCDE.F.-..)(][}.>abcde.f.-..{)(]<.ABCDEF.G.-..}])}>.abcdef.g.."
+        == ".([[{{.<ABCDE.F..-.)(][}.>abcde.f..-.{)(]<.ABCDEF.G..-.}])}>.abcdef.g.."
     )
     assert (
         dto.dotBracket.line2
-        == ".(([[{.<ABCDE.F.-..{)(][.<ABCDE.F.-..}{)G].>abcde.f.-..)}]g}.>abcde.f.."
+        == ".(([[{.<ABCDE.F..-.{)(][.<ABCDE.F..-.}{)G].>abcde.f..-.)}]g}.>abcde.f.."
     )
 
 
@@ -192,7 +192,9 @@ def test_2ms9_handedness_and_polarity_are_serialized():
     ]
     assert quadruplex.tags == [
         "has_bulge",
+        "has_snapback",
         "has_inverted_strand_polarity",
+        "v_loop",
         "two_block",
     ]
 
@@ -247,7 +249,9 @@ def test_5de5_strand_polarities_serialized():
     assert len(quadruplex.strandPolarities) == 4
 
     # Find the tract containing G20 and assert it has mixed polarities
-    for tract, tract_polarities in zip(quadruplex.tracts, quadruplex.strandPolarities):
+    for tract, tract_polarities in zip(
+        quadruplex.tracts, quadruplex.strandPolarities, strict=True
+    ):
         if "A.G20" in tract:
             values = [p for p in tract_polarities if p is not None]
             assert "plus" in values and "minus" in values

@@ -56,20 +56,31 @@ want ElTetrado to not visualize anything, pass `--no-image` switch to
 it.
 
     usage: eltetrado [-h] [-i INPUT] [-o OUTPUT]
-                     [--g4composer-output G4COMPOSER_OUTPUT] [-m MODEL]
-                     [--no-reorder] [--complete-2d] [--image DIR]
-                     [-e [EXTERNAL_FILES ...]]
+                     [--g4composer-output G4COMPOSER_OUTPUT]
+                     [--g4composer-consistent]
+                     [--g4composer-max-sequence-length NT] [-m MODEL] [--no-reorder]
+                     [--complete-2d] [--image DIR] [-e [EXTERNAL_FILES ...]]
                      [--tool {fr3d,dssr,rnaview,bpnet,maxit,barnaba,mc-annotate,dnatco}]
-                     [-v]
+                     [--keep-spurious] [--allow-non-g-tetrads]
+                     [--allow-mirrored] [--allow-abasic-nucleotides] [-v]
 
     options:
       -h, --help            show this help message and exit
       -i, --input INPUT     path to input PDB or PDBx/mmCIF file
       -o, --output OUTPUT   (optional) path for output JSON file
       --g4composer-output G4COMPOSER_OUTPUT
-                            (optional) path for g4composer plain-text export;
-                            requires exactly one unimolecular quadruplex and
-                            exports the full involved chain
+                            (optional) path template for g4composer plain-text
+                            exports; one file per involved chain is written as
+                            {stem}-{chain}.inp (a second distinct entry for the
+                            same chain becomes {stem}-{chain}q2.inp)
+      --g4composer-consistent
+                            number nucleotides within each tetrad by 5'-3' chain
+                            visitation order and export twist as the torsion angle
+                            between the first nucleotides of consecutive tetrads
+                            (affects only the g4composer export)
+      --g4composer-max-sequence-length NT
+                            skip g4composer entries whose full-chain sequence
+                            exceeds NT nt (default: 100; use 0 to disable the limit)
       -m, --model MODEL     (optional) model number to process
       --no-reorder          chains of bi- and tetramolecular quadruplexes should
                             be reordered to be able to have them classified; when
@@ -86,6 +97,24 @@ it.
       --tool {fr3d,dssr,rnaview,bpnet,maxit,barnaba,mc-annotate,dnatco}
                             name of the external tool that produced the files
                             (auto-detected when not provided)
+      --keep-spurious       report quadruplexes even if they are classified as
+                            spurious (e.g. bulges that are too long or unrealistic
+                            rise); by default such quadruplexes are discarded
+      --allow-non-g-tetrads
+                            generate g4composer inputs also for quadruplexes
+                            containing mixed-base tetrads (e.g. G·C·G·C, A·T·G·G);
+                            homogeneous G4, T4, and U4 tetrads are supported by
+                            default; mixed-base quadruplexes produce no input
+                            unless this flag is set
+      --allow-mirrored      analyze also mirror-image L-nucleotides (PDB chemical
+                            components prefixed with 0, e.g. 0G in mirror-image
+                            L-RNA/L-DNA aptamers); by default such residues are
+                            ignored
+      --allow-abasic-nucleotides
+                            export g4composer inputs even when the sequence
+                            contains unresolvable nucleotide letters (e.g. abasic
+                            residues); they are written as n; by default such
+                            g4composer entries are skipped
       -v, --version         show program's version number and exit
 
 # Chains reorder
@@ -123,8 +152,30 @@ The g4composer exporter uses the same structural analysis as the main
 ElTetrado output, but it applies g4composer-specific conventions at
 export time:
 
-- Only a single unimolecular quadruplex with at least two tetrads is
-  supported.
+- Each unimolecular quadruplex with at least two tetrads is considered
+  independently and written to a separate file for its chain. The
+  `--g4composer-output <stem.inp>` argument is a filename template:
+  output files are named `<stem>-<chain>.inp`; additional entries for
+  that chain use `<stem>-<chain>q2.inp`, etc. The `name` field inside
+  each file matches its filename without the `.inp` extension.
+- By default, entries whose exported full-chain sequence is longer than
+  100 nucleotides are skipped. Set `--g4composer-max-sequence-length` to
+  change the limit, or pass `0` to disable it. This avoids exporting
+  quadruplexes that occupy only a small fragment of an unusually long
+  chain.
+- Homogeneous G4, T4, and U4 tetrads are supported by default. A
+  quadruplex containing any mixed-base tetrad (for example G·C·G·C) is
+  not exported by default, because exporting only some tetrads would
+  misrepresent the structure. `--allow-non-g-tetrads` enables the
+  complete entry.
+- Entries with unresolvable nucleotide identities (including abasic
+  residues) are skipped by default. `--allow-abasic-nucleotides` writes
+  those identities as `n`.
+- Nucleotide ligands that complete a tetrad, or cannot be placed
+  reliably in the sequence, cause that entry to be skipped with a
+  warning. Terminal ligands covalently connected to the chain or
+  canonically paired with a terminal nucleotide are placed at the
+  appropriate sequence end.
 - The exported residue span covers the whole chain containing the
   quadruplex, including 5’ and 3’ flanking single strands.
 - Tetrad letters (`A`, `B`, `C`, …) still follow tetrad 5’ order.
@@ -147,6 +198,18 @@ export time:
   that shared axis. `twist` is the best-fit signed rotation of the four
   tract-matched `C1'` atoms around the same axis. Missing `C1'` atoms
   yield an undefined twist.
+- With `--g4composer-consistent`, the export switches to the
+  *consistent* mode: nucleotides within each tetrad are numbered 1-4 by
+  the 5’-3’ order in which the chain visits them (the first tetrad
+  nucleotide visited by the chain is always number 1, e.g. classic
+  `A1;B4` becomes `A1;B1`), and `twist` is computed as the torsion angle
+  `C1'(1) - center(tetrad 1) - center(tetrad 2) - C1'(1)` between
+  consecutive build-order tetrads, where `1` denotes the nucleotide
+  numbered 1 in the consistent path. Note that consistent-mode numbers
+  are per-tetrad visitation ranks, so they no longer identify a physical
+  tract across tetrads. `rise`, `orient`, and every other exported field
+  are mode-independent; the rest of ElTetrado (report, JSON DTO) always
+  uses the classic numbering.
 
 Example g4composer export:
 
