@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ["3.12", "3.13"]
+        python-version: ["3.11", "3.12", "3.13", "3.14", "3.15"]
     steps:
     - name: Checkout code
       uses: actions/checkout@v7
@@ -20,9 +20,17 @@ jobs:
     - name: Install uv and set the Python version
       uses: astral-sh/setup-uv@1c37ad07a6a961277cf70c0d37d6f313000f5884 # v10.3.0
       with:
-        version: "0.9.30"
+        # Must be >= 0.13.0, the first release whose managed-Python index has
+        # a stable 3.15; older uv resolves "3.15" to the pre-ABI-freeze alpha
+        # (3.15.0a5), which cannot load cp315 wheels.
+        version: "0.13.6"
         python-version: ${{ matrix.python-version }}
         enable-cache: true
+
+    # mmcif and viennarna publish no cp315 wheels, so they are built from
+    # source on Python 3.15 and need cmake.
+    - name: Install cmake for source-built dependencies
+      run: sudo apt-get update && sudo apt-get install -y --no-install-recommends cmake
 
     - name: Install dependencies
       run: uv sync --locked

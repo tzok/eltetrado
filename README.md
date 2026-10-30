@@ -26,7 +26,7 @@ uv sync --locked
 
 # Dependencies
 
-The project is written in Python 3.12+ and requires
+The project is written in Python 3.11+ and requires
 [mmcif](https://pypi.org/project/mmcif/),
 [orjson](https://github.com/ijl/orjson), [NumPy](https://numpy.org/) and
 [rnapolis](https://github.com/tzok/rnapolis-py).
