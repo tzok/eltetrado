@@ -13,10 +13,11 @@ x3dna-dssr
 .aider*
 
 # Devenv
+# devenv.lock is committed on purpose: it pins the inputs so the environment
+# is reproducible across machines and CI.
 .devenv*
 devenv.local.nix
 devenv.local.yaml
-devenv.lock
 
 # direnv
 .direnv
