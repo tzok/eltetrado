@@ -3,7 +3,7 @@ name = "eltetrado"
 version = "1.12.0"
 description = "Find and classify tetrads and quadruplexes in DNA/RNA 3D structure"
 readme = "README.md"
-requires-python = ">=3.12"
+requires-python = ">=3.11"
 license = "MIT"
 license-files = ["LICENSE"]
 authors = [{ name = "Tomasz Żok", email = "tomasz.zok@cs.put.poznan.pl" }]
@@ -14,6 +14,11 @@ classifiers = [
     "Intended Audience :: Science/Research",
     "Operating System :: OS Independent",
     "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Programming Language :: Python :: 3.15",
     "Topic :: Scientific/Engineering :: Bio-Informatics",
 ]
 dependencies = ["mmcif", "numpy", "orjson", "rnapolis"]
@@ -30,6 +35,11 @@ score-folds = "eltetrado.score_folds:main"
 
 [dependency-groups]
 dev = ["pytest", "ruff"]
+
+[tool.ruff]
+# Lowest Python version the code must stay compatible with; also drives the
+# pyupgrade (UP) and formatter targets. Keep in sync with `requires-python`.
+target-version = "py311"
 
 [tool.ruff.lint]
 # Pins the rule families that are kept clean in this repository. Intentionally

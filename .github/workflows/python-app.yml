@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ["3.12", "3.13"]
+        python-version: ["3.11", "3.12", "3.13", "3.14", "3.15"]
     steps:
     - name: Checkout code
       uses: actions/checkout@v7
@@ -23,6 +23,11 @@ jobs:
         version: "0.9.30"
         python-version: ${{ matrix.python-version }}
         enable-cache: true
+
+    # mmcif and viennarna publish no cp315 wheels, so they are built from
+    # source on Python 3.15 and need cmake.
+    - name: Install cmake for source-built dependencies
+      run: sudo apt-get update && sudo apt-get install -y --no-install-recommends cmake
 
     - name: Install dependencies
       run: uv sync --locked
