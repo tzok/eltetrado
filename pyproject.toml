@@ -63,6 +63,15 @@ select = [
     "UP",    # pyupgrade
 ]
 
+[tool.uv]
+# Single source of truth for the uv version: astral-sh/setup-uv reads this
+# when a workflow does not pass a version input, and uv itself refuses to run
+# with an older release. Must be >= 0.13.0, the first release whose
+# managed-Python index has a stable 3.15 (older uv resolves "3.15" to the
+# pre-ABI-freeze alpha, which cannot load cp315 wheels). The floor must not
+# exceed the uv version provided by the devenv shell.
+required-version = ">=0.13.4"
+
 [tool.uv.build-backend]
 source-exclude = ["*.helix", "example.fasta"]
 

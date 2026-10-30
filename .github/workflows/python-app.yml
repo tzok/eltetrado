@@ -18,12 +18,11 @@ jobs:
       uses: actions/checkout@v7
 
     - name: Install uv and set the Python version
-      uses: astral-sh/setup-uv@1c37ad07a6a961277cf70c0d37d6f313000f5884 # v10.3.0
+      uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
       with:
-        # Must be >= 0.13.0, the first release whose managed-Python index has
-        # a stable 3.15; older uv resolves "3.15" to the pre-ABI-freeze alpha
-        # (3.15.0a5), which cannot load cp315 wheels.
-        version: "0.13.6"
+        # The uv version floor comes from tool.uv.required-version in
+        # pyproject.toml; setup-uv resolves the latest release that
+        # satisfies it.
         python-version: ${{ matrix.python-version }}
         enable-cache: true
 
